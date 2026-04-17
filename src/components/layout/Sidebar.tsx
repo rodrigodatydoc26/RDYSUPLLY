@@ -40,17 +40,23 @@ export const Sidebar = () => {
     >
       {/* Branding Section */}
       <div className="px-4 mb-8">
-        <div className={`flex items-center gap-3 group border-b border-border pb-6 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-          <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-black shadow-lg shadow-primary/20 transition-transform duration-500 group-hover:scale-110">
-            <Layers size={24} strokeWidth={2.5} />
+        <div className={`flex items-center gap-4 group border-b border-border pb-6 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
+          <div className="flex-shrink-0 w-8 h-12 rounded-[10px] bg-primary flex items-center justify-center text-black shadow-lg shadow-primary/20 transition-transform duration-500 group-hover:scale-105">
+            <Layers size={20} strokeWidth={2.5} />
           </div>
           
           {!isSidebarCollapsed && (
-            <div className="flex flex-col justify-center animate-in fade-in slide-in-from-left-2 duration-500">
-              <h1 className="text-lg font-black italic tracking-tighter uppercase leading-none flex items-center">
+            <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-2 duration-500">
+              <h1 className="text-sm font-black italic tracking-tighter uppercase leading-none flex items-center whitespace-nowrap">
                 <span className="text-text-1">RDY</span><span className="text-primary ml-1">SUPPLY</span>
               </h1>
-              <p className="text-[8px] font-black text-text-2 uppercase tracking-[0.3em] opacity-40 mt-1.5 leading-none">Investment - Performance</p>
+              
+              <div className="w-px h-6 bg-white/10" />
+
+              <div className="flex flex-col">
+                <p className="text-[7px] font-black text-text-2 uppercase tracking-widest opacity-40 leading-[1.1]">INVESTMENT -</p>
+                <p className="text-[7px] font-black text-text-2 uppercase tracking-widest opacity-40 leading-[1.1]">PERFORMANCE</p>
+              </div>
             </div>
           )}
         </div>
