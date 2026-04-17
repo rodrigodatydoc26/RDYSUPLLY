@@ -1,12 +1,13 @@
-import { Users, FileText, AlertCircle, CheckCircle2, ArrowRight, Box, ShieldCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Users, FileText, AlertCircle, CheckCircle2, ArrowRight, Box, ShieldCheck, ArrowUpRight, Activity } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useDataStore } from '../store/useDataStore';
 import { format, subDays } from 'date-fns';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 export const Dashboard = () => {
+  const navigate = useNavigate();
   const { contracts, users, stockEntries, contractSupplies, supplyTypes, resolvedAlertIds } = useDataStore();
-
 
   const today = format(new Date(), 'yyyy-MM-dd');
 
@@ -48,7 +49,6 @@ export const Dashboard = () => {
       });
   }, [stockEntries, contracts, supplyTypes, contractSupplies, resolvedAlertIds]);
 
-
   const chartData = useMemo(() => {
     return Array.from({ length: 14 }).map((_, i) => {
       const date = subDays(new Date(), 13 - i);
@@ -59,47 +59,53 @@ export const Dashboard = () => {
     });
   }, [stockEntries]);
 
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setIsMounted(true), 150);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-700">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-border pb-4">
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-700 pb-10">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-border pb-6">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--rdy-primary-rgb),0.6)]" />
-            <p className="text-[10px] font-black text-black/20 uppercase tracking-[0.3em] leading-none">Catálogo Mestre de Recursos</p>
+            <p className="text-[10px] font-black text-text-2 uppercase tracking-[0.3em] leading-none opacity-40">Catálogo Mestre de Recursos</p>
           </div>
-          <h2 className="text-4xl font-black text-black italic tracking-tighter uppercase leading-none">
-            STATUS <span className="text-black/20 font-light not-italic">OPERACIONAL</span>
+          <h2 className="text-4xl font-black text-text-1 italic tracking-tighter uppercase leading-none">
+            STATUS <span className="text-text-2/40 font-light not-italic uppercase">OPERACIONAL</span>
           </h2>
-          <p className="text-[10px] font-black text-black/10 uppercase tracking-[0.2em] mt-2">Interface de Inteligência de Ativos RDY</p>
+          <p className="text-[10px] font-black text-text-2/40 uppercase tracking-[0.2em] mt-2">Interface de Inteligência de Ativos RDY</p>
         </div>
-          <div className="flex bg-surface/50 p-0.5 rounded border border-border">
-             <div className="px-3 py-1 flex items-center gap-2">
-                <Box size={10} className="text-primary/60" />
-                <p className="text-[8px] font-black text-text-2 uppercase tracking-wide">{contracts.length} Operações</p>
-             </div>
-             <div className="w-px h-3 my-auto bg-border" />
-             <div className="px-3 py-1 flex items-center gap-2">
-                <ShieldCheck size={10} className="text-primary/60" />
-                <p className="text-[8px] font-black text-text-2 uppercase tracking-wide">Fluxo Ativo</p>
-             </div>
+        <div className="flex bg-surface p-1 rounded-xl border border-border">
+          <div className="px-5 py-2 flex items-center gap-3">
+            <Box size={12} className="text-primary/60" />
+            <p className="text-[9px] font-black text-text-1 uppercase tracking-widest">{contracts.length} Operações</p>
           </div>
+          <div className="w-px h-5 my-auto bg-border" />
+          <div className="px-5 py-2 flex items-center gap-3">
+            <ShieldCheck size={12} className="text-primary/60" />
+            <p className="text-[9px] font-black text-text-1 uppercase tracking-widest">Fluxo Ativo</p>
+          </div>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         {kpis.map((kpi, i) => (
           <div key={i} className="group relative">
-            <div className={`p-0.5 w-full bg-surface/50 rounded-2xl border border-border transition-all duration-700 group-hover:bg-primary/5 group-hover:-translate-y-1`}>
-              <div className="bg-surface/40 p-4 rounded-[0.9rem] backdrop-blur-xl">
-                 <div className="flex justify-between items-start mb-4">
-                    <div className={`text-text-2 group-hover:text-${kpi.color} transition-colors duration-700`}>
-                      <kpi.icon size={16} strokeWidth={1.5} />
+            <div className={`p-0.5 w-full bg-surface rounded-3xl border border-border transition-all duration-700 hover:shadow-xl hover:shadow-primary/5 group-hover:-translate-y-1`}>
+              <div className="p-6 rounded-[1.4rem]">
+                 <div className="flex justify-between items-start mb-6">
+                    <div className={`text-text-2 group-hover:text-text-1 transition-colors duration-700`}>
+                      <kpi.icon size={20} strokeWidth={2.5} />
                     </div>
-                    <div className="w-1 h-1 rounded-full bg-border group-hover:bg-primary transition-colors" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-border group-hover:bg-primary transition-colors" />
                  </div>
-                 <p className="text-[8px] font-black text-text-2 uppercase tracking-[0.2em] mb-1.5">{kpi.label}</p>
-                 <div className="flex items-baseline gap-1.5">
-                    <p className="text-2xl font-black text-text-1 italic tracking-tighter">{kpi.value}</p>
-                    <ArrowRight size={10} className="text-text-2/20 group-hover:text-primary transition-all group-hover:translate-x-1" />
+                 <p className="text-[9px] font-black text-text-2 uppercase tracking-[0.2em] mb-2 opacity-40">{kpi.label}</p>
+                 <div className="flex items-baseline gap-2">
+                    <p className="text-3xl font-black text-text-1 italic tracking-tighter leading-none">{kpi.value}</p>
+                    <ArrowUpRight size={14} className="text-text-2/20 group-hover:text-primary transition-all group-hover:translate-x-1 group-hover:-translate-y-1" strokeWidth={3} />
                  </div>
               </div>
             </div>
@@ -107,64 +113,111 @@ export const Dashboard = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        <div className="lg:col-span-2 space-y-3">
-          <div className="card-xp p-4">
-             <div className="flex items-center justify-between mb-4">
-                <p className="text-[8px] font-black text-text-2 uppercase tracking-wider">Outflow Matrix / Performance</p>
-                <div className="flex gap-2">
-                   <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-primary" /><span className="text-[7px] font-black text-text-2 uppercase">Input</span></div>
-                </div>
-             </div>
-             <div className="h-[200px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
+      <div className="space-y-4">
+        <div className="bg-surface border border-border rounded-[40px] p-8 hover:shadow-xl hover:shadow-primary/5 transition-all">
+           <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                 <Activity size={16} className="text-primary" />
+                 <p className="text-[10px] font-black text-text-1 uppercase tracking-widest">OUTFLOW MATRIX / PERFORMANCE</p>
+              </div>
+              <div className="flex items-center gap-6">
+                 <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--rdy-primary-rgb),0.5)]" />
+                    <span className="text-[9px] font-black text-text-2 uppercase tracking-widest">MÉDIA DE ENTRADA</span>
+                 </div>
+              </div>
+           </div>
+           <div className="h-[280px] w-full relative">
+             {isMounted && (
+               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData}>
                   <defs>
                     <linearGradient id="colorSaldo" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#F5C800" stopOpacity={0.1} />
-                      <stop offset="95%" stopColor="#F5C800" stopOpacity={0} />
+                      <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="0" vertical={false} stroke="var(--color-border-subtle)" />
-                  <XAxis dataKey="name" stroke="var(--color-text-2)" fontSize={9} tickLine={false} axisLine={false} tick={{ fill: 'var(--color-text-2)', fontWeight: 'black' }} />
-                  <YAxis stroke="var(--color-text-2)" fontSize={9} tickLine={false} axisLine={false} tick={{ fill: 'var(--color-text-2)', fontWeight: 'black' }} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
+                  <XAxis dataKey="name" stroke="var(--color-border)" fontSize={10} tickLine={false} axisLine={false} tick={{ fill: 'var(--color-text-2)', fontWeight: '900' }} dy={10} />
+                  <YAxis stroke="var(--color-border)" fontSize={10} tickLine={false} axisLine={false} tick={{ fill: 'var(--color-text-2)', fontWeight: '900' }} />
                   <Tooltip 
-                    contentStyle={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '20px', padding: '16px' }} 
-                    itemStyle={{ color: '#F5C800', fontWeight: 'black', fontSize: '10px', textTransform: 'uppercase' }} 
-                    labelStyle={{ color: 'var(--color-text-2)', fontSize: '9px', fontWeight: 'black', marginBottom: '8px' }}
+                    contentStyle={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '24px', padding: '20px', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.3)' }} 
+                    itemStyle={{ color: 'var(--color-text-1)', fontWeight: '900', fontSize: '11px', textTransform: 'uppercase' }} 
+                    labelStyle={{ color: 'var(--color-text-2)', fontSize: '9px', fontWeight: '900', marginBottom: '8px', letterSpacing: '0.1em' }}
                   />
-                  <Area type="monotone" dataKey="saldo" stroke="#F5C800" strokeWidth={2} fillOpacity={1} fill="url(#colorSaldo)" connectNulls name="Média de Estoque" dot={{ fill: '#F5C800', r: 3 }} />
+                  <Area type="monotone" dataKey="saldo" stroke="var(--color-primary)" strokeWidth={4} fillOpacity={1} fill="url(#colorSaldo)" connectNulls name="Média de Estoque" dot={{ fill: 'var(--color-primary)', r: 4, strokeWidth: 0 }} activeDot={{ r: 6, strokeWidth: 0, fill: 'var(--color-text-1)' }} />
                 </AreaChart>
               </ResponsiveContainer>
-            </div>
-         </div>
+             )}
+           </div>
         </div>
-        <div className="card-xp p-4 h-full flex flex-col">
-             <div className="flex items-center gap-2 mb-4">
-                <div className="w-6 h-6 rounded bg-danger/10 flex items-center justify-center text-danger"><AlertCircle size={12} /></div>
-                <p className="text-[8px] font-black text-text-2 uppercase tracking-widest">Critical Buffer Alert</p>
-             </div>
-             <div className="flex-1 overflow-auto">
-                <table className="w-full text-left">
-                   <thead>
-                      <tr className="border-b border-border/50 text-text-2 text-[7px] font-black uppercase">
-                         <th className="py-1">Contract</th>
-                         <th className="py-1">Stock</th>
-                         <th className="py-1 text-right">Trigger</th>
+
+        <div className="bg-surface border border-border rounded-[40px] p-8 hover:shadow-xl hover:shadow-primary/5 transition-all">
+           <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-4">
+                 <div className="w-10 h-10 rounded-2xl bg-danger/10 flex items-center justify-center text-danger">
+                    <AlertCircle size={20} strokeWidth={2.5} />
+                 </div>
+                 <div>
+                    <p className="text-[11px] font-black text-text-1 uppercase tracking-widest leading-none">CRITICAL BUFFER ALERT</p>
+                    <p className="text-[8px] font-black text-text-2/60 uppercase tracking-[0.2em] mt-2">Reposição imediata obrigatória</p>
+                 </div>
+              </div>
+              <button 
+                onClick={() => navigate('/estoque')}
+                className="px-6 h-10 bg-bg border border-border rounded-xl text-[9px] font-black uppercase tracking-widest text-text-1 hover:bg-primary hover:text-black transition-all flex items-center gap-2 group"
+              >
+                GESTÃO COMPLETA
+                <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
+              </button>
+           </div>
+           
+           <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                 <thead>
+                    <tr className="border-b border-border text-text-2 text-[9px] font-black uppercase tracking-widest opacity-40">
+                       <th className="px-4 py-4">UNIDADE / CONTRATO</th>
+                       <th className="px-4 py-4 text-center">SALDO ATUAL</th>
+                       <th className="px-4 py-4 text-right">GATILHO MÍNIMO</th>
+                    </tr>
+                 </thead>
+                 <tbody className="divide-y divide-border">
+                    {criticalStockItems.length > 0 ? (
+                      criticalStockItems.map((item, i) => (
+                        <tr 
+                          key={i} 
+                          onClick={() => navigate('/estoque')}
+                          className="group cursor-pointer hover:bg-bg/50 transition-colors"
+                        >
+                           <td className="px-4 py-6">
+                              <div className="flex items-center gap-3">
+                                 <div className="w-1 h-6 bg-danger/20 rounded-full group-hover:bg-danger transition-colors" />
+                                 <p className="text-sm font-black text-text-1 uppercase italic tracking-tight">{item.contractName}</p>
+                              </div>
+                           </td>
+                           <td className="px-4 py-6 text-center">
+                              <span className="text-lg font-black text-danger italic leading-none">{item.stock}</span>
+                              <span className="text-[9px] font-black text-text-2 uppercase ml-2 opacity-20">{item.unit}</span>
+                           </td>
+                           <td className="px-4 py-6 text-right font-black text-text-2/40 text-sm italic">
+                              {item.min}
+                           </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={3} className="py-20 text-center">
+                           <div className="flex flex-col items-center gap-4 opacity-10">
+                              <ShieldCheck size={48} />
+                              <p className="text-[10px] font-black uppercase tracking-[0.4em]">Nenhum alerta crítico detectado</p>
+                           </div>
+                        </td>
                       </tr>
-                   </thead>
-                   <tbody className="divide-y divide-border/20">
-                      {criticalStockItems.map((item, i) => (
-                         <tr key={i} className="text-[9px]">
-                            <td className="py-1.5 font-bold text-text-1 uppercase truncate max-w-[80px]">{item.contractName}</td>
-                            <td className="py-1.5 text-danger font-black">{item.stock} <span className="text-[7px] opacity-20">{item.unit}</span></td>
-                            <td className="py-1.5 text-right text-text-2 opacity-40">{item.min}</td>
-                         </tr>
-                      ))}
-                   </tbody>
-                </table>
-             </div>
-          </div>
+                    )}
+                 </tbody>
+              </table>
+           </div>
+        </div>
       </div>
     </div>
   );

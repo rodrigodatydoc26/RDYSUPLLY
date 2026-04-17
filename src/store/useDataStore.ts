@@ -57,9 +57,9 @@ const initialData = {
     { id: 'c3', name: 'INDÚSTRIA METAL', client: 'TECNO-STEEL S/A', code: 'IM003', active: true, technicianIds: ['2'], created_at: new Date().toISOString() },
   ],
   equipmentModels: [
-    { id: 'e1', name: 'LaserJet M15w', brand: 'HP' },
-    { id: 'e2', name: 'DCP-L5652DN', brand: 'Brother' },
-    { id: 'e3', name: 'Universal / Outros', brand: 'Generic' },
+    { id: 'e1', name: 'LaserJet M15w', brand: 'HP', is_color: false, has_drum: false, created_at: new Date().toISOString() },
+    { id: 'e2', name: 'DCP-L5652DN', brand: 'Brother', is_color: false, has_drum: true, created_at: new Date().toISOString() },
+    { id: 'e3', name: 'Universal / Outros', brand: 'Generic', is_color: false, has_drum: false, created_at: new Date().toISOString() },
   ],
   supplyTypes: [
     { id: 's1', name: 'Toner HP CF217A', category: 'Toner' as const, color: 'black' as const, capacity: 1600, unit: 'un', equipment_model_id: 'e1' },
@@ -184,8 +184,8 @@ export const useDataStore = create<DataState>()(
           users: admins.length > 0 ? admins : [{ id: '1', name: 'Rodrigo Daty', email: 'admin@rdy.com', password: 'admin', role: 'admin' as const, active: true, created_at: new Date().toISOString() }],
         };
         localStorage.setItem('rdy-supply-data', JSON.stringify({ state: newData, version: 2 }));
-        set({ ...newData });
-        window.location.reload();
+        setTimeout(() => window.location.reload(), 0);
+        return newData;
       }),
 
       resetToDefaults: () => {
@@ -196,7 +196,26 @@ export const useDataStore = create<DataState>()(
     }),
     {
       name: 'rdy-supply-data',
-      version: 2,
+      version: 3,
+      migrate: (persistedState: any, version: number) => {
+        if (version < 3) {
+          persistedState.contracts = (persistedState.contracts || []).map((c: any) => ({
+            ...c,
+            technicianIds: c.technicianIds ?? [],
+          }));
+          persistedState.users = (persistedState.users || []).map((u: any) => ({
+            ...u,
+            password: u.password ?? '',
+          }));
+          persistedState.equipmentModels = (persistedState.equipmentModels || []).map((m: any) => ({
+            is_color: false,
+            has_drum: false,
+            created_at: new Date().toISOString(),
+            ...m,
+          }));
+        }
+        return persistedState;
+      },
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
       }

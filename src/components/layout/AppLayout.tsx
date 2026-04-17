@@ -23,17 +23,22 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
 
   useEffect(() => {
     document.documentElement.style.setProperty('--rdy-primary', themeColor);
+    const hex = themeColor.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    document.documentElement.style.setProperty('--rdy-primary-rgb', `${r}, ${g}, ${b}`);
   }, [themeColor]);
 
   if (isLoading || !_hasHydrated) {
     return (
       <div className="min-h-screen bg-bg flex flex-col items-center justify-center space-y-12 animate-in fade-in duration-1000">
-         <div className="w-20 h-20 rounded-[2.5rem] bg-white/[0.03] border border-primary/20 flex items-center justify-center animate-pulse">
+         <div className="w-20 h-20 rounded-[2.5rem] bg-surface/50 border border-primary/20 flex items-center justify-center animate-pulse shadow-2xl shadow-primary/5">
             <div className="w-4 h-4 rounded-full bg-primary animate-ping" />
          </div>
          <div className="text-center space-y-3">
-            <p className="text-[12px] font-black text-white/40 uppercase tracking-[1em] animate-pulse">Establishing Connection</p>
-            <p className="text-[10px] font-medium text-white/10 uppercase tracking-[0.3em]">RDY SECURE CLOUD GATEWAY</p>
+            <p className="text-[12px] font-black text-text-2 uppercase tracking-[1em] animate-pulse">Establishing Connection</p>
+            <p className="text-[10px] font-medium text-text-2/30 uppercase tracking-[0.3em]">RDY SECURE CLOUD GATEWAY</p>
          </div>
       </div>
     );

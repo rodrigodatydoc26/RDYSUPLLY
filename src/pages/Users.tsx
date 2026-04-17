@@ -30,7 +30,7 @@ export const Users = () => {
 
 
   const getUserContracts = (userId: string) =>
-    contracts.filter(c => c.technicianIds.includes(userId));
+    contracts.filter(c => c.technicianIds?.includes(userId));
 
   const openAddModal = () => {
     setEditingId(null);
@@ -42,7 +42,7 @@ export const Users = () => {
   const openEditModal = (user: Profile) => {
     setEditingId(user.id);
     setFormData({ name: user.name, email: user.email, role: user.role, active: user.active, password: user.password || '' });
-    setTechContracts(contracts.filter(c => c.technicianIds.includes(user.id)).map(c => c.id));
+    setTechContracts(contracts.filter(c => c.technicianIds?.includes(user.id)).map(c => c.id));
     setIsModalOpen(true);
   };
 
@@ -54,11 +54,11 @@ export const Users = () => {
       // Update contracts tech links
       contracts.forEach(c => {
         const isLinked = techContracts.includes(c.id);
-        const alreadyLinked = c.technicianIds.includes(editingId);
+        const alreadyLinked = c.technicianIds?.includes(editingId) ?? false;
         if (isLinked && !alreadyLinked) {
-          updateContract({ ...c, technicianIds: [...c.technicianIds, editingId] });
+          updateContract({ ...c, technicianIds: [...(c.technicianIds ?? []), editingId] });
         } else if (!isLinked && alreadyLinked) {
-          updateContract({ ...c, technicianIds: c.technicianIds.filter(id => id !== editingId) });
+          updateContract({ ...c, technicianIds: (c.technicianIds ?? []).filter(id => id !== editingId) });
         }
       });
     } else {
@@ -74,99 +74,111 @@ export const Users = () => {
   };
 
   return (
-    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border pb-4">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-border pb-6">
         <div>
            <div className="flex items-center gap-2 mb-2">
              <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--rdy-primary-rgb),0.6)]" />
-             <p className="text-[10px] font-black text-text-2 uppercase tracking-[0.3em] leading-none">Catálogo Mestre de Recursos</p>
+             <p className="text-[10px] font-black text-text-2/40 uppercase tracking-[0.3em] leading-none">Catálogo Mestre de Recursos</p>
            </div>
            <h2 className="text-4xl font-black text-text-1 italic tracking-tighter uppercase leading-none">
-             GESTÃO <span className="text-text-2/40 font-light not-italic">DE EQUIPE</span>
+             GESTÃO <span className="text-text-2/40 font-light not-italic uppercase">DE EQUIPE</span>
            </h2>
         </div>
-        <button className="rdy-btn-primary h-9" onClick={openAddModal}>
-          <Plus size={14} /> <span className="text-[10px] uppercase font-black tracking-wider">Convidar Usuário</span>
+        <button 
+          onClick={openAddModal}
+          className="h-12 px-8 bg-primary hover:bg-primary/90 text-black text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-primary/10 transition-all active:scale-95 flex items-center gap-2"
+        >
+          <Plus size={16} strokeWidth={3} />
+          Convidar Usuário
         </button>
       </div>
 
-      <div className="card-xp overflow-hidden">
-        <div className="px-4 py-2 bg-surface/30 border-b border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="relative max-w-sm w-full flex-1 group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-2/40 group-focus-within:text-primary transition-colors" size={14} />
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="relative flex-1 w-full group">
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-text-2/40 group-focus-within:text-text-1 transition-colors" size={16} />
             <input
               type="text"
               placeholder="FILTRAR POR NOME OU E-MAIL..."
-              className="rdy-input pl-10 bg-transparent border-none focus:ring-0 text-[10px] h-8 font-bold uppercase tracking-wider"
+              className="w-full h-14 bg-surface border border-border rounded-[20px] pl-14 pr-6 text-[10px] font-black uppercase tracking-widest text-text-1 focus:bg-bg outline-none transition-all placeholder:text-text-2/40"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-4 text-[7px] font-black text-text-2 uppercase tracking-widest px-3 py-1 bg-surface rounded border border-border">
-            <span className="flex items-center gap-1.5"><div className="w-1 h-1 rounded-full bg-success" /> {users.filter(u => u.active).length} ATIVOS</span>
-            <div className="w-px h-2 bg-border" />
-            <span className="flex items-center gap-1.5"><div className="w-1 h-1 rounded-full bg-text-2/20" /> {users.filter(u => !u.active).length} INATIVOS</span>
+          <div className="flex items-center gap-4 text-[8px] font-black text-text-1 uppercase tracking-[0.2em] px-5 h-14 bg-surface rounded-[20px] border border-border">
+            <span className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-success" /> 
+              {users.filter(u => u.active).length} ATIVOS
+            </span>
+            <div className="w-px h-3 bg-border" />
+            <span className="flex items-center gap-2 text-text-2/40">
+              <div className="w-1.5 h-1.5 rounded-full bg-text-2/20" /> 
+              {users.filter(u => !u.active).length} INATIVOS
+            </span>
           </div>
         </div>
 
-        <div className="overflow-x-auto scroll-elite">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-border text-text-2 text-[7px] font-black uppercase tracking-widest bg-surface/30">
-                <th className="px-4 py-2 opacity-50">Equipe</th>
-                <th className="px-4 py-2 opacity-50">Cargo</th>
-                <th className="px-4 py-2 opacity-50">Operações</th>
-                <th className="px-4 py-2 opacity-50">Status</th>
-                <th className="px-4 py-2 text-right opacity-50">Tarefa</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border-subtle">
-              {filteredUsers.map(u => {
-                const linked = getUserContracts(u.id);
-                return (
-                  <tr key={u.id} className="group hover:bg-white/5 transition-all text-[10px]">
-                    <td className="px-4 py-1.5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded bg-surface border border-border flex items-center justify-center text-text-2/20">
-                          <User size={14} />
+        <div className="bg-surface border border-border rounded-[32px] overflow-hidden shadow-xl shadow-black/[0.02]">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+               <tr className="border-b border-border text-text-2/40 text-[8px] font-black uppercase tracking-widest bg-bg/50">
+                  <th className="px-8 py-5">Perfil Operacional</th>
+                  <th className="px-8 py-5">Nível de Acesso</th>
+                  <th className="px-8 py-5">Contratos Ativos</th>
+                  <th className="px-8 py-5">Status</th>
+                  <th className="px-8 py-5 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {filteredUsers.map(u => {
+                  const linked = getUserContracts(u.id);
+                  return (
+                    <tr key={u.id} className="group hover:bg-bg/50 transition-all">
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-bg border border-border flex items-center justify-center text-text-2/40">
+                            <User size={18} />
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-black text-text-1 uppercase tracking-tight leading-none">{u.name}</p>
+                            <p className="text-[8px] text-text-2/40 uppercase font-bold tracking-widest mt-1.5">{u.email}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-bold text-text-1 uppercase tracking-tight leading-none">{u.name}</p>
-                          <p className="text-[7px] text-text-2 uppercase font-black tracking-widest mt-1">{u.email}</p>
+                      </td>
+                      <td className="px-8 py-5">
+                        <span className="text-[8px] font-black text-text-1 uppercase tracking-widest px-2.5 py-1 bg-bg border border-border rounded-lg">{u.role}</span>
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="flex flex-wrap gap-1.5 max-w-[200px]">
+                          {linked.map(c => (
+                            <span key={c.id} className="px-2 py-0.5 bg-bg border border-border rounded text-[8px] font-black text-text-2/40 uppercase">{c.code}</span>
+                          ))}
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-1.5">
-                      <span className="text-[7px] font-black text-text-2 uppercase tracking-widest px-2 py-0.5 border border-border rounded">{u.role}</span>
-                    </td>
-                    <td className="px-4 py-1.5">
-                      <div className="flex flex-wrap gap-1 max-w-[150px]">
-                        {linked.map(c => (
-                          <span key={c.id} className="px-1.5 py-0.5 bg-surface border border-border rounded text-[7px] font-black text-text-2 uppercase">{c.code}</span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-4 py-1.5">
-                      <div className="flex items-center gap-1.5">
-                        <div className={`w-1 h-1 rounded-full ${u.active ? 'bg-success' : 'bg-text-2/20'}`} />
-                        <span className={`text-[7px] font-black uppercase tracking-widest ${u.active ? 'text-text-1' : 'text-text-2/40'}`}>
-                          {u.active ? 'Ativo' : 'Inativo'}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-1.5 text-right">
-                      <button
-                        onClick={() => openEditModal(u)}
-                        className="p-1 text-text-2/20 hover:text-primary transition-colors"
-                      >
-                        <Edit2 size={12} />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-1.5 h-1.5 rounded-full ${u.active ? 'bg-success shadow-[0_0_8px_rgba(var(--rdy-success-rgb),0.4)]' : 'bg-black/10'}`} />
+                          <span className={`text-[8px] font-black uppercase tracking-widest ${u.active ? 'text-text-1' : 'text-text-2/40'}`}>
+                            {u.active ? 'ATIVO' : 'INATIVO'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5 text-right">
+                        <button
+                          onClick={() => openEditModal(u)}
+                          className="w-8 h-8 rounded-lg text-text-2/40 hover:text-text-1 transition-colors"
+                        >
+                          <Edit2 size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -340,19 +352,19 @@ export const Users = () => {
         </div>
       )}
       {user?.role === 'admin' && (
-        <div className="mt-12 pt-8 border-t border-danger/20 space-y-4">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-1.5 h-1.5 rounded-full bg-danger animate-pulse" />
-            <p className="text-[8px] font-black text-danger uppercase tracking-[0.3em] leading-none">ZONA DE PERIGO OPERACIONAL</p>
+        <div className="mt-16 pt-10 border-t border-danger/10 space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-danger animate-pulse shadow-[0_0_10px_rgba(255,82,82,0.8)]" />
+            <p className="text-[10px] font-black text-danger uppercase tracking-[0.4em] leading-none">ZONA DE PERIGO OPERACIONAL</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="card-xp !bg-black border-danger/30 p-6 flex flex-col justify-between group hover:border-danger transition-all">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-black border border-white/5 p-10 rounded-[32px] flex flex-col justify-between group hover:border-danger/30 transition-all shadow-2xl">
               <div>
-                <h3 className="text-sm font-black text-white uppercase italic tracking-tighter">Limpeza Total</h3>
-                <p className="text-[8px] text-text-2/40 font-bold uppercase tracking-widest mt-2 leading-relaxed">
+                <h3 className="text-xl font-black text-white uppercase italic tracking-tighter">Limpeza Total</h3>
+                <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest mt-4 leading-relaxed max-w-[80%]">
                   Apaga todos os contratos, insumos, histórico de estoque e movimentações. 
-                  <span className="text-danger"> Apenas perfis de Administrador serão preservados.</span>
+                  <span className="text-danger italic ml-1">Apenas perfis de Administrador serão preservados.</span>
                 </p>
               </div>
               <button 
@@ -364,16 +376,16 @@ export const Users = () => {
                     }
                   }
                 }}
-                className="mt-6 h-10 w-full border border-danger/30 text-danger text-[9px] font-black uppercase tracking-[0.2em] rounded-lg hover:bg-danger hover:text-white transition-all transform hover:scale-[1.02]"
+                className="mt-10 h-12 w-full border border-danger/20 text-danger text-[10px] font-black uppercase tracking-[0.3em] rounded-2xl hover:bg-danger hover:text-white transition-all active:scale-95"
               >
                 Zerar Banco de Dados
               </button>
             </div>
 
-            <div className="card-xp !bg-black border-primary/20 p-6 flex flex-col justify-between group hover:border-primary transition-all">
+            <div className="bg-black border border-white/5 p-10 rounded-[32px] flex flex-col justify-between group hover:border-primary/30 transition-all shadow-2xl">
               <div>
-                <h3 className="text-sm font-black text-white uppercase italic tracking-tighter">Restaurar Padrões</h3>
-                <p className="text-[8px] text-text-2/40 font-bold uppercase tracking-widest mt-2 leading-relaxed">
+                <h3 className="text-xl font-black text-white uppercase italic tracking-tighter">Restaurar Padrões</h3>
+                <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest mt-4 leading-relaxed max-w-[80%]">
                   Restaura o sistema para o estado inicial com dados fictícios de demonstração.
                   Útil para resetar o ambiente de treinamento.
                 </p>
@@ -385,7 +397,7 @@ export const Users = () => {
                     resetToDefaults();
                   }
                 }}
-                className="mt-6 h-10 w-full border border-primary/30 text-primary text-[9px] font-black uppercase tracking-[0.2em] rounded-lg hover:bg-primary hover:text-white transition-all transform hover:scale-[1.02]"
+                className="mt-10 h-12 w-full border border-primary/20 text-primary text-[10px] font-black uppercase tracking-[0.3em] rounded-2xl hover:bg-primary hover:text-black transition-all active:scale-95"
               >
                 Restaurar Dados de Exemplo
               </button>

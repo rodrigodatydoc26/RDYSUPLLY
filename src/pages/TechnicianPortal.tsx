@@ -1,21 +1,18 @@
 import { useState, useMemo } from 'react';
 import {
-  Building2,
-  ChevronRight,
   Save,
   ChevronLeft,
-  AlertCircle,
-  UserCheck,
   CheckCircle2,
   Droplets,
   Layers,
-  Activity
+  Activity,
+  ArrowUpRight,
+  Box
 } from 'lucide-react';
 import { useDataStore } from '../store/useDataStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 export const TechnicianPortal = () => {
   const { user } = useAuthStore();
@@ -105,58 +102,65 @@ export const TechnicianPortal = () => {
 
   if (!selectedContractId) {
     return (
-      <div className="max-w-md mx-auto space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <header className="space-y-1 text-center border-b border-border pb-4">
-          <div className="flex flex-col items-center gap-1.5">
-             <div className="flex items-center gap-2 mb-1">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--rdy-primary-rgb),0.5)]" />
-                <p className="text-[9px] font-black text-text-2 uppercase tracking-[0.3em]">Catálogo Mestre de Recursos</p>
-             </div>
-             <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-black">
-               <UserCheck size={16} />
-             </div>
-             <p className="text-[7px] font-black text-text-2 uppercase tracking-widest leading-none mt-1">Núcleo de Serviço de Campo</p>
+      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-border pb-8">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--rdy-primary-rgb),0.6)]" />
+              <p className="text-[10px] font-black text-text-2 uppercase tracking-[0.3em] leading-none opacity-40">Operações de Campo / Sincronização</p>
+            </div>
+            <h2 className="text-4xl font-black text-text-1 italic tracking-tighter uppercase leading-none">
+              PORTAL <span className="text-text-2 font-light not-italic">DO TÉCNICO</span>
+            </h2>
+            <p className="text-[10px] font-black text-text-2 uppercase tracking-[0.2em] mt-2 opacity-20">Unidades Vinculadas ao seu Contexto</p>
           </div>
-          <h2 className="text-xl font-black text-text-1 italic tracking-tighter uppercase leading-none mt-1">OPERAÇÃO <span className="text-primary italic">DE CAMPO</span></h2>
-          <p className="text-text-2 font-black text-[7px] uppercase tracking-widest mt-2 opacity-40">{format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}</p>
+          <div className="hidden md:flex bg-surface p-1.5 rounded-xl border border-border">
+             <div className="px-5 py-2 flex items-center gap-3">
+                <Activity size={12} className="text-primary/60" />
+                <p className="text-[9px] font-black text-text-1 uppercase tracking-widest">Aguardando Sincro</p>
+             </div>
+          </div>
         </header>
 
-        <div className="space-y-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {assignedContracts.length > 0 ? (
-            assignedContracts.map(contract => (
-              <button
-                key={contract.id}
-                onClick={() => setSelectedContractId(contract.id)}
-                className="card-xp w-full p-3 text-left group hover:bg-white/5 transition-all"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded bg-surface border border-border flex items-center justify-center text-text-2/40 group-hover:border-primary transition-colors">
-                      <Building2 size={14} />
+            assignedContracts.map(contract => {
+              const entriesCount = stockEntries.filter(e => e.contract_id === contract.id && e.entry_date === format(new Date(), 'yyyy-MM-dd')).length;
+              const isUpdated = entriesCount > 0;
+
+              return (
+                <button
+                  key={contract.id}
+                  onClick={() => setSelectedContractId(contract.id)}
+                  className="group bg-surface border border-border p-8 rounded-[32px] w-full text-left hover:border-text-1 hover:shadow-2xl transition-all relative overflow-hidden active:scale-95"
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${isUpdated ? 'bg-success/10 text-success' : 'bg-primary text-black shadow-lg shadow-primary/20'}`}>
+                      {isUpdated ? <CheckCircle2 size={24} /> : <Box size={24} />}
                     </div>
-                    <div>
-                      <p className="font-bold text-sm text-text-1 uppercase tracking-tight leading-none">{contract.name}</p>
-                      <p className="text-[7px] font-black text-text-2 uppercase tracking-widest mt-1 opacity-40">{contract.client}</p>
+                    {isUpdated && (
+                      <div className="px-3 py-1 bg-success/10 text-success rounded-full text-[8px] font-black uppercase tracking-widest border border-success/20 animate-in fade-in duration-500">
+                        SINCRONIZADO
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <h3 className="text-xl font-black text-text-1 uppercase italic tracking-tighter leading-none group-hover:translate-x-1 transition-transform">{contract.name}</h3>
+                    <div className="flex items-center gap-3 mt-3 text-[9px] font-black text-text-2/40 uppercase tracking-widest">
+                       <span>{contract.code}</span>
+                       <div className="w-1 h-1 rounded-full bg-border" />
+                       <span className="truncate max-w-[150px]">{contract.client}</span>
                     </div>
                   </div>
-                  <ChevronRight size={14} className="text-text-2/20 group-hover:text-primary transition-all" />
-                </div>
-                
-                <div className="mt-3 pt-2 border-t border-border/30 flex items-center justify-between">
-                  <span className="text-[7px] font-black text-text-2 uppercase tracking-widest">Tipo: {contractSupplies.filter(cs => cs.contract_id === contract.id).length} Itens</span>
-                  <div className="flex items-center gap-1.5">
-                    <div className={`w-1 h-1 rounded-full ${stockEntries.filter(e => e.contract_id === contract.id && e.entry_date === today).length > 0 ? 'bg-success' : 'bg-danger animate-pulse'}`} />
-                    <span className="text-[7px] font-black text-text-2 uppercase tracking-widest">
-                      {stockEntries.filter(e => e.contract_id === contract.id && e.entry_date === today).length > 0 ? 'Sincronizado' : 'Ação Necessária'}
-                    </span>
-                  </div>
-                </div>
-              </button>
-            ))
+
+                  <ArrowUpRight size={18} className="absolute top-8 right-8 text-text-2/20 group-hover:text-text-1 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all" strokeWidth={3} />
+                </button>
+              );
+            })
           ) : (
-            <div className="p-20 text-center card-xp border-dashed">
-              <AlertCircle size={48} className="mx-auto text-text-2/10 mb-6" />
-              <p className="text-text-2 font-black uppercase tracking-[0.5em] text-[10px]">Territórios Não Mapeados</p>
+            <div className="col-span-full py-40 text-center border-2 border-dashed border-border rounded-[40px] opacity-10">
+              <p className="text-[12px] font-black text-text-2 uppercase tracking-[0.8em]">Nenhuma unidade vinculada ao seu ID</p>
             </div>
           )}
         </div>
@@ -165,84 +169,84 @@ export const TechnicianPortal = () => {
   }
 
   return (
-    <div className="max-w-md mx-auto space-y-4 animate-in fade-in slide-in-from-right-4 duration-500 pb-20">
+    <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500 pb-24">
       <button 
         onClick={() => setSelectedContractId(null)}
-        className="flex items-center gap-1.5 text-text-2 hover:text-text-1 transition-all group px-2 h-7 bg-surface/50 rounded border border-border w-fit"
+        className="flex items-center gap-2 text-text-2 hover:text-text-1 transition-all group px-5 h-11 bg-surface rounded-2xl border border-border w-fit hover:shadow-xl hover:shadow-primary/5"
       >
-        <ChevronLeft size={10} />
-        <span className="text-[7px] font-black uppercase tracking-widest">Trocar Unidade</span>
+        <ChevronLeft size={16} strokeWidth={3} />
+        <span className="text-[10px] font-black uppercase tracking-widest">TROCAR UNIDADE DE OPERAÇÃO</span>
       </button>
 
-      <header className="flex flex-col sm:flex-row items-end justify-between gap-4 border-b border-border/50 pb-4">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-1.5 text-primary">
-             <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-             <span className="text-[7px] font-black uppercase tracking-widest">Catálogo Mestre de Recursos / Sincronização</span>
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-10 border-b border-border pb-10">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3 mb-3">
+             <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_12px_rgba(var(--rdy-primary-rgb),0.6)] animate-pulse" />
+             <span className="text-[11px] font-black uppercase tracking-[0.3em] text-text-2/40 italic">SINCRONIZAÇÃO TÁTICA DE ATIVOS</span>
           </div>
-          <h2 className="text-xl font-black text-text-1 italic tracking-tighter uppercase leading-none">
+          <h2 className="text-4xl font-black text-text-1 italic tracking-tighter uppercase leading-none">
             {selectedContract?.name}
           </h2>
-          <div className="flex items-center gap-1.5">
-             <p className="px-1.5 py-0.5 bg-primary/10 text-primary text-[8px] font-black uppercase tracking-widest rounded border border-primary/10">{selectedContract?.code}</p>
-             <p className="px-1.5 py-0.5 bg-surface/50 text-text-2 text-[7px] font-black uppercase tracking-widest rounded border border-border max-w-[120px] truncate">{selectedContract?.client}</p>
+          <div className="flex items-center gap-3 mt-6">
+             <p className="px-3 py-1.5 bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest rounded-xl border border-primary/20">{selectedContract?.code}</p>
+             <p className="px-3 py-1.5 bg-surface text-text-2/60 text-[9px] font-black uppercase tracking-widest rounded-xl border border-border">{selectedContract?.client}</p>
           </div>
         </div>
         <div className="text-right">
-          <p className="text-[7px] font-black text-text-2 uppercase tracking-widest leading-none">Data do Contexto</p>
-          <p className="text-sm font-black text-text-1 italic leading-none mt-1">{format(new Date(), 'dd.MM.yyyy')}</p>
+          <p className="text-[9px] font-black text-text-2/20 uppercase tracking-[0.3em] leading-none mb-3">CICLO OPERACIONAL</p>
+          <p className="text-2xl font-black text-text-1 italic leading-none tracking-tighter">{format(new Date(), 'dd.MM.yyyy')}</p>
         </div>
       </header>
 
-      <div className="grid grid-cols-1 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {contractSuppliesLinked.map(link => {
           const supply = link.type;
           const data = entryData[link.supply_type_id] || { current_stock: 0, incoming: 0, outgoing: 0 };
           const submitted = isAlreadySubmitted(link.supply_type_id);
 
           return (
-            <div key={link.supply_type_id} className={`card-xp p-3 space-y-3 border-l-2 transition-all ${submitted ? 'border-l-success' : 'border-l-transparent'}`}>
+            <div key={link.supply_type_id} className={`bg-surface border p-8 rounded-[40px] space-y-6 shadow-sm transition-all hover:shadow-xl hover:shadow-primary/5 ${submitted ? 'border-success/30' : 'border-border'}`}>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className={`w-7 h-7 rounded flex items-center justify-center border ${supply?.category === 'Toner' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-white/5 text-text-2/40 border-white/5'}`}>
-                    {supply?.category === 'Toner' ? <Droplets size={14} /> : supply?.category === 'Papel' ? <Layers size={14} /> : <Activity size={14} />}
+                <div className="flex items-center gap-5">
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border ${supply?.category === 'Toner' ? 'bg-primary text-black border-black/5' : 'bg-bg text-text-2/40 border-border'}`}>
+                    {supply?.category === 'Toner' ? <Droplets size={24} strokeWidth={2.5} /> : supply?.category === 'Papel' ? <Layers size={24} strokeWidth={2.5} /> : <Activity size={24} strokeWidth={2.5} />}
                   </div>
                   <div>
-                    <h3 className="text-[10px] font-black text-text-1 uppercase tracking-tight leading-none">{supply?.name}</h3>
-                    <p className="text-[7px] font-black text-text-2/40 uppercase tracking-widest mt-1">LIM: {link.min_stock} {supply?.unit}</p>
+                    <h3 className="text-lg font-black text-text-1 uppercase tracking-tight leading-none">{supply?.name}</h3>
+                    <p className="text-[10px] font-black text-text-2 uppercase tracking-[0.2em] mt-2 italic opacity-30">OBJETIVO: {link.min_stock} {supply?.unit}</p>
                   </div>
                 </div>
                 {submitted && (
-                  <div className="px-1.5 py-0.5 bg-success/10 text-success border border-success/20 rounded text-[6px] font-black uppercase tracking-widest flex items-center gap-1">
-                    <CheckCircle2 size={8} /> SINCRONIZADO
+                  <div className="px-4 py-1.5 bg-success shadow-lg shadow-success/20 text-white rounded-xl text-[8px] font-black uppercase tracking-[0.2em] flex items-center gap-2">
+                    <CheckCircle2 size={12} strokeWidth={3} /> SINCRONIZADO
                   </div>
                 )}
               </div>
 
-              <div className="grid grid-cols-3 gap-2 mt-2">
-                <div className="space-y-1">
-                  <label className="text-[7px] font-black text-text-2 uppercase tracking-widest ml-1">ESTOQUE</label>
+              <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border">
+                <div className="space-y-3">
+                  <label className="text-[9px] font-black text-text-2/40 uppercase tracking-widest ml-1">ESTOQUE</label>
                   <input
                     type="number"
-                    className="rdy-input h-7 text-center text-[10px] bg-white/5 border-white/5"
+                    className="w-full h-14 bg-bg border border-border rounded-2xl text-center text-lg font-black italic text-text-1 outline-none focus:bg-surface focus:border-text-1 transition-all"
                     value={data.current_stock || ''}
                     onChange={(e) => handleInputChange(link.supply_type_id, 'current_stock', e.target.value)}
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[7px] font-black text-success uppercase tracking-widest ml-1">REPOS</label>
+                <div className="space-y-3">
+                  <label className="text-[9px] font-black text-success uppercase tracking-widest ml-1 opacity-50">REPOS</label>
                   <input
                     type="number"
-                    className="rdy-input h-7 text-center text-[10px] border-success/20 bg-success/5"
+                    className="w-full h-14 bg-success/5 border border-success/10 rounded-2xl text-center text-lg font-black italic text-success outline-none focus:bg-surface focus:border-success transition-all"
                     value={data.incoming || ''}
                     onChange={(e) => handleInputChange(link.supply_type_id, 'incoming', e.target.value)}
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[7px] font-black text-danger uppercase tracking-widest ml-1">USO</label>
+                <div className="space-y-3">
+                  <label className="text-[9px] font-black text-danger uppercase tracking-widest ml-1 opacity-50">CONSUMO</label>
                   <input
                     type="number"
-                    className="rdy-input h-7 text-center text-[10px] border-danger/20 bg-danger/5"
+                    className="w-full h-14 bg-danger/5 border border-danger/10 rounded-2xl text-center text-lg font-black italic text-danger outline-none focus:bg-surface focus:border-danger transition-all"
                     value={data.outgoing || ''}
                     onChange={(e) => handleInputChange(link.supply_type_id, 'outgoing', e.target.value)}
                   />
@@ -253,17 +257,17 @@ export const TechnicianPortal = () => {
         })}
       </div>
 
-      <div className="pt-4 sticky bottom-4 z-10 max-w-md mx-auto w-full px-4">
-        <button 
-          onClick={handleSubmit}
-          className="rdy-btn-primary w-full h-10 rounded text-[10px] font-black shadow-glow group"
-        >
-          <Save size={14} />
-          <span>Confirmar Sincronização</span>
-        </button>
+      <div className="fixed bottom-10 left-0 right-0 z-[100] px-10">
+        <div className="max-w-6xl mx-auto">
+          <button 
+            onClick={handleSubmit}
+            className="w-full h-16 bg-text-1 text-bg rounded-3xl font-black uppercase text-xs tracking-[0.3em] shadow-2xl hover:bg-primary hover:text-black hover:scale-[1.02] transition-all flex items-center justify-center gap-4 active:scale-95"
+          >
+            <Save size={20} strokeWidth={3} />
+            <span>CONFIRMAR SINCRONIZAÇÃO TÁTICA</span>
+          </button>
+        </div>
       </div>
     </div>
   );
 };
-
-

@@ -46,8 +46,8 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4 font-sans selection:bg-primary selection:text-black">
-      <div className="w-full max-w-[440px] border border-white/5 rounded-[40px] px-8 py-12 flex flex-col items-center shadow-2xl relative overflow-hidden">
+    <div className="min-h-screen bg-bg flex items-center justify-center p-4 font-sans selection:bg-primary selection:text-black">
+      <div className="w-full max-w-[440px] border border-border rounded-[40px] px-8 py-12 flex flex-col items-center shadow-2xl relative overflow-hidden bg-surface">
         {/* Subtle background glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-24 bg-primary/10 blur-[100px] pointer-events-none" />
 
@@ -62,10 +62,10 @@ export const LoginPage = () => {
         {/* Brand Header */}
         <div className="text-center mb-12">
           <h1 className="text-[38px] font-black tracking-tighter leading-none mb-3 flex items-center justify-center gap-2">
-            <span className="text-white">RDY</span>
+            <span className="text-text-1">RDY</span>
             <span className="text-primary italic">SUPPLY</span>
           </h1>
-          <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.5em] leading-none text-center w-full">
+          <p className="text-[10px] font-black text-text-2/40 uppercase tracking-[0.5em] leading-none text-center w-full">
             Investment & Performance
           </p>
         </div>
@@ -74,14 +74,14 @@ export const LoginPage = () => {
         <form onSubmit={handleLogin} className="w-full space-y-6">
           <div className="space-y-4">
             <div>
-              <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-2 mb-2 block">Terminal de Acesso</label>
+              <label className="text-[10px] font-black text-text-2/40 uppercase tracking-[0.2em] ml-2 mb-2 block">Terminal de Acesso</label>
               <div className="relative group">
                 <div className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20">
                   <Mail size={20} />
                 </div>
                 <input 
                   type="email" 
-                  className="w-full h-16 rounded-[20px] bg-[#0A0A0A] border border-white/5 pl-14 pr-6 text-sm text-white font-bold focus:border-primary/40 focus:bg-[#0F0F0F] outline-none transition-all placeholder:text-white/10" 
+                  className="w-full h-16 rounded-[20px] bg-bg border border-border pl-14 pr-6 text-sm text-text-1 font-bold focus:border-primary/40 focus:bg-surface outline-none transition-all placeholder:text-text-2/20" 
                   placeholder="Seu ID Corporativo"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -90,14 +90,14 @@ export const LoginPage = () => {
             </div>
 
             <div>
-              <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-2 mb-2 block">Chave de Segurança</label>
+              <label className="text-[10px] font-black text-text-2/40 uppercase tracking-[0.2em] ml-2 mb-2 block">Chave de Segurança</label>
               <div className="relative group">
                 <div className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20">
                   <Lock size={20} />
                 </div>
                 <input 
                   type="password" 
-                  className="w-full h-16 rounded-[20px] bg-[#0A0A0A] border border-white/5 pl-14 pr-6 text-sm text-white font-bold focus:border-primary/40 focus:bg-[#0F0F0F] outline-none transition-all placeholder:text-white/10" 
+                  className="w-full h-16 rounded-[20px] bg-bg border border-border pl-14 pr-6 text-sm text-text-1 font-bold focus:border-primary/40 focus:bg-surface outline-none transition-all placeholder:text-text-2/20" 
                   placeholder="********"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -126,7 +126,7 @@ export const LoginPage = () => {
 
         {/* Footer Branding */}
         <div className="mt-12 text-center">
-          <p className="text-[9px] font-black text-white/10 uppercase tracking-[0.3em]">
+          <p className="text-[9px] font-black text-text-2/20 uppercase tracking-[0.3em]">
             Conexão Segura RDY Global Data Center
           </p>
         </div>

@@ -20,7 +20,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: async (profile) => {
     set({ isLoading: true });
     // Simulando delay de segurança
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    await new Promise((resolve) => setTimeout(resolve, 200));
     
     set({ user: profile, isLoading: false });
     localStorage.setItem('rdy-user', JSON.stringify(profile));
