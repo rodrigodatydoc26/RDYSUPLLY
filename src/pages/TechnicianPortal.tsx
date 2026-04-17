@@ -108,10 +108,14 @@ export const TechnicianPortal = () => {
       <div className="max-w-md mx-auto space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <header className="space-y-1 text-center border-b border-border pb-4">
           <div className="flex flex-col items-center gap-1.5">
+             <div className="flex items-center gap-2 mb-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--rdy-primary-rgb),0.5)]" />
+                <p className="text-[9px] font-black text-text-2 uppercase tracking-[0.3em]">Catálogo Mestre de Recursos</p>
+             </div>
              <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-black">
                <UserCheck size={16} />
              </div>
-             <p className="text-[7px] font-black text-text-2 uppercase tracking-widest leading-none">Núcleo de Serviço de Campo</p>
+             <p className="text-[7px] font-black text-text-2 uppercase tracking-widest leading-none mt-1">Núcleo de Serviço de Campo</p>
           </div>
           <h2 className="text-xl font-black text-text-1 italic tracking-tighter uppercase leading-none mt-1">OPERAÇÃO <span className="text-primary italic">DE CAMPO</span></h2>
           <p className="text-text-2 font-black text-[7px] uppercase tracking-widest mt-2 opacity-40">{format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}</p>
@@ -174,7 +178,7 @@ export const TechnicianPortal = () => {
         <div className="space-y-1.5">
           <div className="flex items-center gap-1.5 text-primary">
              <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-             <span className="text-[7px] font-black uppercase tracking-widest">Sincronização de Unidade</span>
+             <span className="text-[7px] font-black uppercase tracking-widest">Catálogo Mestre de Recursos / Sincronização</span>
           </div>
           <h2 className="text-xl font-black text-text-1 italic tracking-tighter uppercase leading-none">
             {selectedContract?.name}

@@ -99,100 +99,98 @@ export const Supplies = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
-      {/* Header Section */}
+      {/* Header Section - Final Layout Standard */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-            <p className="text-text-2 text-[9px] font-black uppercase tracking-[0.3em]">Catálogo Mestre de Recursos</p>
+            <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--rdy-primary-rgb),0.6)]" />
+            <p className="text-text-2 text-[10px] font-black uppercase tracking-[0.3em] leading-none">Catálogo Mestre de Recursos</p>
           </div>
-          <h2 className="text-3xl font-black text-text-1 italic tracking-tighter uppercase leading-none">
+          <h2 className="text-4xl font-black text-text-1 italic tracking-tighter uppercase leading-none">
             INSUMOS <span className="text-text-2/40 font-light not-italic">E ATIVOS</span>
           </h2>
         </div>
         {user?.role !== 'technician' && (
           <button 
-            className="h-12 px-8 bg-primary text-black rounded-xl font-black italic uppercase text-[11px] tracking-widest shadow-xl shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
+            className="h-12 px-10 bg-primary text-black rounded-2xl font-black italic uppercase text-[11px] tracking-widest shadow-xl shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
             onClick={openAddModal}
           >
-            <Plus size={16} strokeWidth={3} />
-            <span>Novo {activeTab === 'supplies' ? 'Insumo' : 'Equipamento'}</span>
+            <Plus size={20} strokeWidth={3} />
+            <span>+ Novo Insumo</span>
           </button>
         )}
       </div>
 
-      {/* Navigation Tabs - Elite Style */}
-      <div className="flex items-center gap-3 p-1.5 bg-surface/50 border border-border/40 rounded-2xl w-fit shadow-inner">
-        <button 
-          onClick={() => { setActiveTab('supplies'); setSearchTerm(''); }}
-          className={`flex items-center gap-3 px-6 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${activeTab === 'supplies' ? 'bg-primary text-black shadow-lg shadow-primary/20' : 'text-text-2/60 hover:text-text-1 hover:bg-white/5'}`}
-        >
-          <Box size={16} strokeWidth={activeTab === 'supplies' ? 2.5 : 2} />
-          Insumos
-        </button>
-        <button 
-          onClick={() => { setActiveTab('equipment'); setSearchTerm(''); }}
-          className={`flex items-center gap-3 px-6 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${activeTab === 'equipment' ? 'bg-primary text-black shadow-lg shadow-primary/20' : 'text-text-2/60 hover:text-text-1 hover:bg-white/5'}`}
-        >
-          <Printer size={16} strokeWidth={activeTab === 'equipment' ? 2.5 : 2} />
-          Equipamentos
-        </button>
-      </div>
-
-      {/* Content Container */}
-      <div className="bg-white border border-border/60 rounded-[32px] overflow-hidden shadow-2xl">
-        {/* Search Bar - Elite Style */}
-        <div className="px-8 py-6 bg-surface/10 border-b border-border/40">
-           <div className="relative group w-full max-w-2xl">
-              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-text-2/30 group-focus-within:text-primary transition-colors" size={18} />
-              <input
-                type="text"
-                placeholder={`FILTRAR ${activeTab === 'supplies' ? 'INSUMOS' : 'MODELOS'}...`}
-                className="w-full h-14 bg-surface/40 border border-hidden rounded-2xl pl-16 pr-8 text-[11px] uppercase font-bold tracking-[0.1em] text-text-1 placeholder-text-2/20 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-           </div>
+      {/* Control Bar - Layout Inicial Style */}
+      <div className="flex flex-col lg:flex-row gap-4 items-center">
+        <div className="flex items-center gap-2 p-1 bg-surface/50 border border-border/40 rounded-xl w-fit backdrop-blur-md">
+          <button 
+            onClick={() => { setActiveTab('supplies'); setSearchTerm(''); }}
+            className={`flex items-center gap-3 px-6 h-10 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === 'supplies' ? 'bg-primary text-black shadow-md shadow-primary/10' : 'text-text-2/60 hover:text-text-1 hover:bg-white/5'}`}
+          >
+            <Box size={14} strokeWidth={activeTab === 'supplies' ? 2.5 : 2} />
+            Insumos
+          </button>
+          <button 
+            onClick={() => { setActiveTab('equipment'); setSearchTerm(''); }}
+            className={`flex items-center gap-3 px-6 h-10 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === 'equipment' ? 'bg-primary text-black shadow-md shadow-primary/10' : 'text-text-2/60 hover:text-text-1 hover:bg-white/5'}`}
+          >
+            <Printer size={14} strokeWidth={activeTab === 'equipment' ? 2.5 : 2} />
+            Equipamentos
+          </button>
         </div>
 
-        {/* High Density Table */}
+        <div className="flex-1 relative w-full group">
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-text-2/30 group-focus-within:text-primary transition-colors" size={17} />
+          <input
+            type="text"
+            placeholder="FILTRAR INSUMOS..."
+            className="w-full h-12 bg-surface/40 border border-border/40 rounded-xl pl-14 pr-8 text-[11px] uppercase font-black tracking-[0.1em] text-text-1 placeholder-text-2/20 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-mono"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* High Density Table Container */}
+      <div className="bg-white border border-border/60 rounded-[28px] overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-border text-text-2 text-[8px] font-black uppercase tracking-[0.2em] bg-surface/20">
-                <th className="px-8 py-5">{activeTab === 'supplies' ? 'Identificação' : 'Nome do Modelo'}</th>
-                <th className="px-8 py-5">{activeTab === 'supplies' ? 'Categoria' : 'Fabricante'}</th>
-                {activeTab === 'supplies' && <th className="px-8 py-5">Rendimento/Cap</th>}
-                <th className="px-8 py-5 text-right">Tarefa</th>
+              <tr className="border-b border-border text-text-2/30 text-[8.5px] font-black uppercase tracking-[0.4em] bg-white">
+                <th className="px-10 py-5">Identificação</th>
+                <th className="px-10 py-5">Categoria</th>
+                {activeTab === 'supplies' && <th className="px-10 py-5">Rendimento/Cap</th>}
+                <th className="px-10 py-5 text-right">Tarefa</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/20">
+            <tbody className="divide-y divide-border/10">
               {activeTab === 'supplies' ? (
                 filteredSupplies.map(supply => (
-                  <tr key={supply.id} className="group hover:bg-black/[0.01] transition-all">
-                    <td className="px-8 py-5">
+                  <tr key={supply.id} className="group hover:bg-primary/[0.01] transition-all">
+                    <td className="px-10 py-4">
                       <div>
-                        <p className="font-black text-text-1 uppercase tracking-tight text-sm leading-tight">{supply.name}</p>
-                        <p className="text-[9px] text-text-2 font-black uppercase tracking-widest mt-1 opacity-40">{supply.unit}</p>
+                        <p className="font-black text-text-1 uppercase tracking-tight text-[13px] leading-tight">{supply.name}</p>
+                        <p className="text-[8px] text-text-2 font-black uppercase tracking-[0.2em] mt-1 opacity-40">{supply.unit}</p>
                       </div>
                     </td>
-                    <td className="px-8 py-5">
+                    <td className="px-10 py-4">
                       <div className="flex items-center gap-3">
-                         <div className="px-3 py-1 bg-surface border border-border rounded-lg text-text-2 text-[9px] font-black uppercase tracking-widest shadow-sm">
-                            {supply.category} <span className="opacity-30 ml-2">{supply.color}</span>
+                         <div className="px-3 py-1 bg-surface border border-border/60 rounded-lg text-text-2 text-[8px] font-black uppercase tracking-widest">
+                            {supply.category} <span className="opacity-20 ml-2 font-medium">{supply.color}</span>
                          </div>
                       </div>
                     </td>
-                    <td className="px-8 py-5 font-black text-text-2/40 text-[11px] uppercase tracking-widest">
+                    <td className="px-10 py-4 font-black text-text-2/60 text-[11px] tracking-tight">
                       {supply.capacity} pg
                     </td>
-                    <td className="px-8 py-5">
-                      <div className="flex items-center justify-end gap-3">
-                         <button onClick={() => openEditModal(supply)} className="w-10 h-10 flex items-center justify-center text-text-2/20 hover:text-black hover:bg-surface rounded-xl border border-transparent hover:border-border transition-all">
-                           <Edit2 size={16} />
+                    <td className="px-10 py-4">
+                      <div className="flex items-center justify-end gap-1">
+                         <button onClick={() => openEditModal(supply)} className="p-2.5 text-text-2/20 hover:text-primary hover:bg-primary/10 rounded-xl transition-all">
+                           <Edit2 size={15} strokeWidth={2.5} />
                          </button>
-                         <button onClick={() => deleteSupplyType(supply.id)} className="w-10 h-10 flex items-center justify-center text-text-2/20 hover:text-danger hover:bg-danger/5 rounded-xl border border-transparent hover:border-danger/20 transition-all">
-                           <Trash2 size={16} />
+                         <button onClick={() => deleteSupplyType(supply.id)} className="p-2.5 text-text-2/20 hover:text-danger hover:bg-danger/10 rounded-xl transition-all">
+                           <Trash2 size={15} strokeWidth={2.5} />
                          </button>
                       </div>
                     </td>
@@ -200,20 +198,20 @@ export const Supplies = () => {
                 ))
               ) : (
                 filteredEquipment.map(model => (
-                  <tr key={model.id} className="group hover:bg-black/[0.01] transition-all">
-                    <td className="px-8 py-5">
-                      <p className="font-black text-text-1 uppercase tracking-tight text-sm leading-tight">{model.name}</p>
+                  <tr key={model.id} className="group hover:bg-primary/[0.01] transition-all">
+                    <td className="px-10 py-4">
+                      <p className="font-black text-text-1 uppercase tracking-tight text-[13px] leading-tight">{model.name}</p>
                     </td>
-                    <td className="px-8 py-5 text-[11px] font-black text-text-2/60 uppercase tracking-widest">
+                    <td className="px-10 py-4 text-[11px] font-black text-text-2/60 uppercase tracking-widest">
                       {model.brand}
                     </td>
-                    <td className="px-8 py-5">
-                      <div className="flex items-center justify-end gap-3">
-                         <button onClick={() => openEditModal(model)} className="w-10 h-10 flex items-center justify-center text-text-2/20 hover:text-black hover:bg-surface rounded-xl border border-transparent hover:border-border transition-all">
-                           <Edit2 size={16} />
+                    <td className="px-10 py-4">
+                      <div className="flex items-center justify-end gap-1">
+                         <button onClick={() => openEditModal(model)} className="p-2.5 text-text-2/20 hover:text-primary hover:bg-primary/10 rounded-xl transition-all">
+                           <Edit2 size={15} strokeWidth={2.5} />
                          </button>
-                         <button onClick={() => deleteEquipmentModel(model.id)} className="w-10 h-10 flex items-center justify-center text-text-2/20 hover:text-danger hover:bg-danger/5 rounded-xl border border-transparent hover:border-danger/20 transition-all">
-                           <Trash2 size={16} />
+                         <button onClick={() => deleteEquipmentModel(model.id)} className="p-2.5 text-text-2/20 hover:text-danger hover:bg-danger/10 rounded-xl transition-all">
+                           <Trash2 size={15} strokeWidth={2.5} />
                          </button>
                       </div>
                     </td>

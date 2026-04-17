@@ -5,43 +5,33 @@
   --rdy-primary: #F5C800;
   --rdy-primary-rgb: 245, 200, 0;
   
-  /* Shared Defaults */
-  --radius-xl: 6px;
-  --radius-2xl: 8px;
-  --radius-lg: 4px;
+  /* Shared Defaults - Refined for Industrial Layout */
+  --radius-xl: 12px;
+  --radius-2xl: 32px;
+  --radius-lg: 8px;
   --font-sans: "Outfit", ui-sans-serif, system-ui, -apple-system, sans-serif;
-}
 
-/* Dark Theme (Default) */
-:root, [data-theme="dark"] {
-  --color-bg: #000000;
-  --color-surface: #000000;
-  --color-text-1: #FFFFFF;
-  --color-text-2: #A0A0A0;
-  --color-border: rgba(255, 255, 255, 0.1);
-  --color-border-subtle: rgba(255, 255, 255, 0.05);
-  --glass-bg: rgba(0, 0, 0, 0.6);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --rdy-bg-mesh: radial-gradient(at 0% 0%, rgba(var(--rdy-primary-rgb), 0.03) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(0, 174, 239, 0.02) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(230, 0, 126, 0.02) 0px, transparent 50%),
-                radial-gradient(at 0% 100%, rgba(245, 200, 0, 0.02) 0px, transparent 50%);
-  color-scheme: dark;
-}
-
-/* Light Theme (RDY Control Style) */
-[data-theme="light"] {
+  /* Force Light Theme as the absolute standard (as per photos) */
   --color-bg: #FFFFFF;
-  --color-surface: #F9F9F9;
+  --color-surface: #FFFFFF;
   --color-text-1: #000000;
   --color-text-2: #71717A;
-  --color-border: rgba(0, 0, 0, 0.08);
-  --color-border-subtle: rgba(0, 0, 0, 0.03);
-  --glass-bg: rgba(255, 255, 255, 0.8);
+  --color-border: rgba(0, 0, 0, 0.05);
+  --color-border-subtle: rgba(0, 0, 0, 0.02);
+  --glass-bg: rgba(255, 255, 255, 0.9);
   --glass-border: rgba(0, 0, 0, 0.05);
   --rdy-bg-mesh: radial-gradient(at 0% 0%, rgba(var(--rdy-primary-rgb), 0.05) 0px, transparent 50%),
                 radial-gradient(at 100% 0%, rgba(0, 0, 0, 0.01) 0px, transparent 50%);
   color-scheme: light;
+}
+
+/* Maintain dark variables only for inner cards or specific contexts if needed, but root is light */
+[data-theme="dark"] {
+  --color-bg: #000000;
+  --color-surface: #0A0A0A;
+  --color-text-1: #FFFFFF;
+  --color-text-2: #A0A0A0;
+  --color-border: rgba(255, 255, 255, 0.1);
 }
 
 @theme {

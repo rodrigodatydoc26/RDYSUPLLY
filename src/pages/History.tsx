@@ -111,12 +111,12 @@ export const History = () => {
     <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-4 border-b border-border pb-3">
         <div>
-           <div className="flex items-center gap-2 mb-1">
-             <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-             <p className="text-[8px] font-black text-text-2 uppercase tracking-widest leading-none">Livro de Segurança e Conformidade</p>
+           <div className="flex items-center gap-2 mb-2">
+             <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--rdy-primary-rgb),0.6)]" />
+             <p className="text-[10px] font-black text-text-2 uppercase tracking-[0.3em] leading-none">Catálogo Mestre de Recursos</p>
            </div>
-           <h2 className="text-xl font-black text-text-1 italic tracking-tighter uppercase leading-none">
-             Trilha <span className="text-text-2/40">de Auditoria</span>
+           <h2 className="text-4xl font-black text-text-1 italic tracking-tighter uppercase leading-none">
+             HISTÓRICO <span className="text-text-2/40 font-light not-italic">OPERACIONAL</span>
            </h2>
         </div>
         <div className="flex flex-wrap items-center gap-2">

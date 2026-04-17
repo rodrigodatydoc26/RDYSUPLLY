@@ -40,6 +40,7 @@ interface DataState {
   deleteEquipmentModel: (id: string) => void;
 
   updateContractSupplies: (contractId: string, supplies: Omit<ContractSupply, 'id'>[]) => void;
+  updateMinStock: (contractSupplyId: string, minStock: number) => void;
   deleteSupplyType: (id: string) => void;
   _hasHydrated: boolean;
   setHasHydrated: (state: boolean) => void;
@@ -160,6 +161,13 @@ export const useDataStore = create<DataState>()(
         const filtered = state.contractSupplies.filter(cs => cs.contract_id !== contractId);
         return { contractSupplies: [...filtered, ...supplies.map(s => ({ ...s, id: uid() }))] };
       }),
+
+      updateMinStock: (contractSupplyId, minStock) => set((state) => ({
+        contractSupplies: state.contractSupplies.map(cs => 
+          cs.id === contractSupplyId ? { ...cs, min_stock: minStock } : cs
+        )
+      })),
+
       _hasHydrated: false,
       setHasHydrated: (state) => set({ _hasHydrated: state }),
       wipeDatabase: () => set((state) => {

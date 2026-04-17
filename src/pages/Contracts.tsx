@@ -141,11 +141,11 @@ export const Contracts = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-            <p className="text-text-2 text-[9px] font-black uppercase tracking-[0.3em]">Camada de Gestão de Acordos</p>
+            <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--rdy-primary-rgb),0.6)]" />
+            <p className="text-text-2 text-[10px] font-black uppercase tracking-[0.3em] leading-none">Catálogo Mestre de Recursos</p>
           </div>
-          <h2 className="text-3xl font-black text-text-1 italic tracking-tighter uppercase leading-none">
-            CONTRATOS <span className="text-text-2/40 font-light not-italic">E OPERAÇÕES</span>
+          <h2 className="text-4xl font-black text-text-1 italic tracking-tighter uppercase leading-none">
+            GESTÃO <span className="text-text-2/40 font-light not-italic">DE CONTRATOS</span>
           </h2>
         </div>
         {user?.role !== 'technician' && (

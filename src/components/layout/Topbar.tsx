@@ -53,120 +53,57 @@ export const Topbar = () => {
   }, [stockEntries, contracts, supplyTypes, contractSupplies]);
 
   return (
-    <header className={`h-20 fixed top-0 right-0 z-40 px-8 flex items-center justify-between pointer-events-none border-b border-border/40 bg-bg/70 backdrop-blur-xl transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'left-[90px]' : 'left-[300px]'}`}>
-      <div className="flex items-center gap-4 bg-surface/50 px-5 py-2.5 rounded-2xl border border-border focus-within:border-primary/40 focus-within:bg-surface transition-all group pointer-events-auto w-[400px]">
-        <Search size={16} strokeWidth={2.5} className="text-text-2/40 group-focus-within:text-primary transition-colors" />
+    <header className={`h-16 fixed top-0 right-0 z-40 px-8 flex items-center justify-between border-b border-black/5 bg-white/80 backdrop-blur-xl transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'left-[80px]' : 'left-[280px]'}`}>
+      <div className="flex items-center gap-4 bg-zinc-50 border border-black/5 px-4 py-2 rounded-full w-[380px] focus-within:bg-white focus-within:ring-1 focus-within:ring-primary/20 transition-all pointer-events-auto">
+        <Search size={14} className="text-zinc-400" />
         <input 
           type="text" 
-          placeholder="PESQUISAR ATIVOS OU CONTRATOS..." 
-          className="bg-transparent border-none outline-none text-[10px] w-full font-black uppercase tracking-widest text-text-1 placeholder-text-2/20"
+          placeholder="PESQUISAR..." 
+          className="bg-transparent border-none outline-none text-[10px] w-full font-black uppercase tracking-widest text-black placeholder-zinc-300"
         />
       </div>
 
-      <div className="flex items-center gap-10 pointer-events-auto">
-        {/* Metrics Section */}
-        <div className="hidden lg:flex items-center gap-8">
-           <div className="flex flex-col items-end border-r border-border pr-6">
-              <p className="text-[7px] font-black text-text-2/40 uppercase tracking-widest leading-none mb-1.5">Unidades Operacionais</p>
-              <div className="flex items-baseline gap-2">
-                 <span className="text-sm font-black text-text-1 tracking-tighter">{stats.totalContracts}</span>
-                 <p className="text-[7px] font-black text-primary uppercase">Alpha</p>
-              </div>
-           </div>
-           
-           <div className="flex flex-col items-end">
-              <p className="text-[7px] font-black text-text-2/40 uppercase tracking-widest leading-none mb-1.5">Riscos de Estoque</p>
-              <div className="flex items-baseline gap-2">
-                 <span className={`text-sm font-black tracking-tighter ${stats.criticalCount > 0 ? 'text-danger' : 'text-success'}`}>{stats.criticalCount}</span>
-                 <AlertTriangle size={10} className={stats.criticalCount > 0 ? 'text-danger' : 'text-success/40'} />
-              </div>
-           </div>
+      <div className="flex items-center gap-8 pointer-events-auto">
+        {/* Aesthetic Sync Dots (CMYK) */}
+        <div className="flex items-center gap-1.5 p-1.5 bg-zinc-50 rounded-xl border border-black/5">
+          {themes.map((t) => (
+            <button
+              key={t.color}
+              onClick={() => setThemeColor(t.color)}
+              className={`w-3.5 h-3.5 rounded-md transition-all ${themeColor === t.color ? 'shadow-sm ring-1 ring-primary/20' : 'opacity-20 hover:opacity-100'}`}
+              style={{ backgroundColor: t.color }}
+            />
+          ))}
         </div>
 
-        <div className="w-px h-8 bg-border" />
+        <button 
+          onClick={() => setIsAlertsOpen(!isAlertsOpen)}
+          className="relative h-10 w-10 flex items-center justify-center rounded-xl bg-zinc-50 border border-black/5 text-zinc-400 hover:text-black transition-all"
+        >
+          <Bell size={18} />
+          {alerts.length > 0 && (
+            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-danger rounded-full ring-2 ring-white"></span>
+          )}
+        </button>
 
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-1.5 p-1 bg-surface/50 rounded-xl border border-border">
-            {themes.map((t) => (
-              <button
-                key={t.color}
-                onClick={() => setThemeColor(t.color)}
-                className={`w-4 h-4 rounded-lg transition-all hover:scale-110 ${themeColor === t.color ? 'ring-2 ring-primary/40 shadow-lg' : 'opacity-20 hover:opacity-100'}`}
-                style={{ backgroundColor: t.color }}
-              />
-            ))}
+        <div className="flex items-center gap-4 pl-4 border-l border-black/5">
+          <div className="text-right">
+             <p className="text-[7px] font-black text-black/20 uppercase tracking-[0.2em] leading-none mb-1">Contexto de Segurança</p>
+             <p className="text-[10px] font-black text-black tracking-widest leading-none">{format(new Date(), 'dd.MM.yy')}</p>
           </div>
 
-          <div className="relative">
-            <button 
-              onClick={() => setIsAlertsOpen(!isAlertsOpen)}
-              className={`relative h-12 w-12 flex items-center justify-center rounded-2xl border transition-all ${isAlertsOpen ? 'bg-primary/10 border-primary/40 text-primary shadow-xl shadow-primary/10' : 'bg-surface border-border text-text-2 hover:border-text-2/40 hover:text-text-1'}`}
-            >
-              <Bell size={20} strokeWidth={2.5} />
-              {alerts.length > 0 && (
-                <span className="absolute top-3 right-3 w-2 h-2 bg-danger rounded-full ring-4 ring-bg animate-pulse shadow-lg shadow-danger/40"></span>
-              )}
-            </button>
-
-            {isAlertsOpen && (
-              <div className="absolute right-0 mt-4 w-96 bg-surface border border-border rounded-3xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-                <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-white/[0.02]">
-                  <div>
-                    <h4 className="text-[10px] text-text-1 font-black uppercase tracking-widest">Painel de Alertas</h4>
-                    <p className="text-[7px] text-text-2/40 font-bold uppercase tracking-widest mt-1">GDC Real-time Stream</p>
-                  </div>
-                  <div className="px-3 py-1 bg-danger/10 border border-danger/20 text-danger rounded-lg text-[8px] font-black uppercase tracking-widest">
-                    {alerts.length} Críticos
-                  </div>
-                </div>
-                <div className="max-h-[400px] overflow-y-auto scroll-elite">
-                  {alerts.length > 0 ? alerts.map((alert) => (
-                    <div key={alert.id} className="px-6 py-4 border-b border-border/40 last:border-none hover:bg-white/[0.03] transition-colors cursor-pointer group">
-                      <div className="flex gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-danger/10 text-danger/40 flex items-center justify-center shrink-0 group-hover:text-danger group-hover:bg-danger/20 transition-all">
-                          <AlertTriangle size={20} />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[11px] font-black text-text-1 uppercase truncate leading-tight tracking-tight">{alert.contractName}</p>
-                          <p className="text-[9px] text-text-2 mt-1.5 font-bold uppercase tracking-widest flex items-center gap-2">
-                             {alert.supplyName} 
-                             <span className="w-1 h-1 rounded-full bg-border" />
-                             SALDO: <span className="text-danger font-black">{alert.stock}</span>
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )) : (
-                    <div className="py-20 text-center opacity-20">
-                      <CheckCircle2 size={40} strokeWidth={1} className="mx-auto mb-4" />
-                      <p className="text-[10px] font-black uppercase tracking-[0.4em]">Estoque Nominal Garantido</p>
-                    </div>
-                  )}
-                </div>
-                <div className="px-6 py-4 bg-white/[0.02] text-center border-t border-border group">
-                  <button className="text-[9px] font-black text-primary uppercase tracking-[.2em] group-hover:underline">Limpar Logs do Sistema</button>
-                </div>
-              </div>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-4 border-l border-border pl-6 relative">
-             {/* Security Context Tag */}
-             <div className="absolute -top-7 right-0 text-right">
-                <p className="text-[7px] font-black text-text-2/40 uppercase tracking-[0.3em] leading-none">Contexto de Segurança</p>
-                <p className="text-[10px] font-black text-text-1 mt-1 tracking-widest">{format(new Date(), 'dd.MM.yy')}</p>
-             </div>
-
+          <div className="flex items-center gap-3">
              <div className="flex flex-col items-end">
-                <p className="text-[8px] font-black text-text-1 italic uppercase leading-none">{user?.name}</p>
-                <div className="flex items-center gap-2 mt-1.5">
-                   <div className="w-1.5 h-1.5 rounded-full bg-success shadow-[0_0_8px_rgba(var(--rdy-success-rgb),0.5)]" />
-                   <p className="text-[7px] font-black text-text-2/40 uppercase tracking-[0.2em]">{user?.role}</p>
+                <p className="text-[9px] font-black text-black uppercase leading-none">{user?.name}</p>
+                <div className="flex items-center gap-1.5 mt-1 border-t border-black/5 pt-1">
+                   <div className="w-1 h-1 rounded-full bg-success" />
+                   <p className="text-[7px] font-black text-black/20 uppercase tracking-widest">{user?.role}</p>
                 </div>
              </div>
+             
              <button 
                onClick={logout}
-               className="h-10 w-10 rounded-xl bg-surface border border-border flex items-center justify-center text-text-2 hover:text-danger hover:border-danger transition-all shadow-sm"
+               className="h-10 w-10 rounded-xl bg-zinc-50 border border-black/5 flex items-center justify-center text-zinc-400 hover:text-danger hover:border-danger/20 transition-all"
              >
                <LogOut size={16} />
              </button>

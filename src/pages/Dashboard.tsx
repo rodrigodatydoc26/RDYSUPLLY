@@ -63,15 +63,15 @@ export const Dashboard = () => {
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-700">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-border pb-4">
         <div>
-          <div className="flex items-center gap-2.5 mb-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-            <p className="text-text-2 text-[9px] font-black uppercase tracking-[0.4em]">Painel Inteligente em Tempo Real</p>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--rdy-primary-rgb),0.6)]" />
+            <p className="text-[10px] font-black text-black/20 uppercase tracking-[0.3em] leading-none">Catálogo Mestre de Recursos</p>
           </div>
-            <h2 className="text-xl font-black text-text-1 italic tracking-tighter uppercase leading-none">
-              Status <span className="text-text-2/40">Operacional</span>
-            </h2>
-            <p className="text-[9px] font-black text-text-2 uppercase tracking-widest mt-1 opacity-60">Plataforma de Inteligência RDY</p>
-          </div>
+          <h2 className="text-4xl font-black text-black italic tracking-tighter uppercase leading-none">
+            STATUS <span className="text-black/20 font-light not-italic">OPERACIONAL</span>
+          </h2>
+          <p className="text-[10px] font-black text-black/10 uppercase tracking-[0.2em] mt-2">Interface de Inteligência de Ativos RDY</p>
+        </div>
           <div className="flex bg-surface/50 p-0.5 rounded border border-border">
              <div className="px-3 py-1 flex items-center gap-2">
                 <Box size={10} className="text-primary/60" />
