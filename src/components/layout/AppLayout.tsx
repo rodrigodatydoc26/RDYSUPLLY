@@ -5,6 +5,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useDataStore } from '../../store/useDataStore';
 import { Navigate } from 'react-router-dom';
 import { useThemeStore } from '../../store/useThemeStore';
+import { useUIStore } from '../../store/useUIStore';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -13,7 +14,7 @@ interface AppLayoutProps {
 export const AppLayout = ({ children }: AppLayoutProps) => {
   const { user, isLoading, themeColor } = useAuthStore();
   const { _hasHydrated } = useDataStore();
-  const { theme } = useThemeStore();
+  const { isSidebarCollapsed } = useUIStore();
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -44,8 +45,11 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
   return (
     <div className="min-h-screen bg-bg">
       <Sidebar />
-      <div className="pl-[190px]">
+      <div 
+        className={`transition-all duration-300 ${isSidebarCollapsed ? 'pl-[80px]' : 'pl-[260px]'}`}
+      >
         <Topbar />
+
         <main className="pt-14 px-5 pb-8 min-h-screen">
           <div className="max-w-[1400px] mx-auto">
             {children}

@@ -10,7 +10,10 @@ const themes = [
   { name: 'Ciano', color: '#00AEEF' },
 ];
 
+import { useUIStore } from '../../store/useUIStore';
+
 export const Topbar = () => {
+  const { isSidebarCollapsed } = useUIStore();
   const { stockEntries, contracts, supplyTypes, contractSupplies } = useDataStore();
   const { themeColor, setThemeColor } = useAuthStore();
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
@@ -29,7 +32,7 @@ export const Topbar = () => {
   }, [stockEntries, contracts, supplyTypes, contractSupplies]);
 
   return (
-    <header className="h-12 fixed top-0 right-0 left-[190px] z-40 px-5 flex items-center justify-between pointer-events-none border-b border-border/50 bg-bg/50 backdrop-blur-md">
+    <header className={`h-12 fixed top-0 right-0 z-40 px-5 flex items-center justify-between pointer-events-none border-b border-border/50 bg-bg/50 backdrop-blur-md transition-all duration-300 ${isSidebarCollapsed ? 'left-[80px]' : 'left-[260px]'}`}>
       <div className="flex items-center gap-2 bg-surface/50 px-3 py-1 rounded border border-border focus-within:border-primary/40 transition-all group pointer-events-auto w-60">
         <Search size={12} strokeWidth={2} className="text-text-2/40 group-focus-within:text-primary transition-colors" />
         <input 
