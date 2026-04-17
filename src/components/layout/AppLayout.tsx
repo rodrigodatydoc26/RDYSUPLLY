@@ -4,41 +4,36 @@ import { Topbar } from './Topbar';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useDataStore } from '../../store/useDataStore';
 import { Navigate } from 'react-router-dom';
-import { useThemeStore } from '../../store/useThemeStore';
 import { useUIStore } from '../../store/useUIStore';
+import { cn } from '../ui/Base';
 
 interface AppLayoutProps {
   children: ReactNode;
 }
 
 export const AppLayout = ({ children }: AppLayoutProps) => {
-  const { user, isLoading, themeColor } = useAuthStore();
-  const { _hasHydrated } = useDataStore();
+  const { user, isLoading: isAuthLoading } = useAuthStore();
+  const { _hasHydrated, fetchInitialData } = useDataStore();
   const { isSidebarCollapsed } = useUIStore();
-  const { theme } = useThemeStore();
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
+    if (user) {
+      fetchInitialData();
+    }
+  }, [user]);
 
-  useEffect(() => {
-    document.documentElement.style.setProperty('--rdy-primary', themeColor);
-    const hex = themeColor.replace('#', '');
-    const r = parseInt(hex.substring(0, 2), 16);
-    const g = parseInt(hex.substring(2, 4), 16);
-    const b = parseInt(hex.substring(4, 6), 16);
-    document.documentElement.style.setProperty('--rdy-primary-rgb', `${r}, ${g}, ${b}`);
-  }, [themeColor]);
-
-  if (isLoading || !_hasHydrated) {
+  if (isAuthLoading || !_hasHydrated) {
     return (
-      <div className="min-h-screen bg-bg flex flex-col items-center justify-center space-y-12 animate-in fade-in duration-1000">
-         <div className="w-20 h-20 rounded-[2.5rem] bg-surface/50 border border-primary/20 flex items-center justify-center animate-pulse shadow-2xl shadow-primary/5">
-            <div className="w-4 h-4 rounded-full bg-primary animate-ping" />
+      <div className="min-h-screen bg-bg flex flex-col items-center justify-center space-y-8 animate-fade">
+         <div className="relative">
+            <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center text-primary font-black text-2xl italic tracking-tighter animate-pulse shadow-xl">
+              RDY
+            </div>
+            <div className="absolute -inset-4 border-2 border-primary/20 rounded-[2rem] animate-[spin_4s_linear_infinite]" />
          </div>
-         <div className="text-center space-y-3">
-            <p className="text-[12px] font-black text-text-2 uppercase tracking-[1em] animate-pulse">Establishing Connection</p>
-            <p className="text-[10px] font-medium text-text-2/30 uppercase tracking-[0.3em]">RDY SECURE CLOUD GATEWAY</p>
+         <div className="text-center">
+            <p className="text-[10px] font-black text-text-1 uppercase tracking-[0.5em] animate-pulse">Sincronizando Sistema</p>
+            <p className="text-[8px] font-bold text-text-2 uppercase tracking-widest mt-2 italic">RDY Supply Cloud v2</p>
          </div>
       </div>
     );
@@ -49,15 +44,18 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="min-h-screen bg-bg flex overflow-hidden">
       <Sidebar />
       <div 
-        className={`transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'pl-[90px]' : 'pl-[300px]'}`}
+        className={cn(
+          "flex-1 flex flex-col transition-all duration-300",
+          isSidebarCollapsed ? "pl-[80px]" : "pl-[280px]"
+        )}
       >
         <Topbar />
 
-        <main className="pt-20 px-8 pb-12 min-h-screen">
-          <div className="max-w-[1600px] mx-auto">
+        <main className="flex-1 mt-20 p-8 overflow-y-auto overflow-x-hidden min-h-[calc(100vh-80px)]">
+          <div className="max-w-[1400px] mx-auto animate-fade">
             {children}
           </div>
         </main>

@@ -1,49 +1,105 @@
 import { create } from 'zustand';
-
+import { supabase } from '../lib/supabase';
 import type { Profile } from '../types';
 
 interface AuthState {
   user: Profile | null;
+  session: any | null;
   isLoading: boolean;
   _hasHydrated: boolean;
   themeColor: string;
-  login: (profile: Profile) => Promise<void>;
-  logout: () => void;
+  setUser: (user: Profile | null) => void;
+  setSession: (session: any | null) => void;
+  setLoading: (loading: boolean) => void;
+  logout: () => Promise<void>;
   setThemeColor: (color: string) => void;
+  refreshProfile: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
-  isLoading: false,
+  session: null,
+  isLoading: true,
   _hasHydrated: false,
   themeColor: localStorage.getItem('rdy-theme') || '#F5C800',
-  login: async (profile) => {
-    set({ isLoading: true });
-    // Simulando delay de segurança
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    
-    set({ user: profile, isLoading: false });
-    localStorage.setItem('rdy-user', JSON.stringify(profile));
-  },
-  logout: () => {
-    set({ user: null });
+  
+  setUser: (user) => set({ user }),
+  setSession: (session) => set({ session }),
+  setLoading: (loading) => set({ isLoading: loading }),
+
+  logout: async () => {
+    await supabase.auth.signOut();
+    set({ user: null, session: null });
     localStorage.removeItem('rdy-user');
   },
+
   setThemeColor: (color) => {
     set({ themeColor: color });
     localStorage.setItem('rdy-theme', color);
   },
+
+  refreshProfile: async () => {
+    const { session } = get();
+    if (!session?.user) return;
+
+    // Check if profile exists
+    let { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', session.user.id)
+      .single();
+
+    // If it doesn't exist, create a default one (fallback)
+    if (error && error.code === 'PGRST116') {
+      const newProfile: Profile = {
+        id: session.user.id,
+        name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Novo Usuário',
+        email: session.user.email || '',
+        role: (session.user.user_metadata?.role as any) || 'technician',
+        active: true,
+        created_at: new Date().toISOString()
+      };
+
+      const { data: created, error: createError } = await supabase
+        .from('profiles')
+        .insert(newProfile)
+        .select()
+        .single();
+
+      if (!createError && created) {
+        profile = created;
+      } else {
+        console.error('[Supabase Error] profile_creation:', createError);
+      }
+    }
+
+    if (profile) {
+      set({ user: profile as Profile });
+      localStorage.setItem('rdy-user', JSON.stringify(profile));
+    }
+  }
 }));
 
-// Initialize from localStorage
-const savedUser = localStorage.getItem('rdy-user');
-if (savedUser) {
-  try {
-    useAuthStore.setState({ user: JSON.parse(savedUser), _hasHydrated: true });
-  } catch {
-    localStorage.removeItem('rdy-user');
+// Auth Initialization & Listener
+supabase.auth.getSession().then(({ data: { session } }) => {
+  useAuthStore.getState().setSession(session);
+  if (session) {
+    useAuthStore.getState().refreshProfile().finally(() => {
+      useAuthStore.getState().setLoading(false);
+      useAuthStore.setState({ _hasHydrated: true });
+    });
+  } else {
+    useAuthStore.getState().setLoading(false);
     useAuthStore.setState({ _hasHydrated: true });
   }
-} else {
-  useAuthStore.setState({ _hasHydrated: true });
-}
+});
+
+supabase.auth.onAuthStateChange(async (_event, session) => {
+  useAuthStore.getState().setSession(session);
+  if (session) {
+    await useAuthStore.getState().refreshProfile();
+  } else {
+    useAuthStore.getState().setUser(null);
+  }
+  useAuthStore.getState().setLoading(false);
+});

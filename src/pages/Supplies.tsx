@@ -3,54 +3,52 @@ import {
   Plus,
   Search,
   Edit2,
-  Trash2,
   X,
-  Save,
+  Cpu,
+  Type,
 } from 'lucide-react';
 import { useDataStore } from '../store/useDataStore';
 import { useAuthStore } from '../store/useAuthStore';
-import type { SupplyType, EquipmentModel } from '../types';
+import type { EquipmentModel } from '../types';
 import { toast } from 'sonner';
+import { cn, Button, Input, Card, Badge, CMYKBadge } from '../components/ui/Base';
 
 export const Supplies = () => {
   const { 
-    supplyTypes, 
     equipmentModels, 
-    addSupplyType, 
-    updateSupplyType, 
-    deleteSupplyType,
     addEquipmentModel, 
     updateEquipmentModel,
-    deleteEquipmentModel
+    // deleteEquipmentModel // Not implemented in store yet, but we'll stick to what we have
   } = useDataStore();
   const { user } = useAuthStore();
   
-  const [activeTab, setActiveTab] = useState<'supplies' | 'equipment'>('supplies');
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  // Form States
-  const [supplyForm, setSupplyForm] = useState<Omit<SupplyType, 'id' | 'created_at'>>({
-    name: '',
-    category: 'Toner',
-    unit: 'un',
-    color: 'black',
-    capacity: 0,
-    equipment_model_id: ''
-  });
-
-  const [equipmentForm, setEquipmentForm] = useState<Omit<EquipmentModel, 'id' | 'created_at'>>({
+  // Form State
+  const [form, setForm] = useState<Omit<EquipmentModel, 'id' | 'created_at'>>({
     name: '',
     brand: '',
     is_color: false,
     has_drum: false,
+    toner_black: '',
+    toner_cyan: '',
+    toner_magenta: '',
+    toner_yellow: '',
+    drum_black: '',
+    drum_cyan: '',
+    drum_magenta: '',
+    drum_yellow: '',
+    capacity_toner_black: 0,
+    capacity_toner_cyan: 0,
+    capacity_toner_magenta: 0,
+    capacity_toner_yellow: 0,
+    capacity_drum_black: 0,
+    capacity_drum_cyan: 0,
+    capacity_drum_magenta: 0,
+    capacity_drum_yellow: 0,
   });
-
-  const filteredSupplies = supplyTypes.filter(s => 
-    s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const filteredEquipment = equipmentModels.filter(e => 
     e.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -59,251 +57,298 @@ export const Supplies = () => {
 
   const openAddModal = () => {
     setEditingId(null);
-    if (activeTab === 'supplies') {
-      setSupplyForm({ name: '', category: 'Toner', unit: 'un', color: 'black', capacity: 0, equipment_model_id: '' });
-    } else {
-      setEquipmentForm({ name: '', brand: '', is_color: false, has_drum: false });
-    }
+    setForm({
+      name: '',
+      brand: '',
+      is_color: false,
+      has_drum: false,
+      toner_black: '',
+      toner_cyan: '',
+      toner_magenta: '',
+      toner_yellow: '',
+      drum_black: '',
+      drum_cyan: '',
+      drum_magenta: '',
+      drum_yellow: '',
+      capacity_toner_black: 0,
+      capacity_toner_cyan: 0,
+      capacity_toner_magenta: 0,
+      capacity_toner_yellow: 0,
+      capacity_drum_black: 0,
+      capacity_drum_cyan: 0,
+      capacity_drum_magenta: 0,
+      capacity_drum_yellow: 0,
+    });
     setIsModalOpen(true);
   };
 
-  const openEditModal = (item: any) => {
-    setEditingId(item.id);
-    if (activeTab === 'supplies') {
-      setSupplyForm({ ...item });
-    } else {
-      setEquipmentForm({ ...item });
-    }
+  const openEditModal = (model: EquipmentModel) => {
+    setEditingId(model.id);
+    setForm({ ...model });
     setIsModalOpen(true);
   };
 
-  const handleSave = () => {
-    if (activeTab === 'supplies') {
-      if (!supplyForm.name) return toast.error('Nome é obrigatório');
+  const handleSave = async () => {
+    if (!form.name || !form.brand) return toast.error('Nome e Fabricante são obrigatórios');
+    
+    try {
       if (editingId) {
-        updateSupplyType({ id: editingId, ...supplyForm } as SupplyType);
+        await updateEquipmentModel({ id: editingId, ...form } as EquipmentModel);
+        toast.success('Modelo atualizado no catálogo');
       } else {
-        addSupplyType(supplyForm);
+        await addEquipmentModel(form);
+        toast.success('Novo modelo registrado com sucesso');
       }
-    } else {
-      if (!equipmentForm.name || !equipmentForm.brand) return toast.error('Preencha os campos');
-      if (editingId) {
-        updateEquipmentModel({ id: editingId, ...equipmentForm } as EquipmentModel);
-      } else {
-        addEquipmentModel(equipmentForm);
-      }
+      setIsModalOpen(false);
+    } catch (err) {
+      toast.error('Erro ao salvar no catálogo');
     }
-    toast.success('Salvo com sucesso');
-    setIsModalOpen(false);
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
-      {/* Standardized 'Catálogo Mestre' Header */}
+    <div className="space-y-6 animate-fade pb-10">
+      {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-border pb-6">
         <div className="space-y-1">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--rdy-primary-rgb),0.6)]" />
-            <p className="text-[10px] font-black text-text-2 uppercase tracking-[0.3em] leading-none opacity-40">Catálogo Mestre de Recursos</p>
+            <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-lg shadow-primary" />
+            <p className="text-[10px] font-black text-text-2 uppercase tracking-[0.3em] leading-none">Estrutura de Ativos</p>
           </div>
           <h2 className="text-4xl font-black text-text-1 italic tracking-tighter uppercase leading-none">
-            INSUMOS <span className="text-text-2/40 font-light not-italic uppercase">E ATIVOS</span>
+            CATÁLOGO <span className="text-text-2 font-light not-italic  text-3xl">DE MODELOS</span>
           </h2>
         </div>
         {user?.role !== 'technician' && (
-          <button 
-            className="h-12 px-8 bg-primary text-black rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/10 hover:scale-105 transition-all flex items-center gap-2"
+          <Button 
+            className="h-12 px-8 rounded-2xl text-[10px] font-black uppercase tracking-widest gap-2 shadow-xl shadow-primary/10"
             onClick={openAddModal}
           >
-            <Plus size={16} strokeWidth={3} />
-            <span>+ Novo Insumo</span>
-          </button>
+            <Plus size={18} strokeWidth={3} />
+            Novo Modelo
+          </Button>
         )}
       </div>
 
-      {/* Control Bar - Tacit Tabs & Search */}
+      {/* Control Bar */}
       <div className="flex flex-col lg:flex-row gap-4 items-center">
-        <div className="flex bg-surface p-1.5 rounded-[20px] border border-border">
-          <button 
-            onClick={() => { setActiveTab('supplies'); setSearchTerm(''); }}
-            className={`px-8 h-11 rounded-[14px] text-[10px] font-black uppercase tracking-[0.2em] transition-all ${
-              activeTab === 'supplies' 
-                ? 'bg-primary text-black shadow-md' 
-                : 'text-text-2 opacity-30 hover:text-text-1 hover:bg-bg'
-            }`}
-          >
-            Insumos
-          </button>
-          <button 
-            onClick={() => { setActiveTab('equipment'); setSearchTerm(''); }}
-            className={`px-8 h-11 rounded-[14px] text-[10px] font-black uppercase tracking-[0.2em] transition-all ${
-              activeTab === 'equipment' 
-                ? 'bg-primary text-black shadow-md' 
-                : 'text-text-2 opacity-30 hover:text-text-1 hover:bg-bg'
-            }`}
-          >
-            Equipamentos
-          </button>
-        </div>
-
         <div className="flex-1 relative w-full group">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-text-2 opacity-20 group-focus-within:opacity-100 transition-colors" size={16} />
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-text-2 group-focus-within:text-primary transition-colors" size={18} />
           <input
             type="text"
-            placeholder={activeTab === 'supplies' ? "FILTRAR INSUMOS..." : "FILTRAR EQUIPAMENTOS..."}
-            className="w-full h-14 bg-surface border border-border rounded-[20px] pl-14 pr-8 text-[10px] font-black uppercase tracking-widest text-text-1 focus:bg-bg outline-none transition-all placeholder:text-text-2/40"
+            placeholder="PESQUISAR NO CATÁLOGO MESTRE..."
+            className="w-full h-14 bg-surface border border-border rounded-2xl pl-14 pr-8 text-xs font-bold uppercase tracking-widest text-text-1 outline-none focus:ring-2 focus:ring-primary/10 transition-all placeholder:text-text-2"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
-      {/* High Density Table Container - Padrão Layout Inicial */}
-      <div className="bg-surface border border-border rounded-[32px] overflow-hidden shadow-xl shadow-black/[0.02]">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-border text-text-2/40 text-[8px] font-black uppercase tracking-widest bg-bg/50">
-                <th className="px-10 py-5">Identificação do Ativo</th>
-                <th className="px-10 py-5">Categoria Operacional</th>
-                {activeTab === 'supplies' && <th className="px-10 py-5">Rendimento (Ciclos)</th>}
-                <th className="px-10 py-5 text-right">Ação</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {activeTab === 'supplies' ? (
-                filteredSupplies.map(supply => (
-                  <tr key={supply.id} className="group hover:bg-bg/50 transition-all">
-                    <td className="px-10 py-5">
-                      <div>
-                        <p className="font-black text-text-1 uppercase tracking-tight text-[12px] leading-tight">{supply.name}</p>
-                        <p className="text-[8px] text-text-2/40 font-black uppercase tracking-widest mt-1.5">{supply.unit}</p>
-                      </div>
-                    </td>
-                    <td className="px-10 py-5">
-                      <div className="flex items-center gap-3">
-                         <div className="px-3 py-1 bg-bg border border-border rounded-lg text-text-1 text-[8px] font-black uppercase tracking-widest">
-                            {supply.category} <span className="text-text-2/40 ml-2 font-medium">{supply.color}</span>
-                         </div>
-                      </div>
-                    </td>
-                    <td className="px-10 py-5 font-black text-text-2/40 text-[10px] tracking-widest">
-                      {supply.capacity.toLocaleString()} CICLOS
-                    </td>
-                    <td className="px-10 py-5">
-                      <div className="flex items-center justify-end gap-1">
-                         <button onClick={() => openEditModal(supply)} className="w-9 h-9 flex items-center justify-center text-text-2/20 hover:text-text-1 transition-colors">
-                           <Edit2 size={14} />
-                         </button>
-                         <button onClick={() => deleteSupplyType(supply.id)} className="w-9 h-9 flex items-center justify-center text-text-2/20 hover:text-danger transition-colors">
-                           <Trash2 size={14} />
-                         </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                filteredEquipment.map(model => (
-                  <tr key={model.id} className="group hover:bg-bg/50 transition-all">
-                    <td className="px-10 py-5">
-                      <p className="font-black text-text-1 uppercase tracking-tight text-[12px] leading-tight">{model.name}</p>
-                    </td>
-                    <td className="px-10 py-5 text-[10px] font-black text-text-2/40 uppercase tracking-widest">
-                      {model.brand}
-                    </td>
-                    <td className="px-10 py-5">
-                      <div className="flex items-center justify-end gap-1">
-                         <button onClick={() => openEditModal(model)} className="w-9 h-9 flex items-center justify-center text-text-2/20 hover:text-text-1 transition-colors">
-                           <Edit2 size={14} />
-                         </button>
-                         <button onClick={() => deleteEquipmentModel(model.id)} className="w-9 h-9 flex items-center justify-center text-text-2/20 hover:text-danger transition-colors">
-                           <Trash2 size={14} />
-                         </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+      {/* Equipment List */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredEquipment.map(model => (
+          <Card key={model.id} className="group relative overflow-visible">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                   <Badge variant="neutral" className="mb-2">{model.brand}</Badge>
+                   <h3 className="text-xl font-black text-text-1 uppercase tracking-tight italic">{model.name}</h3>
+                </div>
+                <div className="flex gap-1">
+                   {model.is_color && <Badge variant="info">Color</Badge>}
+                   {model.has_drum && <Badge variant="warning">Drum</Badge>}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-[10px] font-bold text-text-2 uppercase tracking-widest">
+                  <span>Part Numbers</span>
+                  <div className="flex gap-1">
+                    <CMYKBadge type="K" />
+                    {model.is_color && (
+                      <>
+                        <CMYKBadge type="C" />
+                        <CMYKBadge type="M" />
+                        <CMYKBadge type="Y" />
+                      </>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-1">
+                  <p className="text-[11px] font-bold text-text-1 truncate bg-bg py-1 px-2 rounded border border-border/50">
+                    Toner: <span className="text-text-2 ml-2">{model.toner_black || '—'}</span>
+                  </p>
+                  {model.has_drum && (
+                    <p className="text-[11px] font-bold text-text-1 truncate bg-bg py-1 px-2 rounded border border-border/50">
+                      Drum: <span className="text-text-2 ml-2">{model.drum_black || '—'}</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {user?.role !== 'technician' && (
+                <div className="mt-6 pt-6 border-t border-border flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button variant="outline" size="sm" onClick={() => openEditModal(model)}>
+                    <Edit2 size={12} className="mr-2" /> Editar
+                  </Button>
+                </div>
               )}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          </Card>
+        ))}
+        
+        {filteredEquipment.length === 0 && (
+          <div className="col-span-full py-20 text-center bg-surface border-2 border-dashed border-border rounded-3xl">
+             <Cpu size={48} className="mx-auto text-text-2 mb-4" />
+             <p className="text-xs font-bold text-text-2 uppercase tracking-widest">Nenhum modelo encontrado no catálogo</p>
+          </div>
+        )}
       </div>
 
+      {/* Add/Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-md bg-black/80">
-          <div className="w-full max-w-sm bg-surface border border-border rounded-lg shadow-2xl p-6 space-y-6 animate-in zoom-in-95 duration-300">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="text-lg font-black text-text-1 italic uppercase tracking-tighter leading-none">
-                  {editingId ? 'Editar' : 'Novo'} <span className="text-primary">{activeTab === 'supplies' ? 'Ativo' : 'Modelo'}</span>
-                </h3>
-              </div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-xl bg-secondary/80">
+          <div className="w-full max-w-2xl bg-surface border border-border rounded-[40px] shadow-2xl overflow-hidden animate-fade">
+            <div className="px-10 py-8 border-b border-border flex justify-between items-center bg-bg/50">
+              <h3 className="text-2xl font-black text-text-1 italic uppercase tracking-tighter">
+                {editingId ? 'Parametrizar' : 'Novo'} <span className="text-primary italic">Modelo</span>
+              </h3>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="w-6 h-6 rounded bg-surface border border-border flex items-center justify-center text-text-2 hover:text-danger transition-colors"
+                className="w-10 h-10 rounded-2xl bg-surface border border-border flex items-center justify-center text-text-2 hover:text-danger transition-all"
               >
-                <X size={14} />
+                <X size={20} strokeWidth={3} />
               </button>
             </div>
 
-            <div className="space-y-4">
-              {activeTab === 'supplies' ? (
-                <>
-                  <div>
-                    <label className="text-[8px] font-black text-text-2 uppercase tracking-widest ml-1 mb-1.5 block">Nome do Insumo</label>
-                    <input className="rdy-input" value={supplyForm.name} onChange={e => setSupplyForm({...supplyForm, name: e.target.value})} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[8px] font-black text-text-2 uppercase tracking-widest ml-1 mb-1.5 block">Categoria</label>
-                      <select className="rdy-input" value={supplyForm.category} onChange={e => setSupplyForm({...supplyForm, category: e.target.value as any})}>
-                        <option value="Toner">Toner</option>
-                        <option value="Papel">Papel</option>
-                        <option value="Cilindro">Cilindro</option>
-                        <option value="Outros">Outros</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-[8px] font-black text-text-2 uppercase tracking-widest ml-1 mb-1.5 block">Unidade</label>
-                      <input className="rdy-input font-bold" value={supplyForm.unit} onChange={e => setSupplyForm({...supplyForm, unit: e.target.value})} />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[8px] font-black text-text-2 uppercase tracking-widest ml-1 mb-1.5 block">Rendimento (pg)</label>
-                      <input type="number" className="rdy-input" value={supplyForm.capacity} onChange={e => setSupplyForm({...supplyForm, capacity: parseInt(e.target.value) || 0})} />
-                    </div>
-                    <div>
-                      <label className="text-[8px] font-black text-text-2 uppercase tracking-widest ml-1 mb-1.5 block">Modelo</label>
-                      <select className="rdy-input" value={supplyForm.equipment_model_id} onChange={e => setSupplyForm({...supplyForm, equipment_model_id: e.target.value})}>
-                        <option value="">Universal</option>
-                        {equipmentModels.map(em => (
-                          <option key={em.id} value={em.id}>{em.brand} {em.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <label className="text-[8px] font-black text-text-2 uppercase tracking-widest ml-1 mb-1.5 block">Fabricante</label>
-                    <input className="rdy-input" placeholder="Ex: HP" value={equipmentForm.brand} onChange={e => setEquipmentForm({...equipmentForm, brand: e.target.value})} />
-                  </div>
-                  <div>
-                    <label className="text-[8px] font-black text-text-2 uppercase tracking-widest ml-1 mb-1.5 block">Nome do Modelo</label>
-                    <input className="rdy-input" placeholder="Ex: M15w" value={equipmentForm.name} onChange={e => setEquipmentForm({...equipmentForm, name: e.target.value})} />
-                  </div>
-                </>
-              )}
+            <div className="p-10 max-h-[70vh] overflow-y-auto custom-scrollbar">
+              <div className="grid grid-cols-2 gap-6 mb-8">
+                <Input 
+                  label="Fabricante / Marca"
+                  placeholder="Ex: HP, Brother, Ricoh"
+                  value={form.brand}
+                  onChange={e => setForm({...form, brand: e.target.value.toUpperCase()})}
+                />
+                <Input 
+                  label="Nome do Modelo"
+                  placeholder="Ex: LaserJet M177fw"
+                  value={form.name}
+                  onChange={e => setForm({...form, name: e.target.value})}
+                />
+              </div>
 
-                <button 
-                  onClick={handleSave}
-                  className="rdy-btn-primary w-full h-10 mt-2 text-[10px]"
-                >
-                  <Save size={14} />
-                  <span>Cadastrar no Catálogo</span>
-                </button>
+              <div className="grid grid-cols-2 gap-6 mb-10">
+                <div className="p-5 bg-bg rounded-[24px] border border-border space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-text-1">Sistema Colorido</span>
+                    <button 
+                      onClick={() => setForm({...form, is_color: !form.is_color})}
+                      className={cn(
+                        "w-12 h-6 rounded-full transition-all relative px-1 flex items-center",
+                        form.is_color ? "bg-primary" : "bg-border"
+                      )}
+                    >
+                      <div className={cn("w-4 h-4 bg-white rounded-full transition-all", form.is_color ? "translate-x-6" : "translate-x-0")} />
+                    </button>
+                  </div>
+                  <p className="text-[9px] font-medium text-text-2/50 leading-relaxed italic">Habilita os campos para Cyan, Magenta e Yellow na ficha técnica e portal do técnico.</p>
+                </div>
+
+                <div className="p-5 bg-bg rounded-[24px] border border-border space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-text-1">Possui Cilindro</span>
+                    <button 
+                      onClick={() => setForm({...form, has_drum: !form.has_drum})}
+                      className={cn(
+                        "w-12 h-6 rounded-full transition-all relative px-1 flex items-center",
+                        form.has_drum ? "bg-primary" : "bg-border"
+                      )}
+                    >
+                      <div className={cn("w-4 h-4 bg-white rounded-full transition-all", form.has_drum ? "translate-x-6" : "translate-x-0")} />
+                    </button>
+                  </div>
+                  <p className="text-[9px] font-medium text-text-2/50 leading-relaxed italic">Habilita campos de monitoramento para Unidades de Imagem / Fotocondutores.</p>
+                </div>
+              </div>
+
+              {/* Toners Section */}
+              <div className="space-y-6 mb-10">
+                <div className="flex items-center gap-3 border-b border-border pb-2">
+                  <Type size={16} className="text-primary" />
+                  <h4 className="text-xs font-black uppercase tracking-[0.2em] text-text-1">Especificações de Toner</h4>
+                </div>
+                
+                <div className="bg-bg p-6 rounded-[32px] border border-border grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <CMYKBadge type="K" />
+                      <Input label="PN Toner Black" value={form.toner_black || ''} onChange={e => setForm({...form, toner_black: e.target.value})} />
+                    </div>
+                  </div>
+                  
+                  {form.is_color && (
+                    <div className="space-y-4 border-l border-border pl-6">
+                      <div className="flex items-center gap-2">
+                        <CMYKBadge type="C" />
+                        <Input label="PN Toner Cyan" value={form.toner_cyan || ''} onChange={e => setForm({...form, toner_cyan: e.target.value})} />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CMYKBadge type="M" />
+                        <Input label="PN Toner Magenta" value={form.toner_magenta || ''} onChange={e => setForm({...form, toner_magenta: e.target.value})} />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CMYKBadge type="Y" />
+                        <Input label="PN Toner Yellow" value={form.toner_yellow || ''} onChange={e => setForm({...form, toner_yellow: e.target.value})} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Drums Section */}
+              {form.has_drum && (
+                <div className="space-y-6 mb-10">
+                  <div className="flex items-center gap-3 border-b border-border pb-2">
+                    <Cpu size={16} className="text-warning" />
+                    <h4 className="text-xs font-black uppercase tracking-[0.2em] text-text-1">Especificações de Cilindro</h4>
+                  </div>
+                  
+                  <div className="bg-bg p-6 rounded-[32px] border border-border grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <div className="space-y-4">
+                       <div className="flex items-center gap-2">
+                         <CMYKBadge type="K" />
+                         <Input label="PN Drum Black" value={form.drum_black || ''} onChange={e => setForm({...form, drum_black: e.target.value})} />
+                       </div>
+                     </div>
+                     
+                     {form.is_color && (
+                       <div className="space-y-4 border-l border-border pl-6">
+                         <div className="flex items-center gap-2">
+                           <CMYKBadge type="C" />
+                           <Input label="PN Drum Cyan" value={form.drum_cyan || ''} onChange={e => setForm({...form, drum_cyan: e.target.value})} />
+                         </div>
+                         <div className="flex items-center gap-2">
+                           <CMYKBadge type="M" />
+                           <Input label="PN Drum Magenta" value={form.drum_magenta || ''} onChange={e => setForm({...form, drum_magenta: e.target.value})} />
+                         </div>
+                         <div className="flex items-center gap-2">
+                           <CMYKBadge type="Y" />
+                           <Input label="PN Drum Yellow" value={form.drum_yellow || ''} onChange={e => setForm({...form, drum_yellow: e.target.value})} />
+                         </div>
+                       </div>
+                     )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="px-10 py-8 bg-bg border-t border-border flex justify-end">
+               <Button 
+                 onClick={handleSave}
+                 className="h-14 px-12 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary"
+               >
+                 Salvar no Catálogo
+               </Button>
             </div>
           </div>
         </div>
@@ -311,3 +356,4 @@ export const Supplies = () => {
     </div>
   );
 };
+

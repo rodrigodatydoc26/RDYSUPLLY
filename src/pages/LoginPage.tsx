@@ -1,136 +1,131 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
-import { useDataStore } from '../store/useDataStore';
-import { Loader2, Mail, Lock, ChevronRight, Package } from 'lucide-react';
+import { Loader2, Lock, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { Button, Input } from '../components/ui/Base';
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, isLoading } = useAuthStore();
-  const { users } = useDataStore();
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const { user } = useAuthStore();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate(user.role === 'technician' ? '/tecnico' : '/');
+    }
+  }, [user, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      toast.error('Preencha e-mail e senha');
+      toast.error('Informe suas credenciais');
       return;
     }
     
-    authFlow(email, password);
-  };
-
-  const authFlow = async (uEmail: string, uPass: string) => {
+    setIsAuthenticating(true);
     try {
-      const foundUser = users.find(u => 
-        u.email.toLowerCase() === uEmail.toLowerCase() && 
-        u.password === uPass
-      );
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      if (!foundUser) {
-        return toast.error('Perfil não identificado.');
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          toast.error('E-mail ou senha incorretos');
+        } else {
+          toast.error(error.message);
+        }
+        return;
       }
 
-      if (!foundUser.active) {
-        return toast.error('Acesso suspenso.');
-      }
-
-      await login(foundUser);
-      toast.success(`Operador autenticado: ${foundUser.name}`);
-      navigate(foundUser.role === 'technician' ? '/tecnico' : '/');
-    } catch (error) {
-      toast.error('GDC Connection Error.');
+      toast.success('Acesso autorizado!');
+    } catch (err: any) {
+      toast.error('Erro de conexão com o servidor');
+    } finally {
+      setIsAuthenticating(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-bg flex items-center justify-center p-4 font-sans selection:bg-primary selection:text-black">
-      <div className="w-full max-w-[440px] border border-border rounded-[40px] px-8 py-12 flex flex-col items-center shadow-2xl relative overflow-hidden bg-surface">
-        {/* Subtle background glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-24 bg-primary/10 blur-[100px] pointer-events-none" />
-
-        {/* Top Icon Area */}
-        <div className="relative mb-10">
-          <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
-          <div className="w-20 h-20 bg-primary rounded-[24px] flex items-center justify-center shadow-[0_0_30px_rgba(245,200,0,0.4)] relative">
-            <Package size={40} strokeWidth={2.5} className="text-black" />
-          </div>
+    <div className="min-h-screen bg-bg flex items-center justify-center p-6 selection:bg-primary selection:text-secondary">
+      <div className="w-full max-w-[480px] bg-surface border border-border rounded-[40px] px-10 py-16 shadow-2xl relative overflow-hidden flex flex-col items-center animate-fade">
+        {/* Decorative elements */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-primary blur-[100px] pointer-events-none" />
+        
+        {/* Brand Icon */}
+        <div className="relative mb-8">
+           <div className="w-20 h-20 bg-secondary rounded-3xl flex items-center justify-center text-primary shadow-2xl shadow-primary transition-transform hover:scale-105">
+             <span className="font-black text-3xl italic tracking-tighter">RDY</span>
+           </div>
+           <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-primary flex items-center justify-center text-secondary border-4 border-surface">
+             <Lock size={14} strokeWidth={3} />
+           </div>
         </div>
 
-        {/* Brand Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-[38px] font-black tracking-tighter leading-none mb-3 flex items-center justify-center gap-2">
-            <span className="text-text-1">RDY</span>
-            <span className="text-primary italic">SUPPLY</span>
+        {/* Header */}
+        <div className="text-center mb-10">
+          <h1 className="text-4xl font-black tracking-tighter leading-none mb-3">
+            RDY <span className="text-primary italic">SUPPLY</span>
           </h1>
-          <p className="text-[10px] font-black text-text-2/40 uppercase tracking-[0.5em] leading-none text-center w-full">
-            Investment & Performance
-          </p>
+          <p className="text-[10px] font-bold text-text-2 uppercase tracking-[0.5em]">Inventory Intelligence v2</p>
         </div>
 
-        {/* Auth Form */}
+        {/* Login Form */}
         <form onSubmit={handleLogin} className="w-full space-y-6">
           <div className="space-y-4">
-            <div>
-              <label className="text-[10px] font-black text-text-2/40 uppercase tracking-[0.2em] ml-2 mb-2 block">Terminal de Acesso</label>
-              <div className="relative group">
-                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20">
-                  <Mail size={20} />
-                </div>
-                <input 
-                  type="email" 
-                  className="w-full h-16 rounded-[20px] bg-bg border border-border pl-14 pr-6 text-sm text-text-1 font-bold focus:border-primary/40 focus:bg-surface outline-none transition-all placeholder:text-text-2/20" 
-                  placeholder="Seu ID Corporativo"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-[10px] font-black text-text-2/40 uppercase tracking-[0.2em] ml-2 mb-2 block">Chave de Segurança</label>
-              <div className="relative group">
-                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20">
-                  <Lock size={20} />
-                </div>
-                <input 
-                  type="password" 
-                  className="w-full h-16 rounded-[20px] bg-bg border border-border pl-14 pr-6 text-sm text-text-1 font-bold focus:border-primary/40 focus:bg-surface outline-none transition-all placeholder:text-text-2/20" 
-                  placeholder="********"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-            </div>
+            <Input 
+              label="E-mail Corporativo"
+              type="email"
+              placeholder="exemplo@rdy.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={isAuthenticating}
+              className="h-14 rounded-2xl"
+            />
+            
+            <Input 
+              label="Chave de Acesso"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={isAuthenticating}
+              className="h-14 rounded-2xl"
+            />
           </div>
 
-          <div className="pt-4">
-            <button 
-              type="submit" 
-              disabled={isLoading}
-              className="w-full h-16 bg-primary hover:bg-primary/95 text-black text-xs font-black uppercase tracking-[0.2em] rounded-[20px] shadow-[0_15px_40px_-10px_rgba(245,200,0,0.3)] transition-all active:scale-[0.98] flex items-center justify-center gap-3 relative group overflow-hidden"
-            >
-              {isLoading ? (
-                <Loader2 className="animate-spin h-5 w-5" />
-              ) : (
-                <>
-                  Autenticar
-                  <ChevronRight size={18} strokeWidth={3} className="group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
-            </button>
-          </div>
+          <Button 
+            type="submit" 
+            disabled={isAuthenticating}
+            className="w-full h-16 rounded-2xl text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-primary group"
+          >
+            {isAuthenticating ? (
+              <Loader2 className="animate-spin h-5 w-5" />
+            ) : (
+              <span className="flex items-center gap-2">
+                Autenticar no Sistema
+                <ChevronRight size={18} strokeWidth={3} className="transition-transform group-hover:translate-x-1" />
+              </span>
+            )}
+          </Button>
         </form>
 
-        {/* Footer Branding */}
-        <div className="mt-12 text-center">
-          <p className="text-[9px] font-black text-text-2/20 uppercase tracking-[0.3em]">
-            Conexão Segura RDY Global Data Center
-          </p>
+        {/* Footer */}
+        <div className="mt-12 flex flex-col items-center gap-4">
+           <p className="text-[9px] font-bold text-text-2 uppercase tracking-[0.2em] text-center">
+             Protegido por RDY Security Gateway
+           </p>
+           <div className="flex items-center gap-2 opacity-50 grayscale">
+             <div className="w-1.5 h-1.5 rounded-full bg-success" />
+             <span className="text-[8px] font-bold text-text-1 uppercase tracking-widest">Servidor Local Online</span>
+           </div>
         </div>
       </div>
     </div>
   );
 };
+

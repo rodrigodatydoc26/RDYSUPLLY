@@ -79,10 +79,10 @@ export const Users = () => {
         <div>
            <div className="flex items-center gap-2 mb-2">
              <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--rdy-primary-rgb),0.6)]" />
-             <p className="text-[10px] font-black text-text-2/40 uppercase tracking-[0.3em] leading-none">Catálogo Mestre de Recursos</p>
+             <p className="text-[10px] font-black text-text-2 uppercase tracking-[0.3em] leading-none">Catálogo Mestre de Recursos</p>
            </div>
            <h2 className="text-4xl font-black text-text-1 italic tracking-tighter uppercase leading-none">
-             GESTÃO <span className="text-text-2/40 font-light not-italic uppercase">DE EQUIPE</span>
+             GESTÃO <span className="text-text-2 font-light not-italic uppercase">DE EQUIPE</span>
            </h2>
         </div>
         <button 
@@ -97,11 +97,11 @@ export const Users = () => {
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="relative flex-1 w-full group">
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-text-2/40 group-focus-within:text-text-1 transition-colors" size={16} />
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-text-2 group-focus-within:text-text-1 transition-colors" size={16} />
             <input
               type="text"
               placeholder="FILTRAR POR NOME OU E-MAIL..."
-              className="w-full h-14 bg-surface border border-border rounded-[20px] pl-14 pr-6 text-[10px] font-black uppercase tracking-widest text-text-1 focus:bg-bg outline-none transition-all placeholder:text-text-2/40"
+              className="w-full h-14 bg-surface border border-border rounded-[20px] pl-14 pr-6 text-[10px] font-black uppercase tracking-widest text-text-1 focus:bg-bg outline-none transition-all placeholder:text-text-2"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
@@ -112,8 +112,8 @@ export const Users = () => {
               {users.filter(u => u.active).length} ATIVOS
             </span>
             <div className="w-px h-3 bg-border" />
-            <span className="flex items-center gap-2 text-text-2/40">
-              <div className="w-1.5 h-1.5 rounded-full bg-text-2/20" /> 
+            <span className="flex items-center gap-2 text-text-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-text-2" /> 
               {users.filter(u => !u.active).length} INATIVOS
             </span>
           </div>
@@ -123,7 +123,7 @@ export const Users = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-               <tr className="border-b border-border text-text-2/40 text-[8px] font-black uppercase tracking-widest bg-bg/50">
+               <tr className="border-b border-border text-text-2 text-[8px] font-black uppercase tracking-widest bg-bg/50">
                   <th className="px-8 py-5">Perfil Operacional</th>
                   <th className="px-8 py-5">Nível de Acesso</th>
                   <th className="px-8 py-5">Contratos Ativos</th>
@@ -138,12 +138,12 @@ export const Users = () => {
                     <tr key={u.id} className="group hover:bg-bg/50 transition-all">
                       <td className="px-8 py-5">
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-bg border border-border flex items-center justify-center text-text-2/40">
+                          <div className="w-10 h-10 rounded-xl bg-bg border border-border flex items-center justify-center text-text-2">
                             <User size={18} />
                           </div>
                           <div>
                             <p className="text-[11px] font-black text-text-1 uppercase tracking-tight leading-none">{u.name}</p>
-                            <p className="text-[8px] text-text-2/40 uppercase font-bold tracking-widest mt-1.5">{u.email}</p>
+                            <p className="text-[8px] text-text-2 uppercase font-bold tracking-widest mt-1.5">{u.email}</p>
                           </div>
                         </div>
                       </td>
@@ -153,14 +153,14 @@ export const Users = () => {
                       <td className="px-8 py-5">
                         <div className="flex flex-wrap gap-1.5 max-w-[200px]">
                           {linked.map(c => (
-                            <span key={c.id} className="px-2 py-0.5 bg-bg border border-border rounded text-[8px] font-black text-text-2/40 uppercase">{c.code}</span>
+                            <span key={c.id} className="px-2 py-0.5 bg-bg border border-border rounded text-[8px] font-black text-text-2 uppercase">{c.code}</span>
                           ))}
                         </div>
                       </td>
                       <td className="px-8 py-5">
                         <div className="flex items-center gap-2">
                           <div className={`w-1.5 h-1.5 rounded-full ${u.active ? 'bg-success shadow-[0_0_8px_rgba(var(--rdy-success-rgb),0.4)]' : 'bg-black/10'}`} />
-                          <span className={`text-[8px] font-black uppercase tracking-widest ${u.active ? 'text-text-1' : 'text-text-2/40'}`}>
+                          <span className={`text-[8px] font-black uppercase tracking-widest ${u.active ? 'text-text-1' : 'text-text-2'}`}>
                             {u.active ? 'ATIVO' : 'INATIVO'}
                           </span>
                         </div>
@@ -168,7 +168,7 @@ export const Users = () => {
                       <td className="px-8 py-5 text-right">
                         <button
                           onClick={() => openEditModal(u)}
-                          className="w-8 h-8 rounded-lg text-text-2/40 hover:text-text-1 transition-colors"
+                          className="w-8 h-8 rounded-lg text-text-2 hover:text-text-1 transition-colors"
                         >
                           <Edit2 size={14} />
                         </button>
@@ -183,14 +183,14 @@ export const Users = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm bg-black/60 overflow-y-auto">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm bg-black overflow-y-auto">
           <div className="w-full max-w-sm bg-surface border border-border rounded-lg shadow-2xl p-6 space-y-6 animate-in zoom-in-95 duration-300 my-auto">
             <div className="flex justify-between items-start border-b border-border pb-4">
               <div>
                 <h3 className="text-lg font-black text-text-1 italic uppercase tracking-tighter leading-none">
                   {editingId ? 'Editar' : 'Novo'} <span className="text-primary">Perfil</span>
                 </h3>
-                <p className="text-[7px] font-black text-text-2 uppercase tracking-widest mt-1 opacity-40">Política de Segurança de Acesso</p>
+                <p className="text-[7px] font-black text-text-2 uppercase tracking-widest mt-1 ">Política de Segurança de Acesso</p>
               </div>
               <button 
                 onClick={() => setIsModalOpen(false)} 
@@ -225,7 +225,7 @@ export const Users = () => {
                   <button 
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-2/40 hover:text-primary transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-2 hover:text-primary transition-colors"
                   >
                     {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
@@ -246,7 +246,7 @@ export const Users = () => {
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, active: !formData.active })}
-                    className={`w-full h-9 rounded border transition-all text-[8px] font-black uppercase tracking-widest ${formData.active ? 'bg-success/5 border-success/30 text-success' : 'bg-surface border-border text-text-2/40'}`}
+                    className={`w-full h-9 rounded border transition-all text-[8px] font-black uppercase tracking-widest ${formData.active ? 'bg-success/5 border-success text-success' : 'bg-surface border-border text-text-2'}`}
                   >
                     {formData.active ? 'Ativo' : 'Suspenso'}
                   </button>
@@ -265,16 +265,16 @@ export const Users = () => {
                       Ver todos / Gerenciar
                     </button>
                   </div>
-                  <div className="grid grid-cols-1 gap-1 max-h-24 overflow-y-auto scroll-elite p-1 bg-bg/20 rounded border border-border">
+                  <div className="grid grid-cols-1 gap-1 max-h-24 overflow-y-auto scroll-elite p-1 bg-bg rounded border border-border">
                     {contracts.filter(c => techContracts.includes(c.id)).length > 0 ? (
                       contracts.filter(c => techContracts.includes(c.id)).map(c => (
-                        <div key={c.id} className="flex items-center gap-2 p-1.5 rounded bg-primary/10 text-primary border border-primary/20">
+                        <div key={c.id} className="flex items-center gap-2 p-1.5 rounded bg-primary/10 text-primary border border-primary">
                            <Building2 size={10} />
                            <span className="text-[9px] font-bold uppercase truncate">{c.name}</span>
                         </div>
                       ))
                     ) : (
-                      <div className="py-4 text-center opacity-20">
+                      <div className="py-4 text-center opacity-50">
                         <p className="text-[8px] font-black uppercase">Nenhum contrato vinculado</p>
                       </div>
                     )}
@@ -298,7 +298,7 @@ export const Users = () => {
                 <h3 className="text-lg font-black text-text-1 italic uppercase tracking-tighter leading-none">
                   Vincular <span className="text-primary">Contratos</span>
                 </h3>
-                <p className="text-[7px] font-black text-text-2 uppercase tracking-widest mt-1 opacity-40">Gestão de Carteira do Técnico</p>
+                <p className="text-[7px] font-black text-text-2 uppercase tracking-widest mt-1 ">Gestão de Carteira do Técnico</p>
               </div>
               <button 
                 onClick={() => setIsContractModalOpen(false)} 
@@ -309,7 +309,7 @@ export const Users = () => {
             </div>
 
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-2/40" size={14} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-2" size={14} />
               <input 
                 className="rdy-input h-9 pl-10" 
                 placeholder="PROCURAR CONTRATO OU CLIENTE..."
@@ -318,14 +318,14 @@ export const Users = () => {
               />
             </div>
 
-            <div className="grid grid-cols-1 gap-1 max-h-64 overflow-y-auto scroll-elite p-1 bg-bg/20 rounded border border-border">
+            <div className="grid grid-cols-1 gap-1 max-h-64 overflow-y-auto scroll-elite p-1 bg-bg rounded border border-border">
               {contracts
                 .filter(c => c.active && (c.name.toLowerCase().includes(contractSearch.toLowerCase()) || c.client.toLowerCase().includes(contractSearch.toLowerCase())))
                 .map(c => (
                   <label 
                     key={c.id} 
                     className={`flex items-center justify-between p-3 rounded cursor-pointer transition-all border ${
-                      techContracts.includes(c.id) ? 'bg-primary/5 border-primary/30 text-text-1' : 'bg-surface border-border/40 text-text-2/40 hover:bg-white/5'
+                      techContracts.includes(c.id) ? 'bg-primary/5 border-primary text-text-1' : 'bg-surface border-border text-text-2 hover:bg-white/5'
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -334,7 +334,7 @@ export const Users = () => {
                       </div>
                       <div>
                         <p className="text-[10px] font-black uppercase leading-none">{c.name}</p>
-                        <p className="text-[7px] font-black uppercase tracking-widest mt-1 opacity-40">{c.client}</p>
+                        <p className="text-[7px] font-black uppercase tracking-widest mt-1 ">{c.client}</p>
                       </div>
                     </div>
                     <input type="checkbox" className="hidden" checked={techContracts.includes(c.id)} onChange={() => toggleTechContract(c.id)} />
@@ -359,7 +359,7 @@ export const Users = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-black border border-white/5 p-10 rounded-[32px] flex flex-col justify-between group hover:border-danger/30 transition-all shadow-2xl">
+            <div className="bg-black border border-white/5 p-10 rounded-[32px] flex flex-col justify-between group hover:border-danger transition-all shadow-2xl">
               <div>
                 <h3 className="text-xl font-black text-white uppercase italic tracking-tighter">Limpeza Total</h3>
                 <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest mt-4 leading-relaxed max-w-[80%]">
@@ -376,13 +376,13 @@ export const Users = () => {
                     }
                   }
                 }}
-                className="mt-10 h-12 w-full border border-danger/20 text-danger text-[10px] font-black uppercase tracking-[0.3em] rounded-2xl hover:bg-danger hover:text-white transition-all active:scale-95"
+                className="mt-10 h-12 w-full border border-danger text-danger text-[10px] font-black uppercase tracking-[0.3em] rounded-2xl hover:bg-danger hover:text-white transition-all active:scale-95"
               >
                 Zerar Banco de Dados
               </button>
             </div>
 
-            <div className="bg-black border border-white/5 p-10 rounded-[32px] flex flex-col justify-between group hover:border-primary/30 transition-all shadow-2xl">
+            <div className="bg-black border border-white/5 p-10 rounded-[32px] flex flex-col justify-between group hover:border-primary transition-all shadow-2xl">
               <div>
                 <h3 className="text-xl font-black text-white uppercase italic tracking-tighter">Restaurar Padrões</h3>
                 <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest mt-4 leading-relaxed max-w-[80%]">
@@ -397,7 +397,7 @@ export const Users = () => {
                     resetToDefaults();
                   }
                 }}
-                className="mt-10 h-12 w-full border border-primary/20 text-primary text-[10px] font-black uppercase tracking-[0.3em] rounded-2xl hover:bg-primary hover:text-black transition-all active:scale-95"
+                className="mt-10 h-12 w-full border border-primary text-primary text-[10px] font-black uppercase tracking-[0.3em] rounded-2xl hover:bg-primary hover:text-black transition-all active:scale-95"
               >
                 Restaurar Dados de Exemplo
               </button>
@@ -408,3 +408,4 @@ export const Users = () => {
     </div>
   );
 };
+

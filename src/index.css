@@ -28,16 +28,16 @@
     --rdy-bg: #F4F5F7;
     --rdy-surface: #FFFFFF;
     --rdy-border: #E2E4E9;
-    --rdy-text-1: #1A1A1A;
-    --rdy-text-2: #6B7280;
+    --rdy-text-1: #000000; /* Black */
+    --rdy-text-2: #1A1A1A; /* Also Black, for maximum contrast (was Gray) */
   }
 
   [data-theme="dark"] {
     --rdy-bg: #0F0F0F;
     --rdy-surface: #1A1A1A;
     --rdy-border: #2A2A2A;
-    --rdy-text-1: #F5F5F5;
-    --rdy-text-2: #9CA3AF;
+    --rdy-text-1: #FFFFFF; /* White */
+    --rdy-text-2: #F5F5F5; /* Also White/Near-White (was Gray) */
   }
 
   body {
