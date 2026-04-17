@@ -197,7 +197,7 @@ export const TechnicianPortal = () => {
           const submitted = isAlreadySubmitted(link.supply_type_id);
 
           return (
-            <div key={link.supply_type_id} className={`card-xp p-3 space-y-3 transition-opacity ${submitted ? 'opacity-30' : ''}`}>
+            <div key={link.supply_type_id} className={`card-xp p-3 space-y-3 border-l-2 transition-all ${submitted ? 'border-l-success' : 'border-l-transparent'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div className={`w-7 h-7 rounded flex items-center justify-center border ${supply?.category === 'Toner' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-white/5 text-text-2/40 border-white/5'}`}>
