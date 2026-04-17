@@ -39,27 +39,33 @@ export const Sidebar = () => {
       className={`fixed left-0 top-0 bottom-0 glass border-r z-50 flex flex-col pt-6 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${isSidebarCollapsed ? 'w-[90px]' : 'w-[300px]'}`}
     >
       {/* Branding Section */}
-      <div className="px-6 mb-10">
-        <div className={`flex items-center gap-5 group border-b border-border pb-8 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-          <div className="flex-shrink-0 w-12 h-16 rounded-[12px] bg-primary flex items-center justify-center text-black shadow-xl shadow-primary/20 transition-transform duration-500 group-hover:scale-105">
-            <Layers size={28} strokeWidth={2.5} />
+      <div className="px-8 mb-10 relative">
+        <div className={`flex items-center gap-4 group ${isSidebarCollapsed ? 'justify-center border-b border-border pb-8' : ''}`}>
+          <div className="flex-shrink-0 w-12 h-16 rounded-[14px] bg-primary flex items-center justify-center text-black shadow-xl shadow-primary/10 transition-transform duration-500 group-hover:scale-105">
+            <Layers size={28} strokeWidth={3} />
           </div>
           
           {!isSidebarCollapsed && (
             <div className="flex items-center gap-4 animate-in fade-in slide-in-from-left-4 duration-700">
-              <h1 className="text-lg font-black italic tracking-tighter uppercase leading-none flex items-center whitespace-nowrap">
+              <h1 className="text-xl font-black italic tracking-tighter uppercase leading-none flex items-center whitespace-nowrap">
                 <span className="text-text-1">RDY</span><span className="text-primary ml-1.5">SUPPLY</span>
               </h1>
               
-              <div className="w-px h-10 bg-white/10" />
-
-              <div className="flex flex-col">
-                <p className="text-[8px] font-black text-text-2 uppercase tracking-[0.3em] opacity-40 leading-[1.2]">INVESTMENT</p>
-                <p className="text-[8px] font-black text-text-2 uppercase tracking-[0.3em] opacity-40 leading-[1.2]">PERFORMANCE</p>
+              <div className="flex flex-col text-[7.5px] font-black text-text-2/40 uppercase tracking-[0.2em] leading-[1.1] border-l border-border pl-4 ml-1">
+                <p>INVESTMENT</p>
+                <p>PERFORMANCE</p>
               </div>
             </div>
           )}
         </div>
+
+        {/* Tactical Toggle Button */}
+        <button 
+          onClick={toggleSidebar}
+          className="absolute -right-4.5 top-12 w-9 h-9 rounded-full bg-white border-[2.5px] border-black flex items-center justify-center text-black hover:scale-110 active:scale-95 transition-all shadow-[0_8px_20px_-5px_rgba(0,0,0,0.3)] z-[60] group pointer-events-auto"
+        >
+          {isSidebarCollapsed ? <ChevronRight size={18} strokeWidth={3} /> : <ChevronLeft size={18} strokeWidth={3} />}
+        </button>
       </div>
 
       {/* Navigation Section */}
@@ -98,13 +104,6 @@ export const Sidebar = () => {
         ))}
       </nav>
 
-      {/* Toggle Button */}
-      <button 
-        onClick={toggleSidebar}
-        className="absolute -right-3.5 top-24 w-7 h-7 rounded-full bg-surface border border-border flex items-center justify-center text-text-2 hover:text-primary hover:border-primary/50 transition-all shadow-xl z-[60] group"
-      >
-        {isSidebarCollapsed ? <ChevronRight size={16} className="group-hover:translate-x-0.5 transition-transform" /> : <ChevronLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />}
-      </button>
 
     </aside>
   );
