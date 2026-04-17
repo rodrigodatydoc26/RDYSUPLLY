@@ -70,25 +70,27 @@ export const Sidebar = () => {
             to={item.path}
             title={isSidebarCollapsed ? item.name : ''}
             className={({ isActive }) => `
-              flex items-center gap-4 px-4 py-4 transition-all group relative border border-transparent rounded-2xl
+              flex items-center gap-4 px-4 py-3.5 transition-all group relative rounded-2xl
               ${isActive 
-                ? 'bg-primary/10 text-text-1 border-primary/20 shadow-sm' 
+                ? 'bg-primary/10' 
                 : 'text-text-2 hover:text-text-1 hover:bg-white/5'}
               ${isSidebarCollapsed ? 'justify-center px-0' : ''}
             `}
           >
             {({ isActive }) => (
               <>
-                <item.icon size={24} strokeWidth={isActive ? 2.5 : 2} className={isActive ? 'text-primary' : 'text-text-2/40 group-hover:text-text-1/70 transition-colors'} />
+                <div className={`w-11 h-11 flex items-center justify-center rounded-xl transition-all ${isActive ? 'bg-primary/10 text-primary shadow-sm drop-shadow-[0_0_8px_rgba(var(--rdy-primary-rgb),0.3)]' : 'text-text-2/40 group-hover:text-text-1/70'}`}>
+                   <item.icon size={22} strokeWidth={isActive ? 3 : 2} />
+                </div>
                 
                 {!isSidebarCollapsed && (
-                  <span className={`text-sm font-black uppercase tracking-[0.1em] animate-in fade-in slide-in-from-left-4 duration-500 ${isActive ? 'text-primary' : ''}`}>
+                  <span className={`text-[11px] font-black uppercase tracking-[0.2em] animate-in fade-in slide-in-from-left-4 duration-500 ${isActive ? 'text-text-1' : 'text-text-2/40 group-hover:text-text-1'}`}>
                     {item.name}
                   </span>
                 )}
                 
                 {isActive && (
-                  <div className={`absolute right-0 w-1.5 h-6 bg-primary rounded-full shadow-[0_0_15px_rgba(var(--rdy-primary-rgb),0.8)] ${isSidebarCollapsed ? 'h-1.5 w-1.5 top-0 right-1/2 translate-x-1/2' : ''}`} />
+                  <div className={`absolute right-4 w-1 h-4 bg-primary rounded-full shadow-[0_0_15px_rgba(var(--rdy-primary-rgb),0.8)] ${isSidebarCollapsed ? 'h-1 w-1 top-2 right-2' : ''}`} />
                 )}
               </>
             )}
