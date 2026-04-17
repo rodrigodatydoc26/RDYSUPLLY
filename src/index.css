@@ -15,13 +15,13 @@
 /* Dark Theme (Default) */
 :root, [data-theme="dark"] {
   --color-bg: #000000;
-  --color-surface: #111111;
+  --color-surface: #000000;
   --color-text-1: #FFFFFF;
   --color-text-2: #A0A0A0;
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-subtle: rgba(255, 255, 255, 0.03);
-  --glass-bg: rgba(0, 0, 0, 0.4);
-  --glass-border: rgba(255, 255, 255, 0.05);
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-subtle: rgba(255, 255, 255, 0.05);
+  --glass-bg: rgba(0, 0, 0, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.1);
   --rdy-bg-mesh: radial-gradient(at 0% 0%, rgba(var(--rdy-primary-rgb), 0.03) 0px, transparent 50%),
                 radial-gradient(at 100% 0%, rgba(0, 174, 239, 0.02) 0px, transparent 50%),
                 radial-gradient(at 100% 100%, rgba(230, 0, 126, 0.02) 0px, transparent 50%),

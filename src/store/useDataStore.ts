@@ -43,7 +43,8 @@ interface DataState {
   deleteSupplyType: (id: string) => void;
   _hasHydrated: boolean;
   setHasHydrated: (state: boolean) => void;
-  resetStore: () => void;
+  wipeDatabase: () => void;
+  resetToDefaults: () => void;
 }
 
 const uid = () => Math.random().toString(36).substring(7);
@@ -161,7 +162,25 @@ export const useDataStore = create<DataState>()(
       }),
       _hasHydrated: false,
       setHasHydrated: (state) => set({ _hasHydrated: state }),
-      resetStore: () => {
+      wipeDatabase: () => set((state) => {
+        const admins = state.users.filter(u => u.role === 'admin');
+        const newData = {
+          ...initialData,
+          contracts: [],
+          supplyTypes: [],
+          contractSupplies: [],
+          stockEntries: [],
+          equipmentModels: [],
+          stockAdjustments: [],
+          resolvedAlertIds: [],
+          users: admins.length > 0 ? admins : [{ id: '1', name: 'Rodrigo Daty', email: 'admin@rdy.com', password: 'admin', role: 'admin' as const, active: true, created_at: new Date().toISOString() }],
+        };
+        localStorage.setItem('rdy-supply-data', JSON.stringify({ state: newData, version: 2 }));
+        set({ ...newData });
+        window.location.reload();
+      }),
+
+      resetToDefaults: () => {
         localStorage.removeItem('rdy-supply-data');
         set({ ...initialData });
         window.location.reload();

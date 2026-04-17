@@ -44,7 +44,7 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-[#000000] flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans">
       <div className="text-center mb-10 animate-in fade-in slide-in-from-top-4 duration-700 flex flex-col items-center">
         <h1 className="text-6xl font-black tracking-tighter leading-none mb-2 flex items-center gap-3">
           <span className="text-primary">RDY</span>
@@ -55,7 +55,7 @@ export const LoginPage = () => {
         </p>
       </div>
 
-      <div className="w-full max-w-md bg-[#111111] border border-white/5 rounded-3xl p-10 shadow-2xl animate-in fade-in zoom-in duration-500">
+      <div className="w-full max-w-md bg-[#000000] border border-white/10 rounded-3xl p-10 shadow-2xl animate-in fade-in zoom-in duration-500">
         <header className="mb-8">
           <h2 className="text-3xl font-bold text-white mb-2">Bem-vindo</h2>
           <p className="text-xs text-text-2/60">Acesse sua conta para operar no modo Elite.</p>

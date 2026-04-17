@@ -4,10 +4,12 @@ import {
   X, Eye, EyeOff, Building2, Check,
 } from 'lucide-react';
 import { useDataStore } from '../store/useDataStore';
+import { useAuthStore } from '../store/useAuthStore';
 import type { Profile, UserRole } from '../types';
 import { toast } from 'sonner';
 
 export const Users = () => {
+  const { user } = useAuthStore();
   const { users, addUser, updateUser, contracts, updateContract } = useDataStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -334,6 +336,60 @@ export const Users = () => {
             >
                Confirmar Seleção ({techContracts.length})
             </button>
+          </div>
+        </div>
+      )}
+      {user?.role === 'admin' && (
+        <div className="mt-12 pt-8 border-t border-danger/20 space-y-4">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-1.5 h-1.5 rounded-full bg-danger animate-pulse" />
+            <p className="text-[8px] font-black text-danger uppercase tracking-[0.3em] leading-none">ZONA DE PERIGO OPERACIONAL</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="card-xp !bg-black border-danger/30 p-6 flex flex-col justify-between group hover:border-danger transition-all">
+              <div>
+                <h3 className="text-sm font-black text-white uppercase italic tracking-tighter">Limpeza Total</h3>
+                <p className="text-[8px] text-text-2/40 font-bold uppercase tracking-widest mt-2 leading-relaxed">
+                  Apaga todos os contratos, insumos, histórico de estoque e movimentações. 
+                  <span className="text-danger"> Apenas perfis de Administrador serão preservados.</span>
+                </p>
+              </div>
+              <button 
+                onClick={() => {
+                  if(window.confirm("ATENÇÃO: Você está prestes a apagar TODOS os dados operacionais do sistema. Esta ação não pode ser desfeita. Deseja continuar?")) {
+                    if(window.confirm("CONFIRMAÇÃO FINAL: Tenha certeza de que deseja zerar o banco completamente.")) {
+                      const { wipeDatabase } = useDataStore.getState();
+                      wipeDatabase();
+                    }
+                  }
+                }}
+                className="mt-6 h-10 w-full border border-danger/30 text-danger text-[9px] font-black uppercase tracking-[0.2em] rounded-lg hover:bg-danger hover:text-white transition-all transform hover:scale-[1.02]"
+              >
+                Zerar Banco de Dados
+              </button>
+            </div>
+
+            <div className="card-xp !bg-black border-primary/20 p-6 flex flex-col justify-between group hover:border-primary transition-all">
+              <div>
+                <h3 className="text-sm font-black text-white uppercase italic tracking-tighter">Restaurar Padrões</h3>
+                <p className="text-[8px] text-text-2/40 font-bold uppercase tracking-widest mt-2 leading-relaxed">
+                  Restaura o sistema para o estado inicial com dados fictícios de demonstração.
+                  Útil para resetar o ambiente de treinamento.
+                </p>
+              </div>
+              <button 
+                onClick={() => {
+                  if(window.confirm("Deseja restaurar os dados de exemplo de fábrica?")) {
+                    const { resetToDefaults } = useDataStore.getState();
+                    resetToDefaults();
+                  }
+                }}
+                className="mt-6 h-10 w-full border border-primary/30 text-primary text-[9px] font-black uppercase tracking-[0.2em] rounded-lg hover:bg-primary hover:text-white transition-all transform hover:scale-[1.02]"
+              >
+                Restaurar Dados de Exemplo
+              </button>
+            </div>
           </div>
         </div>
       )}
