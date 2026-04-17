@@ -44,13 +44,10 @@ export const LoginPage = () => {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans">
-      {/* Branding Estrutural */}
       <div className="text-center mb-10 animate-in fade-in slide-in-from-top-4 duration-700 flex flex-col items-center">
-        <h1 className="text-5xl font-black italic tracking-tighter uppercase leading-none flex items-center mb-2">
-          <span className="text-primary">RDY</span><span className="text-white ml-2">SUPPLY</span>
-        </h1>
-        <p className="text-[9px] font-black text-text-2 uppercase tracking-[0.3em] opacity-40 leading-none">
-          INVESTMENT - PERFORMANCE
+        <h1 className="text-6xl font-black text-primary tracking-tighter leading-none mb-2">RDY</h1>
+        <p className="text-[10px] font-black text-text-2 uppercase tracking-[0.4em] opacity-60 leading-none">
+          INVESTMENT PERFORMANCE
         </p>
       </div>
 
