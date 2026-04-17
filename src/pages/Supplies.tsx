@@ -98,104 +98,131 @@ export const Supplies = () => {
   };
 
   return (
-    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border pb-4">
-        <div>
-           <div className="flex items-center gap-2 mb-1">
-             <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-             <p className="text-[8px] font-black text-text-2 uppercase tracking-widest leading-none">Catálogo Mestre de Recursos</p>
-           </div>
-           <h2 className="text-xl font-black text-text-1 italic tracking-tighter uppercase leading-none">
-             Insumos <span className="text-text-2/40">e Ativos</span>
-           </h2>
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+            <p className="text-text-2 text-[9px] font-black uppercase tracking-[0.3em]">Catálogo Mestre de Recursos</p>
+          </div>
+          <h2 className="text-3xl font-black text-text-1 italic tracking-tighter uppercase leading-none">
+            INSUMOS <span className="text-text-2/40 font-light not-italic">E ATIVOS</span>
+          </h2>
         </div>
         {user?.role !== 'technician' && (
-          <button className="rdy-btn-primary h-9" onClick={openAddModal}>
-            <Plus size={14} />
-            <span className="uppercase tracking-wider">Novo {activeTab === 'supplies' ? 'Insumo' : 'Modelo'}</span>
+          <button 
+            className="h-12 px-8 bg-primary text-black rounded-xl font-black italic uppercase text-[11px] tracking-widest shadow-xl shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
+            onClick={openAddModal}
+          >
+            <Plus size={16} strokeWidth={3} />
+            <span>Novo {activeTab === 'supplies' ? 'Insumo' : 'Equipamento'}</span>
           </button>
         )}
       </div>
 
-      <div className="flex items-center gap-2 p-0.5 bg-surface/50 border border-border rounded w-fit">
+      {/* Navigation Tabs - Elite Style */}
+      <div className="flex items-center gap-3 p-1.5 bg-surface/50 border border-border/40 rounded-2xl w-fit shadow-inner">
         <button 
           onClick={() => { setActiveTab('supplies'); setSearchTerm(''); }}
-          className={`flex items-center gap-2 px-4 h-7 rounded text-[8px] font-black uppercase tracking-wider transition-all ${activeTab === 'supplies' ? 'bg-primary text-black' : 'text-text-2 hover:text-text-1'}`}
+          className={`flex items-center gap-3 px-6 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${activeTab === 'supplies' ? 'bg-primary text-black shadow-lg shadow-primary/20' : 'text-text-2/60 hover:text-text-1 hover:bg-white/5'}`}
         >
-          <Box size={12} />
+          <Box size={16} strokeWidth={activeTab === 'supplies' ? 2.5 : 2} />
           Insumos
         </button>
         <button 
           onClick={() => { setActiveTab('equipment'); setSearchTerm(''); }}
-          className={`flex items-center gap-2 px-4 h-7 rounded text-[8px] font-black uppercase tracking-wider transition-all ${activeTab === 'equipment' ? 'bg-primary text-black' : 'text-text-2 hover:text-text-1'}`}
+          className={`flex items-center gap-3 px-6 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${activeTab === 'equipment' ? 'bg-primary text-black shadow-lg shadow-primary/20' : 'text-text-2/60 hover:text-text-1 hover:bg-white/5'}`}
         >
-          <Printer size={12} />
+          <Printer size={16} strokeWidth={activeTab === 'equipment' ? 2.5 : 2} />
           Equipamentos
         </button>
       </div>
 
-      <div className="relative group w-full xl:w-96">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-2/40 group-focus-within:text-primary transition-colors" size={14} />
-        <input
-          type="text"
-          placeholder={`Filtrar ${activeTab === 'supplies' ? 'insumos' : 'modelos'}...`}
-          className="rdy-input h-9 pl-10"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
+      {/* Content Container */}
+      <div className="bg-white border border-border/60 rounded-[32px] overflow-hidden shadow-2xl">
+        {/* Search Bar - Elite Style */}
+        <div className="px-8 py-6 bg-surface/10 border-b border-border/40">
+           <div className="relative group w-full max-w-2xl">
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-text-2/30 group-focus-within:text-primary transition-colors" size={18} />
+              <input
+                type="text"
+                placeholder={`FILTRAR ${activeTab === 'supplies' ? 'INSUMOS' : 'MODELOS'}...`}
+                className="w-full h-14 bg-surface/40 border border-hidden rounded-2xl pl-16 pr-8 text-[11px] uppercase font-bold tracking-[0.1em] text-text-1 placeholder-text-2/20 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+           </div>
+        </div>
 
-      <div className="card-xp overflow-hidden">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-border text-text-2 text-[7px] font-black uppercase tracking-widest bg-surface/30">
-              <th className="px-4 py-2 opacity-50">{activeTab === 'supplies' ? 'Identificação' : 'Nome do Modelo'}</th>
-              <th className="px-4 py-2 opacity-50">{activeTab === 'supplies' ? 'Categoria' : 'Fabricante'}</th>
-              {activeTab === 'supplies' && <th className="px-4 py-2 opacity-50">Rendimento/Cap</th>}
-              <th className="px-4 py-2 text-right opacity-50">Tarefa</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border-subtle">
-            {activeTab === 'supplies' ? (
-              filteredSupplies.map(supply => (
-                <tr key={supply.id} className="group/row hover:bg-white/5 transition-all text-[10px]">
-                  <td className="px-4 py-1.5 focus-within:bg-primary/5">
-                    <p className="font-bold text-text-1 uppercase tracking-tight">{supply.name}</p>
-                    <p className="text-[7px] text-text-2 font-bold uppercase tracking-widest">{supply.unit}</p>
-                  </td>
-                  <td className="px-4 py-1.5">
-                    <div className="flex items-center gap-2">
-                       <span className="text-[7px] px-1.5 py-0.5 bg-border rounded text-text-2 font-black uppercase tracking-wider">{supply.category}</span>
-                       <span className="text-[7px] text-text-2/20 uppercase font-black">{supply.color}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-1.5 font-medium text-text-2/40">
-                    {supply.capacity} pg
-                  </td>
-                  <td className="px-4 py-1.5 text-right">
-                    <div className="flex items-center justify-end gap-3">
-                      <button onClick={() => openEditModal(supply)} className="text-text-2/20 hover:text-primary transition-colors"><Edit2 size={12} /></button>
-                      <button onClick={() => deleteSupplyType(supply.id)} className="text-text-2/20 hover:text-danger transition-colors"><Trash2 size={12} /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              filteredEquipment.map(model => (
-                <tr key={model.id} className="group/row hover:bg-white/5 transition-all text-[10px]">
-                  <td className="px-4 py-1.5 font-bold text-text-1 uppercase tracking-tight">{model.name}</td>
-                  <td className="px-4 py-1.5 text-[8px] font-black text-text-2 uppercase tracking-widest">{model.brand}</td>
-                  <td className="px-4 py-1.5 text-right">
-                    <div className="flex items-center justify-end gap-3">
-                      <button onClick={() => openEditModal(model)} className="text-text-2/20 hover:text-primary transition-colors"><Edit2 size={12} /></button>
-                      <button onClick={() => deleteEquipmentModel(model.id)} className="text-text-2/20 hover:text-danger transition-colors"><Trash2 size={12} /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+        {/* High Density Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-border text-text-2 text-[8px] font-black uppercase tracking-[0.2em] bg-surface/20">
+                <th className="px-8 py-5">{activeTab === 'supplies' ? 'Identificação' : 'Nome do Modelo'}</th>
+                <th className="px-8 py-5">{activeTab === 'supplies' ? 'Categoria' : 'Fabricante'}</th>
+                {activeTab === 'supplies' && <th className="px-8 py-5">Rendimento/Cap</th>}
+                <th className="px-8 py-5 text-right">Tarefa</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/20">
+              {activeTab === 'supplies' ? (
+                filteredSupplies.map(supply => (
+                  <tr key={supply.id} className="group hover:bg-black/[0.01] transition-all">
+                    <td className="px-8 py-5">
+                      <div>
+                        <p className="font-black text-text-1 uppercase tracking-tight text-sm leading-tight">{supply.name}</p>
+                        <p className="text-[9px] text-text-2 font-black uppercase tracking-widest mt-1 opacity-40">{supply.unit}</p>
+                      </div>
+                    </td>
+                    <td className="px-8 py-5">
+                      <div className="flex items-center gap-3">
+                         <div className="px-3 py-1 bg-surface border border-border rounded-lg text-text-2 text-[9px] font-black uppercase tracking-widest shadow-sm">
+                            {supply.category} <span className="opacity-30 ml-2">{supply.color}</span>
+                         </div>
+                      </div>
+                    </td>
+                    <td className="px-8 py-5 font-black text-text-2/40 text-[11px] uppercase tracking-widest">
+                      {supply.capacity} pg
+                    </td>
+                    <td className="px-8 py-5">
+                      <div className="flex items-center justify-end gap-3">
+                         <button onClick={() => openEditModal(supply)} className="w-10 h-10 flex items-center justify-center text-text-2/20 hover:text-black hover:bg-surface rounded-xl border border-transparent hover:border-border transition-all">
+                           <Edit2 size={16} />
+                         </button>
+                         <button onClick={() => deleteSupplyType(supply.id)} className="w-10 h-10 flex items-center justify-center text-text-2/20 hover:text-danger hover:bg-danger/5 rounded-xl border border-transparent hover:border-danger/20 transition-all">
+                           <Trash2 size={16} />
+                         </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                filteredEquipment.map(model => (
+                  <tr key={model.id} className="group hover:bg-black/[0.01] transition-all">
+                    <td className="px-8 py-5">
+                      <p className="font-black text-text-1 uppercase tracking-tight text-sm leading-tight">{model.name}</p>
+                    </td>
+                    <td className="px-8 py-5 text-[11px] font-black text-text-2/60 uppercase tracking-widest">
+                      {model.brand}
+                    </td>
+                    <td className="px-8 py-5">
+                      <div className="flex items-center justify-end gap-3">
+                         <button onClick={() => openEditModal(model)} className="w-10 h-10 flex items-center justify-center text-text-2/20 hover:text-black hover:bg-surface rounded-xl border border-transparent hover:border-border transition-all">
+                           <Edit2 size={16} />
+                         </button>
+                         <button onClick={() => deleteEquipmentModel(model.id)} className="w-10 h-10 flex items-center justify-center text-text-2/20 hover:text-danger hover:bg-danger/5 rounded-xl border border-transparent hover:border-danger/20 transition-all">
+                           <Trash2 size={16} />
+                         </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {isModalOpen && (

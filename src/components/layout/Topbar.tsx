@@ -150,7 +150,13 @@ export const Topbar = () => {
             )}
           </div>
           
-          <div className="flex items-center gap-4 border-l border-border pl-6">
+          <div className="flex items-center gap-4 border-l border-border pl-6 relative">
+             {/* Security Context Tag */}
+             <div className="absolute -top-7 right-0 text-right">
+                <p className="text-[7px] font-black text-text-2/40 uppercase tracking-[0.3em] leading-none">Contexto de Segurança</p>
+                <p className="text-[10px] font-black text-text-1 mt-1 tracking-widest">{format(new Date(), 'dd.MM.yy')}</p>
+             </div>
+
              <div className="flex flex-col items-end">
                 <p className="text-[8px] font-black text-text-1 italic uppercase leading-none">{user?.name}</p>
                 <div className="flex items-center gap-2 mt-1.5">

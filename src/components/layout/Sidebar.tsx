@@ -47,11 +47,13 @@ export const Sidebar = () => {
           
           {!isSidebarCollapsed && (
             <div className="flex items-center gap-4 animate-in fade-in slide-in-from-left-4 duration-700">
-              <h1 className="text-xl font-black italic tracking-tighter uppercase leading-none flex items-center whitespace-nowrap">
+              <h1 className="text-2xl font-black italic tracking-tighter uppercase leading-none flex items-center whitespace-nowrap">
                 <span className="text-text-1">RDY</span><span className="text-primary ml-1.5">SUPPLY</span>
               </h1>
               
-              <div className="flex flex-col text-[7.5px] font-black text-text-2/40 uppercase tracking-[0.2em] leading-[1.1] border-l border-border pl-4 ml-1">
+              <div className="w-[1.5px] h-8 bg-border/40 ml-2" />
+
+              <div className="flex flex-col text-[7.5px] font-black text-text-2/40 uppercase tracking-[0.3em] leading-tight ml-3">
                 <p>INVESTMENT</p>
                 <p>PERFORMANCE</p>
               </div>
