@@ -107,12 +107,7 @@ export const LoginPage = () => {
           </div>
         </form>
 
-        <div className="mt-8 text-center space-y-4">
-          <p className="text-[10px] text-text-2/40">
-            Novo por aqui? <span className="text-primary font-bold cursor-pointer hover:underline">Criar conta de membro</span>
-          </p>
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-white/5 to-transparent" />
-        </div>
+
       </div>
 
       <footer className="mt-12 text-[8px] font-bold text-white/10 uppercase tracking-[0.4em]">
