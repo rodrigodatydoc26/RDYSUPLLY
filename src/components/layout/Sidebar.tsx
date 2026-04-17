@@ -104,38 +104,6 @@ export const Sidebar = () => {
         {isSidebarCollapsed ? <ChevronRight size={16} className="group-hover:translate-x-0.5 transition-transform" /> : <ChevronLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />}
       </button>
 
-      {/* Profile & Settings Section */}
-      <div className={`p-6 border-t border-border mt-auto bg-surface/30 backdrop-blur-sm transition-all duration-300 ${isSidebarCollapsed ? 'items-center px-2' : ''}`}>
-        <div className={`flex items-center justify-between mb-6 ${isSidebarCollapsed ? 'flex-col gap-6' : ''}`}>
-           <div className="flex items-center gap-4 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-surface border border-border flex items-center justify-center text-xs font-black text-primary italic shadow-inner">
-                {user?.name?.charAt(0).toUpperCase()}
-              </div>
-              {!isSidebarCollapsed && (
-                <div className="min-w-0 animate-in fade-in slide-in-from-left-4 duration-700">
-                  <p className="text-xs font-black text-text-1 italic truncate leading-none uppercase">{user?.name}</p>
-                  <p className="text-[8px] font-bold text-text-2/40 uppercase tracking-[0.3em] mt-2">{user?.role}</p>
-                </div>
-              )}
-           </div>
-           <button 
-             onClick={toggleTheme}
-             className="w-10 h-10 rounded-xl bg-surface border border-border flex items-center justify-center text-text-2 hover:text-primary hover:border-primary/30 transition-all shadow-sm"
-             title={isSidebarCollapsed ? "Mudar Tema" : ""}
-           >
-             {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
-           </button>
-        </div>
-        
-        <button 
-          onClick={logout}
-          title={isSidebarCollapsed ? "Sair" : ""}
-          className={`w-full h-12 text-[10px] font-black text-text-2 uppercase tracking-[0.3em] border border-border rounded-xl hover:bg-danger hover:border-danger hover:text-white transition-all flex items-center justify-center gap-3 group ${isSidebarCollapsed ? 'px-0' : ''}`}
-        >
-          <LogOut size={18} className="group-hover:scale-110 transition-transform" />
-          {!isSidebarCollapsed && <span>Sair do Sistema</span>}
-        </button>
-      </div>
     </aside>
   );
 };
