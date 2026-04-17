@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   Plus, Search, Edit2, User,
-  X, UserCheck,
+  X, Eye, EyeOff, Building2, Check,
 } from 'lucide-react';
 import { useDataStore } from '../store/useDataStore';
 import type { Profile, UserRole } from '../types';
@@ -13,9 +13,12 @@ export const Users = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [techContracts, setTechContracts] = useState<string[]>([]);
+  const [isContractModalOpen, setIsContractModalOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [contractSearch, setContractSearch] = useState('');
 
   const [formData, setFormData] = useState<Omit<Profile, 'id' | 'created_at'>>({
-    name: '', email: '', role: 'technician', active: true,
+    name: '', email: '', role: 'technician', active: true, password: '',
   });
 
   const filteredUsers = users.filter(u =>
@@ -29,14 +32,14 @@ export const Users = () => {
 
   const openAddModal = () => {
     setEditingId(null);
-    setFormData({ name: '', email: '', role: 'technician', active: true });
+    setFormData({ name: '', email: '', role: 'technician', active: true, password: '' });
     setTechContracts([]);
     setIsModalOpen(true);
   };
 
   const openEditModal = (user: Profile) => {
     setEditingId(user.id);
-    setFormData({ name: user.name, email: user.email, role: user.role, active: user.active });
+    setFormData({ name: user.name, email: user.email, role: user.role, active: user.active, password: user.password || '' });
     setTechContracts(contracts.filter(c => c.technicianIds.includes(user.id)).map(c => c.id));
     setIsModalOpen(true);
   };
@@ -184,13 +187,35 @@ export const Users = () => {
             </div>
 
             <div className="space-y-4">
-              <div>
-                <label className="text-[8px] font-black text-text-2 uppercase tracking-widest ml-1 mb-1.5 block">Nome Completo</label>
-                <input className="rdy-input h-9" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[8px] font-black text-text-2 uppercase tracking-widest ml-1 mb-1.5 block">Nome Completo</label>
+                  <input className="rdy-input h-9" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+                </div>
+                <div>
+                  <label className="text-[8px] font-black text-text-2 uppercase tracking-widest ml-1 mb-1.5 block">Identidade de E-mail</label>
+                  <input type="email" className="rdy-input h-9" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+                </div>
               </div>
+
               <div>
-                <label className="text-[8px] font-black text-text-2 uppercase tracking-widest ml-1 mb-1.5 block">Identidade de E-mail</label>
-                <input type="email" className="rdy-input h-9" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+                <label className="text-[8px] font-black text-text-2 uppercase tracking-widest ml-1 mb-1.5 block">Credencial de Acesso (Senha)</label>
+                <div className="relative">
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    className="rdy-input h-9 pr-10" 
+                    value={formData.password} 
+                    onChange={e => setFormData({ ...formData, password: e.target.value })} 
+                    placeholder="Definir nova senha operacional..."
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-2/40 hover:text-primary transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -216,17 +241,29 @@ export const Users = () => {
 
               {formData.role === 'technician' && (
                 <div>
-                  <label className="text-[8px] font-black text-text-2 uppercase tracking-widest ml-1 mb-2 block">Vínculos Operacionais</label>
-                  <div className="grid grid-cols-1 gap-1 max-h-32 overflow-y-auto scroll-elite p-1 bg-bg/20 rounded border border-border">
-                    {contracts.filter(c => c.active).map(c => (
-                      <label key={c.id} className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-all ${techContracts.includes(c.id) ? 'bg-primary/10 text-text-1' : 'text-text-2/40 hover:bg-white/5'}`}>
-                         <input type="checkbox" className="hidden" checked={techContracts.includes(c.id)} onChange={() => toggleTechContract(c.id)} />
-                         <div className={`w-3 h-3 rounded-sm border flex items-center justify-center transition-all ${techContracts.includes(c.id) ? 'bg-primary border-primary' : 'border-border'}`}>
-                            {techContracts.includes(c.id) && <UserCheck size={8} className="text-black" />}
-                         </div>
-                         <span className="text-[9px] font-bold uppercase truncate">{c.name}</span>
-                      </label>
-                    ))}
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-[8px] font-black text-text-2 uppercase tracking-widest ml-1 block">Vínculos Operacionais</label>
+                    <button 
+                      type="button"
+                      onClick={() => setIsContractModalOpen(true)}
+                      className="text-[8px] font-black text-primary uppercase tracking-widest hover:underline"
+                    >
+                      Ver todos / Gerenciar
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 gap-1 max-h-24 overflow-y-auto scroll-elite p-1 bg-bg/20 rounded border border-border">
+                    {contracts.filter(c => techContracts.includes(c.id)).length > 0 ? (
+                      contracts.filter(c => techContracts.includes(c.id)).map(c => (
+                        <div key={c.id} className="flex items-center gap-2 p-1.5 rounded bg-primary/10 text-primary border border-primary/20">
+                           <Building2 size={10} />
+                           <span className="text-[9px] font-bold uppercase truncate">{c.name}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="py-4 text-center opacity-20">
+                        <p className="text-[8px] font-black uppercase">Nenhum contrato vinculado</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -235,6 +272,68 @@ export const Users = () => {
                  Confirmar Alterações de Perfil
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Modal de Seleção de Contratos */}
+      {isContractModalOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 backdrop-blur-md bg-black/80">
+          <div className="w-full max-w-md bg-surface border border-border rounded-lg shadow-2xl p-6 space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-start border-b border-border pb-4">
+              <div>
+                <h3 className="text-lg font-black text-text-1 italic uppercase tracking-tighter leading-none">
+                  Vincular <span className="text-primary">Contratos</span>
+                </h3>
+                <p className="text-[7px] font-black text-text-2 uppercase tracking-widest mt-1 opacity-40">Gestão de Carteira do Técnico</p>
+              </div>
+              <button 
+                onClick={() => setIsContractModalOpen(false)} 
+                className="w-6 h-6 rounded bg-surface border border-border flex items-center justify-center text-text-2 hover:text-danger px-0 transition-colors"
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-2/40" size={14} />
+              <input 
+                className="rdy-input h-9 pl-10" 
+                placeholder="PROCURAR CONTRATO OU CLIENTE..."
+                value={contractSearch}
+                onChange={e => setContractSearch(e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-1 max-h-64 overflow-y-auto scroll-elite p-1 bg-bg/20 rounded border border-border">
+              {contracts
+                .filter(c => c.active && (c.name.toLowerCase().includes(contractSearch.toLowerCase()) || c.client.toLowerCase().includes(contractSearch.toLowerCase())))
+                .map(c => (
+                  <label 
+                    key={c.id} 
+                    className={`flex items-center justify-between p-3 rounded cursor-pointer transition-all border ${
+                      techContracts.includes(c.id) ? 'bg-primary/5 border-primary/30 text-text-1' : 'bg-surface border-border/40 text-text-2/40 hover:bg-white/5'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-4 h-4 rounded-sm border flex items-center justify-center transition-all ${techContracts.includes(c.id) ? 'bg-primary border-primary' : 'border-border'}`}>
+                        {techContracts.includes(c.id) && <Check size={10} className="text-black" />}
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase leading-none">{c.name}</p>
+                        <p className="text-[7px] font-black uppercase tracking-widest mt-1 opacity-40">{c.client}</p>
+                      </div>
+                    </div>
+                    <input type="checkbox" className="hidden" checked={techContracts.includes(c.id)} onChange={() => toggleTechContract(c.id)} />
+                  </label>
+                ))}
+            </div>
+
+            <button 
+              onClick={() => setIsContractModalOpen(false)}
+              className="rdy-btn-primary w-full h-10 mt-2 text-[10px]"
+            >
+               Confirmar Seleção ({techContracts.length})
+            </button>
           </div>
         </div>
       )}

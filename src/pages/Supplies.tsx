@@ -7,10 +7,7 @@ import {
   Printer,
   X,
   Save,
-  Layers,
   Box,
-  Droplets,
-  Package
 } from 'lucide-react';
 import { useDataStore } from '../store/useDataStore';
 import { useAuthStore } from '../store/useAuthStore';

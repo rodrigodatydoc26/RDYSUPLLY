@@ -1,16 +1,12 @@
-import { Users, FileText, AlertCircle, CheckCircle2, BarChart3, ArrowRight, Box, ShieldCheck } from 'lucide-react';
+import { Users, FileText, AlertCircle, CheckCircle2, ArrowRight, Box, ShieldCheck } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useDataStore } from '../store/useDataStore';
 import { format, subDays } from 'date-fns';
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 
 export const Dashboard = () => {
   const { contracts, users, stockEntries, contractSupplies, supplyTypes, resolvedAlertIds } = useDataStore();
 
-  const [contractFilter, setContractFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [chartContractId] = useState('all');
-  const [chartSupplyId] = useState('all');
 
   const today = format(new Date(), 'yyyy-MM-dd');
 

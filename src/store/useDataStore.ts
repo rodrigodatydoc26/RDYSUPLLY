@@ -37,8 +37,10 @@ interface DataState {
 
   updateEquipmentModel: (model: EquipmentModel) => void;
   addEquipmentModel: (model: Omit<EquipmentModel, 'id' | 'created_at'>) => void;
+  deleteEquipmentModel: (id: string) => void;
 
   updateContractSupplies: (contractId: string, supplies: Omit<ContractSupply, 'id'>[]) => void;
+  deleteSupplyType: (id: string) => void;
   _hasHydrated: boolean;
   setHasHydrated: (state: boolean) => void;
   resetStore: () => void;
@@ -70,8 +72,8 @@ const initialData = {
     { id: 'cs4', contract_id: 'c3', supply_type_id: 's4', min_stock: 1 },
   ],
   users: [
-    { id: '1', name: 'Rodrigo Daty', email: 'rodrigo@rdy.com', role: 'admin' as const, active: true, created_at: new Date().toISOString() },
-    { id: '2', name: 'Tecnico Master', email: 'tecnico@rdy.com', role: 'technician' as const, active: true, created_at: new Date().toISOString() },
+    { id: '1', name: 'Rodrigo Daty', email: 'admin@rdy.com', password: 'admin', role: 'admin' as const, active: true, created_at: new Date().toISOString() },
+    { id: '2', name: 'Tecnico Master', email: 'tecnico@rdy.com', password: '123', role: 'technician' as const, active: true, created_at: new Date().toISOString() },
   ],
   stockEntries: [
     { id: 'v1', contract_id: 'c1', supply_type_id: 's1', current_stock: 0, entries_in: 0, entries_out: 0, technician_id: '2', entry_date: format(new Date(), 'yyyy-MM-dd'), created_at: new Date(Date.now() - 86400000).toISOString() },
@@ -142,6 +144,17 @@ export const useDataStore = create<DataState>()(
         equipmentModels: [...state.equipmentModels, { ...model, id: uid(), created_at: new Date().toISOString() }],
       })),
 
+      deleteEquipmentModel: (id) => set((state) => ({
+        equipmentModels: state.equipmentModels.filter(m => m.id !== id),
+        supplyTypes: state.supplyTypes.filter(s => s.equipment_model_id !== id),
+      })),
+
+      deleteSupplyType: (id) => set((state) => ({
+        supplyTypes: state.supplyTypes.filter(s => s.id !== id),
+        contractSupplies: state.contractSupplies.filter(cs => cs.supply_type_id !== id),
+        stockEntries: state.stockEntries.filter(e => e.supply_type_id !== id),
+      })),
+
       updateContractSupplies: (contractId, supplies) => set((state) => {
         const filtered = state.contractSupplies.filter(cs => cs.contract_id !== contractId);
         return { contractSupplies: [...filtered, ...supplies.map(s => ({ ...s, id: uid() }))] };
@@ -154,8 +167,9 @@ export const useDataStore = create<DataState>()(
         window.location.reload();
       }
     }),
-    { 
+    {
       name: 'rdy-supply-data',
+      version: 2,
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
       }

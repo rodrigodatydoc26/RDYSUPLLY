@@ -1,9 +1,6 @@
 import { useMemo, useState } from 'react';
 import { 
-  Layers,
   ArrowUpRight,
-  Filter,
-  Zap,
   Activity,
   ShieldCheck,
   SearchCode,
@@ -15,7 +12,7 @@ import { format } from 'date-fns';
 export const Inventory = () => {
   const { contracts, supplyTypes, contractSupplies, stockEntries } = useDataStore();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<'all' | 'toner' | 'paper' | 'part'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'Toner' | 'Papel' | 'Cilindro'>('all');
 
   const currentInventory = useMemo(() => {
     if (!contracts || !stockEntries) return [];
@@ -54,19 +51,6 @@ export const Inventory = () => {
     });
   }, [contracts, supplyTypes, contractSupplies, stockEntries, searchTerm, selectedCategory]);
 
-  const stats = useMemo(() => {
-    let totalItems = 0;
-    let criticalItems = 0;
-    
-    currentInventory.forEach(c => {
-      c.supplies.forEach(s => {
-        totalItems++;
-        if (s.current_stock <= s.min_stock) criticalItems++;
-      });
-    });
-
-    return { totalItems, criticalItems, okItems: totalItems - criticalItems };
-  }, [currentInventory]);
 
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-6 duration-700">
@@ -174,14 +158,14 @@ export const Inventory = () => {
                          <div className="flex items-center gap-1.5">
                             <div className={`w-1 h-1 rounded-full ${isCritical ? 'bg-danger animate-pulse shadow-[0_0_5px_rgba(255,82,82,0.6)]' : 'bg-primary/40'}`} />
                             <span className={`text-[7px] font-black uppercase tracking-widest ${isCritical ? 'text-danger' : 'text-text-2/40'}`}>
-                               {isCritical ? 'Critical' : 'Nominal'}
+                               {isCritical ? 'Crítico' : 'Nominal'}
                             </span>
                          </div>
                       </td>
                       <td className="px-4 py-1.5 text-right">
                          <button className="h-6 px-2 bg-surface border border-border rounded text-[7px] font-black text-text-2 uppercase tracking-widest hover:border-primary hover:text-primary transition-all flex items-center gap-1 ml-auto group/btn">
-                            <span>Adjust</span>
-                            <ArrowUpRight size={8} />
+                             <span>Ajustar</span>
+                             <ArrowUpRight size={8} />
                          </button>
                       </td>
                     </tr>

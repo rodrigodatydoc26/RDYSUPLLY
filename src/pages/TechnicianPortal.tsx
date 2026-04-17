@@ -1,8 +1,10 @@
 import { useState, useMemo } from 'react';
 import {
+  Building2,
   ChevronRight,
   Save,
   ChevronLeft,
+  AlertCircle,
   UserCheck,
   CheckCircle2,
   Droplets,
@@ -213,37 +215,35 @@ export const TechnicianPortal = () => {
                 )}
               </div>
 
-              {!submitted && (
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="space-y-1">
-                    <label className="text-[7px] font-black text-text-2 uppercase tracking-widest ml-1">ESTOQUE</label>
-                    <input
-                      type="number"
-                      className="rdy-input h-7 text-center text-[10px] bg-white/5 border-white/5"
-                      value={data.current_stock || ''}
-                      onChange={(e) => handleInputChange(link.supply_type_id, 'current_stock', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[7px] font-black text-success uppercase tracking-widest ml-1">REPOS</label>
-                    <input
-                      type="number"
-                      className="rdy-input h-7 text-center text-[10px] border-success/20 bg-success/5"
-                      value={data.incoming || ''}
-                      onChange={(e) => handleInputChange(link.supply_type_id, 'incoming', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[7px] font-black text-danger uppercase tracking-widest ml-1">USO</label>
-                    <input
-                      type="number"
-                      className="rdy-input h-7 text-center text-[10px] border-danger/20 bg-danger/5"
-                      value={data.outgoing || ''}
-                      onChange={(e) => handleInputChange(link.supply_type_id, 'outgoing', e.target.value)}
-                    />
-                  </div>
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                <div className="space-y-1">
+                  <label className="text-[7px] font-black text-text-2 uppercase tracking-widest ml-1">ESTOQUE</label>
+                  <input
+                    type="number"
+                    className="rdy-input h-7 text-center text-[10px] bg-white/5 border-white/5"
+                    value={data.current_stock || ''}
+                    onChange={(e) => handleInputChange(link.supply_type_id, 'current_stock', e.target.value)}
+                  />
                 </div>
-              )}
+                <div className="space-y-1">
+                  <label className="text-[7px] font-black text-success uppercase tracking-widest ml-1">REPOS</label>
+                  <input
+                    type="number"
+                    className="rdy-input h-7 text-center text-[10px] border-success/20 bg-success/5"
+                    value={data.incoming || ''}
+                    onChange={(e) => handleInputChange(link.supply_type_id, 'incoming', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[7px] font-black text-danger uppercase tracking-widest ml-1">USO</label>
+                  <input
+                    type="number"
+                    className="rdy-input h-7 text-center text-[10px] border-danger/20 bg-danger/5"
+                    value={data.outgoing || ''}
+                    onChange={(e) => handleInputChange(link.supply_type_id, 'outgoing', e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
           );
         })}

@@ -6,6 +6,7 @@ export interface Profile {
   email: string;
   role: UserRole;
   active: boolean;
+  password?: string;
   created_at: string;
 }
 

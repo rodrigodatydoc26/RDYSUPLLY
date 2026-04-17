@@ -1,19 +1,13 @@
 import { create } from 'zustand';
 
-export type UserRole = 'admin' | 'analyst' | 'technician' | 'cto';
-
-interface Profile {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-}
+import type { Profile } from '../types';
 
 interface AuthState {
   user: Profile | null;
   isLoading: boolean;
+  _hasHydrated: boolean;
   themeColor: string;
-  login: (email: string, role: UserRole) => Promise<void>;
+  login: (profile: Profile) => Promise<void>;
   logout: () => void;
   setThemeColor: (color: string) => void;
 }
@@ -21,21 +15,15 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isLoading: false,
+  _hasHydrated: false,
   themeColor: localStorage.getItem('rdy-theme') || '#F5C800',
-  login: async (email, role) => {
+  login: async (profile) => {
     set({ isLoading: true });
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Simulando delay de segurança
+    await new Promise((resolve) => setTimeout(resolve, 800));
     
-    const mockUser: Profile = {
-      id: Math.random().toString(36).substring(7),
-      name: email.split('@')[0],
-      email: email,
-      role: role,
-    };
-    
-    set({ user: mockUser, isLoading: false });
-    localStorage.setItem('rdy-user', JSON.stringify(mockUser));
+    set({ user: profile, isLoading: false });
+    localStorage.setItem('rdy-user', JSON.stringify(profile));
   },
   logout: () => {
     set({ user: null });
@@ -51,8 +39,11 @@ export const useAuthStore = create<AuthState>((set) => ({
 const savedUser = localStorage.getItem('rdy-user');
 if (savedUser) {
   try {
-    useAuthStore.setState({ user: JSON.parse(savedUser) });
+    useAuthStore.setState({ user: JSON.parse(savedUser), _hasHydrated: true });
   } catch {
     localStorage.removeItem('rdy-user');
+    useAuthStore.setState({ _hasHydrated: true });
   }
+} else {
+  useAuthStore.setState({ _hasHydrated: true });
 }

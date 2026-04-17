@@ -7,6 +7,7 @@ import {
   X,
   Trash2,
   Save,
+  Check,
 } from 'lucide-react';
 import { useDataStore } from '../store/useDataStore';
 import { useAuthStore } from '../store/useAuthStore';
@@ -29,6 +30,9 @@ export const Contracts = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isSupplyModalOpen, setIsSupplyModalOpen] = useState(false);
+  const [supplySearch, setSupplySearch] = useState('');
+  const [supplyCategoryFilter, setSupplyCategoryFilter] = useState<string>('all');
 
   // Form State
   const [formData, setFormData] = useState({
@@ -323,31 +327,34 @@ export const Contracts = () => {
               {/* Coluna 2: Insumos */}
               <div className="space-y-4">
                 <div>
-                  <label className="text-[7px] font-black text-text-2 uppercase tracking-widest ml-1 mb-2 block">Catálogo de Insumos e Limites</label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-[7px] font-black text-text-2 uppercase tracking-widest ml-1 block">Catálogo de Insumos e Limites</label>
+                    <button 
+                      type="button"
+                      onClick={() => setIsSupplyModalOpen(true)}
+                      className="text-[7px] font-black text-primary uppercase tracking-widest hover:underline"
+                    >
+                      Gerenciar Catálogo / Vincular
+                    </button>
+                  </div>
                   <div className="space-y-1.5 max-h-64 overflow-y-auto pr-2 scroll-elite">
-                    {supplyTypes.map(supply => {
-                      const selected = formData.supplies.find(s => s.supply_type_id === supply.id);
-                      return (
-                        <div 
-                          key={supply.id} 
-                          className={`p-2 rounded border transition-all ${
-                            selected ? 'bg-white/5 border-border' : 'bg-transparent border-white/5 opacity-40'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                               <input 
-                                 type="checkbox" 
-                                 checked={!!selected} 
-                                 onChange={() => toggleSupply(supply.id)}
-                                 className="w-3.5 h-3.5 rounded-sm border-white/20 bg-white/5 text-primary focus:ring-primary"
-                               />
-                               <div>
-                                 <p className="text-[9px] font-bold text-text-1 uppercase leading-none">{supply.name}</p>
-                                 <p className="text-[7px] text-text-2 font-black uppercase tracking-widest opacity-40">{supply.category}</p>
-                               </div>
-                            </div>
-                            {selected && (
+                    {formData.supplies.length > 0 ? (
+                      formData.supplies.map(selected => {
+                        const supply = supplyTypes.find(s => s.id === selected.supply_type_id);
+                        if (!supply) return null;
+                        return (
+                          <div 
+                            key={supply.id} 
+                            className="p-2 rounded border border-primary/20 bg-primary/5 transition-all"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                 <Package size={12} className="text-primary" />
+                                 <div>
+                                   <p className="text-[9px] font-bold text-text-1 uppercase leading-none">{supply.name}</p>
+                                   <p className="text-[7px] text-text-2 font-black uppercase tracking-widest opacity-40">{supply.category}</p>
+                                 </div>
+                              </div>
                               <div className="text-right flex items-center gap-2">
                                 <span className="text-[7px] font-black text-primary uppercase">Min:</span>
                                 <input 
@@ -357,11 +364,15 @@ export const Contracts = () => {
                                   onChange={e => updateMinStock(supply.id, parseInt(e.target.value) || 0)}
                                 />
                               </div>
-                            )}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    ) : (
+                      <div className="py-8 text-center border border-dashed border-border rounded opacity-20">
+                        <p className="text-[8px] font-black uppercase">Nenhum insumo vinculado</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -376,6 +387,86 @@ export const Contracts = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Modal de Seleção de Insumos */}
+      {isSupplyModalOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 backdrop-blur-md bg-black/80">
+          <div className="w-full max-w-lg bg-surface border border-border rounded shadow-2xl p-6 space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-start border-b border-border pb-4">
+              <div>
+                <h3 className="text-lg font-black text-text-1 italic uppercase tracking-tighter leading-none">
+                  Vincular <span className="text-primary">Insumos</span>
+                </h3>
+                <p className="text-[7px] font-black text-text-2 uppercase tracking-widest mt-1 opacity-40">Gestão de Portfólio do Contrato</p>
+              </div>
+              <button 
+                onClick={() => setIsSupplyModalOpen(false)} 
+                className="w-6 h-6 rounded bg-surface border border-border flex items-center justify-center text-text-2 hover:text-danger px-0 transition-colors"
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-2/40" size={14} />
+                <input 
+                  className="rdy-input h-9 pl-10" 
+                  placeholder="PROCURAR INSUMO..."
+                  value={supplySearch}
+                  onChange={e => setSupplySearch(e.target.value)}
+                />
+              </div>
+              <select 
+                className="rdy-input h-9 w-32 text-[8px] font-black uppercase"
+                value={supplyCategoryFilter}
+                onChange={e => setSupplyCategoryFilter(e.target.value)}
+              >
+                <option value="all">TODOS</option>
+                <option value="Toner">TONER</option>
+                <option value="Papel">PAPEL</option>
+                <option value="Cilindro">CILINDRO</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-1 gap-1 max-h-80 overflow-y-auto scroll-elite p-1 bg-bg/20 rounded border border-border">
+              {supplyTypes
+                .filter(s => 
+                  (supplyCategoryFilter === 'all' || s.category === supplyCategoryFilter) &&
+                  (s.name.toLowerCase().includes(supplySearch.toLowerCase()))
+                )
+                .map(supply => {
+                  const isSelected = !!formData.supplies.find(item => item.supply_type_id === supply.id);
+                  return (
+                    <label 
+                      key={supply.id} 
+                      className={`flex items-center justify-between p-3 rounded cursor-pointer transition-all border ${
+                        isSelected ? 'bg-primary/5 border-primary/30 text-text-1' : 'bg-surface border-border/40 text-text-2/40 hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-4 h-4 rounded-sm border flex items-center justify-center transition-all ${isSelected ? 'bg-primary border-primary' : 'border-border'}`}>
+                          {isSelected && <Check size={10} className="text-black" />}
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black uppercase leading-none">{supply.name}</p>
+                          <p className="text-[7px] font-black uppercase tracking-widest mt-1 opacity-40">{supply.category}</p>
+                        </div>
+                      </div>
+                      <input type="checkbox" className="hidden" checked={isSelected} onChange={() => toggleSupply(supply.id)} />
+                    </label>
+                  );
+                })}
+            </div>
+
+            <button 
+              onClick={() => setIsSupplyModalOpen(false)}
+              className="rdy-btn-primary w-full h-10 mt-2 text-[10px]"
+            >
+               Confirmar Vínculos ({formData.supplies.length})
+            </button>
           </div>
         </div>
       )}

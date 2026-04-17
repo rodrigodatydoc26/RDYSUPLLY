@@ -36,10 +36,10 @@ const ProtectedRoute = ({
   children: React.ReactNode; 
   allowedRoles?: string[] 
 }) => {
-  const { user, _hasHydrated } = useAuthStore();
-  const { _hasHydrated: _dataHydrated } = useDataStore();
+  const { user } = useAuthStore();
+  const { _hasHydrated } = useDataStore();
 
-  if (!_hasHydrated || !_dataHydrated) return <Loader />;
+  if (!_hasHydrated) return <Loader />;
   if (!user) return <Navigate to="/login" replace />;
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     return <Navigate to={user.role === 'technician' ? '/tecnico' : '/'} replace />;

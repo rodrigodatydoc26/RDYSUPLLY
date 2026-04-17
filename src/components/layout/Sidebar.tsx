@@ -37,11 +37,14 @@ export const Sidebar = () => {
           <div className="w-9 h-9 rounded bg-primary flex items-center justify-center text-black shadow-lg shadow-primary/10">
             <Layers size={18} strokeWidth={2.5} />
           </div>
-          <div className="flex flex-col">
-            <h1 className="text-base font-black italic tracking-tighter uppercase leading-none">
-              <span className="text-text-1">RDY</span><span className="text-primary ml-1">SUPPLY</span>
-            </h1>
-            <p className="text-[7px] font-bold text-text-2 uppercase tracking-[0.25em] opacity-40 leading-none mt-1.5">INVESTIMENTO - PERFORMANCE</p>
+          <div className="flex flex-col justify-center">
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm font-black italic tracking-tighter uppercase leading-none flex items-center">
+                <span className="text-text-1">RDY</span><span className="text-primary ml-1">SUPPLY</span>
+              </h1>
+              <div className="w-px h-2.5 bg-border/60" />
+              <p className="text-[7px] font-black text-text-2 uppercase tracking-widest opacity-60 leading-none">INVESTMENT - PERFORMANCE</p>
+            </div>
           </div>
         </div>
       </div>

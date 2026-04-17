@@ -3,9 +3,6 @@ import {
   Search,
   FileSpreadsheet,
   Package,
-  Calendar,
-  Clock,
-  User,
   ArrowRight,
   AlertTriangle,
   History as HistoryIcon,
@@ -15,7 +12,6 @@ import {
 import { useDataStore } from '../store/useDataStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { format, subDays } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
