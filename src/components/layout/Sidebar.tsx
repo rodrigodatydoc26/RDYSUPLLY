@@ -64,7 +64,7 @@ export const Sidebar = () => {
           onClick={toggleSidebar}
           className="absolute -right-4.5 top-12 w-9 h-9 rounded-full bg-white border-[2.5px] border-black flex items-center justify-center text-black hover:scale-110 active:scale-95 transition-all shadow-[0_8px_20px_-5px_rgba(0,0,0,0.3)] z-[60] group pointer-events-auto"
         >
-          {isSidebarCollapsed ? <ChevronRight size={18} strokeWidth={3} /> : <ChevronLeft size={18} strokeWidth={3} />}
+          {isSidebarCollapsed ? <ChevronRight size={18} strokeWidth={3.5} /> : <ChevronLeft size={18} strokeWidth={3.5} />}
         </button>
       </div>
 
@@ -78,15 +78,15 @@ export const Sidebar = () => {
             className={({ isActive }) => `
               flex items-center gap-4 px-4 py-3.5 transition-all group relative rounded-2xl
               ${isActive 
-                ? 'bg-primary/10' 
+                ? 'bg-primary/5' 
                 : 'text-text-2 hover:text-text-1 hover:bg-white/5'}
               ${isSidebarCollapsed ? 'justify-center px-0' : ''}
             `}
           >
             {({ isActive }) => (
               <>
-                <div className={`w-11 h-11 flex items-center justify-center rounded-xl transition-all ${isActive ? 'bg-primary/10 text-primary shadow-sm drop-shadow-[0_0_8px_rgba(var(--rdy-primary-rgb),0.3)]' : 'text-text-2/40 group-hover:text-text-1/70'}`}>
-                   <item.icon size={22} strokeWidth={isActive ? 3 : 2} />
+                <div className={`w-14 h-14 flex items-center justify-center rounded-2xl transition-all ${isActive ? 'bg-primary/10 text-primary shadow-sm' : 'text-text-2/40 group-hover:text-text-1/70'}`}>
+                   <item.icon size={26} strokeWidth={isActive ? 3 : 2} />
                 </div>
                 
                 {!isSidebarCollapsed && (
@@ -96,7 +96,7 @@ export const Sidebar = () => {
                 )}
                 
                 {isActive && (
-                  <div className={`absolute right-4 w-1 h-4 bg-primary rounded-full shadow-[0_0_15px_rgba(var(--rdy-primary-rgb),0.8)] ${isSidebarCollapsed ? 'h-1 w-1 top-2 right-2' : ''}`} />
+                  <div className={`absolute w-1.5 bg-primary rounded-full shadow-[0_0_10px_rgba(var(--rdy-primary-rgb),0.5)] ${isSidebarCollapsed ? 'right-1.5 h-8' : 'right-4 h-5'}`} />
                 )}
               </>
             )}
