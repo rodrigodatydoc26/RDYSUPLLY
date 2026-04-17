@@ -45,11 +45,6 @@ export const LoginPage = () => {
     }
   };
 
-  const quickAccess = (role: 'admin' | 'technician') => {
-    const found = users.find(u => u.role === role);
-    if (found) authFlow(found.email, found.password);
-  };
-
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4 font-sans selection:bg-primary selection:text-black">
       <div className="w-full max-w-[440px] border border-white/5 rounded-[40px] px-8 py-12 flex flex-col items-center shadow-2xl relative overflow-hidden">
@@ -128,29 +123,6 @@ export const LoginPage = () => {
             </button>
           </div>
         </form>
-
-        {/* Quick Access for Dev */}
-        <div className="mt-12 w-full">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="h-px bg-white/5 flex-1" />
-            <span className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em]">Acesso Rápido (Desenvolvimento)</span>
-            <div className="h-px bg-white/5 flex-1" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <button 
-              onClick={() => quickAccess('admin')}
-              className="h-14 rounded-xl bg-[#0A0A0A] border border-white/5 text-[10px] font-black text-white/40 uppercase tracking-widest hover:border-white/20 hover:text-white/80 transition-all active:scale-95"
-            >
-              Demo Gestor
-            </button>
-            <button 
-              onClick={() => quickAccess('technician')}
-              className="h-14 rounded-xl bg-[#0A0A0A] border border-white/5 text-[10px] font-black text-white/40 uppercase tracking-widest hover:border-white/20 hover:text-white/80 transition-all active:scale-95"
-            >
-              Demo Motorista
-            </button>
-          </div>
-        </div>
 
         {/* Footer Branding */}
         <div className="mt-12 text-center">
