@@ -77,7 +77,7 @@ export const LoginPage = () => {
             </div>
 
             <div>
-              <label className="text-[10px] font-black text-text-2 uppercase tracking-widest ml-1 mb-2 block">SUA SENHA</label>
+              <label className="text-[10px] font-black text-text-2 uppercase tracking-widest ml-1 mb-2 block">SENHA OPERACIONAL</label>
               <div className="relative group">
                 <input 
                   type={showPassword ? "text" : "password"} 
@@ -97,13 +97,6 @@ export const LoginPage = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 px-1 cursor-pointer group" onClick={() => setRememberMe(!rememberMe)}>
-            <div className={`w-5 h-5 rounded border transition-all flex items-center justify-center ${rememberMe ? 'bg-primary border-primary' : 'bg-black border-white/10 group-hover:border-white/20'}`}>
-              {rememberMe && <div className="w-2 h-2 bg-black rounded-sm" />}
-            </div>
-            <span className="text-xs text-text-2/60 group-hover:text-text-2 transition-colors select-none">Lembrar meu e-mail</span>
-          </div>
-
           <div className="pt-2">
             <button 
               type="submit" 
@@ -115,7 +108,9 @@ export const LoginPage = () => {
           </div>
         </form>
 
-
+        <div className="mt-8 text-center text-[10px] font-medium text-text-2/40">
+          Novo por aqui? <button className="text-primary font-bold hover:underline">Criar conta de membro</button>
+        </div>
       </div>
 
       <footer className="mt-12 text-[8px] font-bold text-white/10 uppercase tracking-[0.4em]">
