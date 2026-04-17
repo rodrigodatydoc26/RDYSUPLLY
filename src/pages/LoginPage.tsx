@@ -2,14 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
 import { useDataStore } from '../store/useDataStore';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Mail, Lock, ChevronRight, Package } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const { login, isLoading } = useAuthStore();
   const { users } = useDataStore();
   const navigate = useNavigate();
@@ -21,55 +19,75 @@ export const LoginPage = () => {
       return;
     }
     
+    authFlow(email, password);
+  };
+
+  const authFlow = async (uEmail: string, uPass: string) => {
     try {
       const foundUser = users.find(u => 
-        u.email.toLowerCase() === email.toLowerCase() && 
-        u.password === password
+        u.email.toLowerCase() === uEmail.toLowerCase() && 
+        u.password === uPass
       );
 
       if (!foundUser) {
-        return toast.error('E-mail ou senha incorretos.');
+        return toast.error('Perfil não identificado.');
       }
 
       if (!foundUser.active) {
-        return toast.error('Este perfil está suspenso.');
+        return toast.error('Acesso suspenso.');
       }
 
       await login(foundUser);
-      toast.success(`Bem-vindo, ${foundUser.name}!`);
+      toast.success(`Operador autenticado: ${foundUser.name}`);
       navigate(foundUser.role === 'technician' ? '/tecnico' : '/');
     } catch (error) {
-      toast.error('Falha na autenticação.');
+      toast.error('GDC Connection Error.');
     }
   };
 
+  const quickAccess = (role: 'admin' | 'technician') => {
+    const found = users.find(u => u.role === role);
+    if (found) authFlow(found.email, found.password);
+  };
+
   return (
-    <div className="min-h-screen bg-[#000000] flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans">
-      <div className="text-center mb-10 animate-in fade-in slide-in-from-top-4 duration-700 flex flex-col items-center">
-        <h1 className="text-6xl font-black tracking-tighter leading-none mb-2 flex items-center gap-3">
-          <span className="text-primary">RDY</span>
-          <span className="text-white">SUPPLY</span>
-        </h1>
-        <p className="text-[10px] font-black text-text-2 uppercase tracking-[0.4em] opacity-60 leading-none">
-          Investment - Performance
-        </p>
-      </div>
+    <div className="min-h-screen bg-black flex items-center justify-center p-4 font-sans selection:bg-primary selection:text-black">
+      <div className="w-full max-w-[440px] border border-white/5 rounded-[40px] px-8 py-12 flex flex-col items-center shadow-2xl relative overflow-hidden">
+        {/* Subtle background glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-24 bg-primary/10 blur-[100px] pointer-events-none" />
 
-      <div className="w-full max-w-md bg-[#000000] border border-white/10 rounded-3xl p-10 shadow-2xl animate-in fade-in zoom-in duration-500">
-        <header className="mb-8">
-          <h2 className="text-3xl font-bold text-white mb-2">Bem-vindo</h2>
-          <p className="text-xs text-text-2/60">Acesse sua conta para operar no modo Elite.</p>
-        </header>
+        {/* Top Icon Area */}
+        <div className="relative mb-10">
+          <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
+          <div className="w-20 h-20 bg-primary rounded-[24px] flex items-center justify-center shadow-[0_0_30px_rgba(245,200,0,0.4)] relative">
+            <Package size={40} strokeWidth={2.5} className="text-black" />
+          </div>
+        </div>
 
-        <form onSubmit={handleLogin} className="space-y-6">
+        {/* Brand Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-[38px] font-black tracking-tighter leading-none mb-3 flex items-center justify-center gap-2">
+            <span className="text-white">RDY</span>
+            <span className="text-primary italic">SUPPLY</span>
+          </h1>
+          <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.5em] leading-none text-center w-full">
+            Investment & Performance
+          </p>
+        </div>
+
+        {/* Auth Form */}
+        <form onSubmit={handleLogin} className="w-full space-y-6">
           <div className="space-y-4">
             <div>
-              <label className="text-[10px] font-black text-text-2 uppercase tracking-widest ml-1 mb-2 block">E-MAIL CORPORATIVO</label>
+              <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-2 mb-2 block">Terminal de Acesso</label>
               <div className="relative group">
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20">
+                  <Mail size={20} />
+                </div>
                 <input 
                   type="email" 
-                  className="w-full h-14 rounded-xl bg-black border border-white/10 px-4 text-sm text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-white/10" 
-                  placeholder="exemplo@rdy.com"
+                  className="w-full h-16 rounded-[20px] bg-[#0A0A0A] border border-white/5 pl-14 pr-6 text-sm text-white font-bold focus:border-primary/40 focus:bg-[#0F0F0F] outline-none transition-all placeholder:text-white/10" 
+                  placeholder="Seu ID Corporativo"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -77,45 +95,70 @@ export const LoginPage = () => {
             </div>
 
             <div>
-              <label className="text-[10px] font-black text-text-2 uppercase tracking-widest ml-1 mb-2 block">SENHA OPERACIONAL</label>
+              <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-2 mb-2 block">Chave de Segurança</label>
               <div className="relative group">
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20">
+                  <Lock size={20} />
+                </div>
                 <input 
-                  type={showPassword ? "text" : "password"} 
-                  className="w-full h-14 rounded-xl bg-black border border-white/10 px-4 text-sm text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-white/10" 
+                  type="password" 
+                  className="w-full h-16 rounded-[20px] bg-[#0A0A0A] border border-white/5 pl-14 pr-6 text-sm text-white font-bold focus:border-primary/40 focus:bg-[#0F0F0F] outline-none transition-all placeholder:text-white/10" 
                   placeholder="********"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-                <button 
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-text-2/40 hover:text-primary transition-colors"
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
               </div>
             </div>
           </div>
 
-          <div className="pt-2">
+          <div className="pt-4">
             <button 
               type="submit" 
               disabled={isLoading}
-              className="w-full h-16 bg-primary hover:bg-primary/90 text-black text-sm font-black rounded-full shadow-lg shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+              className="w-full h-16 bg-primary hover:bg-primary/95 text-black text-xs font-black uppercase tracking-[0.2em] rounded-[20px] shadow-[0_15px_40px_-10px_rgba(245,200,0,0.3)] transition-all active:scale-[0.98] flex items-center justify-center gap-3 relative group overflow-hidden"
             >
-              {isLoading ? <Loader2 className="animate-spin h-5 w-5" /> : 'Entrar na Plataforma'}
+              {isLoading ? (
+                <Loader2 className="animate-spin h-5 w-5" />
+              ) : (
+                <>
+                  Autenticar
+                  <ChevronRight size={18} strokeWidth={3} className="group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
             </button>
           </div>
         </form>
 
-        <div className="mt-8 text-center text-[10px] font-medium text-text-2/40">
-          Novo por aqui? <button className="text-primary font-bold hover:underline">Criar conta de membro</button>
+        {/* Quick Access for Dev */}
+        <div className="mt-12 w-full">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-px bg-white/5 flex-1" />
+            <span className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em]">Acesso Rápido (Desenvolvimento)</span>
+            <div className="h-px bg-white/5 flex-1" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <button 
+              onClick={() => quickAccess('admin')}
+              className="h-14 rounded-xl bg-[#0A0A0A] border border-white/5 text-[10px] font-black text-white/40 uppercase tracking-widest hover:border-white/20 hover:text-white/80 transition-all active:scale-95"
+            >
+              Demo Gestor
+            </button>
+            <button 
+              onClick={() => quickAccess('technician')}
+              className="h-14 rounded-xl bg-[#0A0A0A] border border-white/5 text-[10px] font-black text-white/40 uppercase tracking-widest hover:border-white/20 hover:text-white/80 transition-all active:scale-95"
+            >
+              Demo Motorista
+            </button>
+          </div>
+        </div>
+
+        {/* Footer Branding */}
+        <div className="mt-12 text-center">
+          <p className="text-[9px] font-black text-white/10 uppercase tracking-[0.3em]">
+            Conexão Segura RDY Global Data Center
+          </p>
         </div>
       </div>
-
-      <footer className="mt-12 text-[8px] font-bold text-white/10 uppercase tracking-[0.4em]">
-        Protocolo Elite &bull; Sistemas Operacionais RDY &bull; 2026
-      </footer>
     </div>
   );
 };
