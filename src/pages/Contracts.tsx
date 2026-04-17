@@ -332,8 +332,9 @@ export const Contracts = () => {
                     <button 
                       type="button"
                       onClick={() => setIsSupplyModalOpen(true)}
-                      className="text-[7px] font-black text-primary uppercase tracking-widest hover:underline"
+                      className="px-2.5 py-1 bg-primary/10 text-primary border border-primary/20 rounded-sm text-[6.5px] font-black uppercase tracking-[0.2em] hover:bg-primary hover:text-black transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
                     >
+                      <Plus size={8} strokeWidth={3} />
                       Gerenciar Catálogo / Vincular
                     </button>
                   </div>
