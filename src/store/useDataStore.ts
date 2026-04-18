@@ -196,9 +196,9 @@ export const useDataStore = create<DataState>((set, get) => ({
         userConfigs: (configsRaw || []) as UserConfig[],
         _hasHydrated: true,
       });
-    } catch (_err) {
-      console.error('fetchInitialData error:', _err);
-      set({ _hasHydrated: true });
+    } catch (err: any) {
+      console.error('[RDY] fetchInitialData ERRO — verifique as políticas RLS no Supabase:', err?.message || err);
+      set({ _hasHydrated: true }); // Libera a tela de loading mesmo com erro
     } finally {
       set({ isLoading: false });
     }
@@ -216,11 +216,13 @@ export const useDataStore = create<DataState>((set, get) => ({
   },
 
   updateContract: async (contract) => {
-    const { error } = await supabase
+    const { data: updated, error } = await supabase
       .from('contracts')
       .update({ name: contract.name, client: contract.client, code: contract.code, active: contract.active })
-      .eq('id', contract.id);
+      .eq('id', contract.id)
+      .select();
     if (error) throw error;
+    if (!updated || updated.length === 0) throw new Error('Sem permissão para atualizar este contrato');
     await supabase.from('contract_technicians').delete().eq('contract_id', contract.id);
     if (contract.technicianIds?.length > 0) {
       await supabase.from('contract_technicians').insert(
@@ -298,11 +300,13 @@ export const useDataStore = create<DataState>((set, get) => ({
   },
 
   updateUser: async (user) => {
-    const { error } = await supabase
+    const { data: updated, error } = await supabase
       .from('profiles')
       .update({ name: user.name, email: user.email, role: user.role, active: user.active })
-      .eq('id', user.id);
+      .eq('id', user.id)
+      .select();
     if (error) throw error;
+    if (!updated || updated.length === 0) throw new Error('Sem permissão para atualizar este usuário');
     set(state => ({ users: state.users.map(u => u.id === user.id ? user : u) }));
   },
 
@@ -328,7 +332,7 @@ export const useDataStore = create<DataState>((set, get) => ({
   },
 
   updateEquipmentModel: async (model) => {
-    const { error } = await supabase
+    const { data: updated, error } = await supabase
       .from('equipment_models')
       .update({
         name: model.name, brand: model.brand,
@@ -342,8 +346,10 @@ export const useDataStore = create<DataState>((set, get) => ({
         capacity_drum_black: model.capacity_drum_black, capacity_drum_cyan: model.capacity_drum_cyan,
         capacity_drum_magenta: model.capacity_drum_magenta, capacity_drum_yellow: model.capacity_drum_yellow,
       })
-      .eq('id', model.id);
+      .eq('id', model.id)
+      .select();
     if (error) throw error;
+    if (!updated || updated.length === 0) throw new Error('Sem permissão para atualizar este modelo');
     set(state => ({ equipmentModels: state.equipmentModels.map(m => m.id === model.id ? model : m) }));
   },
 
