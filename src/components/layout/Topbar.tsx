@@ -10,7 +10,8 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useUIStore } from '../../store/useUIStore';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { cn, Badge } from '../ui/Base';
+import { cn } from '../../lib/utils';
+import { Badge } from '../ui/Base';
 
 export const Topbar = () => {
   const { isSidebarCollapsed } = useUIStore();
@@ -40,10 +41,18 @@ export const Topbar = () => {
       {/* Right Actions */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-1 border-r border-border pr-4 mr-2">
-          <button className="p-2.5 text-text-2 hover:text-text-1 hover:bg-bg rounded-xl transition-all">
+          <button 
+            title="Ajuda e Documentação"
+            aria-label="Abrir central de ajuda"
+            className="p-2.5 text-text-2 hover:text-text-1 hover:bg-bg rounded-xl transition-all"
+          >
             <HelpCircle size={20} />
           </button>
-          <button className="p-2.5 text-text-2 hover:text-text-1 hover:bg-bg rounded-xl transition-all">
+          <button 
+            title="Configurações do Sistema"
+            aria-label="Abrir configurações"
+            className="p-2.5 text-text-2 hover:text-text-1 hover:bg-bg rounded-xl transition-all"
+          >
             <Settings size={20} />
           </button>
         </div>
@@ -52,6 +61,8 @@ export const Topbar = () => {
         <div className="relative">
           <button
             onClick={() => setIsAlertsOpen(!isAlertsOpen)}
+            title="Alertas de Estoque"
+            aria-label={`${activeAlerts.length} alertas de estoque críticos`}
             className={cn(
               "relative p-2.5 flex items-center justify-center rounded-xl transition-all border border-transparent",
               isAlertsOpen ? "bg-bg border-border text-text-1" : "text-text-2 hover:text-text-1 hover:bg-bg"

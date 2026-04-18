@@ -7,11 +7,16 @@ import {
   Hash,
   Search,
   Box,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useDataStore } from '../store/useDataStore';
-import { cn, Button, Card, Badge, CMYKBadge } from '../components/ui/Base';
+import { useAuthStore } from '../store/useAuthStore';
+import { cn } from '../lib/utils';
+import { Button, Card, Badge, CMYKBadge } from '../components/ui/Base';
+import { ImportModal } from '../components/features/ImportModal';
 
 export const Inventory = () => {
+  const { user } = useAuthStore();
   const { 
     contracts, 
     equipmentModels, 
@@ -19,15 +24,31 @@ export const Inventory = () => {
     equipmentMinStock, 
     equipmentStockEntries,
     paperStockEntries,
-    fetchInitialData 
+    fetchInitialData,
+    importEquipment 
   } = useDataStore();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   useEffect(() => {
     fetchInitialData();
   }, [fetchInitialData]);
+
+  const checkMachineAlerts = (entry: any, min: any) => {
+    if (!entry || !min) return false;
+    return (
+      (entry.toner_black !== undefined && entry.toner_black <= min.toner_black_min) ||
+      (entry.toner_cyan !== undefined && entry.toner_cyan <= min.toner_cyan_min) ||
+      (entry.toner_magenta !== undefined && entry.toner_magenta <= min.toner_magenta_min) ||
+      (entry.toner_yellow !== undefined && entry.toner_yellow <= min.toner_yellow_min) ||
+      (entry.drum_black !== undefined && entry.drum_black <= min.drum_black_min) ||
+      (entry.drum_cyan !== undefined && entry.drum_cyan <= min.drum_cyan_min) ||
+      (entry.drum_magenta !== undefined && entry.drum_magenta <= min.drum_magenta_min) ||
+      (entry.drum_yellow !== undefined && entry.drum_yellow <= min.drum_yellow_min)
+    );
+  };
 
   const contractInventory = useMemo(() => {
     return contracts.map(contract => {
@@ -83,6 +104,16 @@ export const Inventory = () => {
             ESTOQUES <span className="text-text-2 font-light not-italic opacity-50 text-3xl">POR UNIDADE</span>
           </h2>
         </div>
+        {user?.role !== 'technician' && (
+          <Button 
+            variant="outline"
+            className="h-12 px-8 rounded-2xl text-[10px] font-black uppercase tracking-widest gap-2 bg-surface/50 border-border/50 hover:bg-surface hover:border-primary/50"
+            onClick={() => setIsImportModalOpen(true)}
+          >
+            <FileSpreadsheet size={16} />
+            Importar Lote
+          </Button>
+        )}
       </div>
 
       {/* Control Bar */}
@@ -104,8 +135,12 @@ export const Inventory = () => {
         {contractInventory.map(contract => (
           <Card key={contract.id} className="group overflow-hidden">
              <div 
-               className="p-8 flex items-center justify-between cursor-pointer hover:bg-bg/50 transition-colors"
+               className="p-8 flex items-center justify-between cursor-pointer hover:bg-bg/50 transition-colors focus:ring-2 focus:ring-primary outline-none"
                onClick={() => setSelectedContractId(contract.id)}
+               role="button"
+               tabIndex={0}
+               aria-label={`Ver estoque detalhado de ${contract.name}`}
+               onKeyDown={(e) => e.key === 'Enter' && setSelectedContractId(contract.id)}
              >
                 <div className="flex items-center gap-6">
                    <div className={cn(
@@ -161,6 +196,8 @@ export const Inventory = () => {
                 <button 
                   onClick={() => setSelectedContractId(null)}
                   className="w-14 h-14 rounded-2xl bg-surface border border-border flex items-center justify-center text-text-2 hover:text-danger hover:border-danger transition-all"
+                  title="Fechar Modal"
+                  aria-label="Voltar para a lista de unidades"
                 >
                   <X size={24} strokeWidth={3} />
                 </button>
@@ -248,6 +285,15 @@ export const Inventory = () => {
           </div>
         </div>
       )}
+
+      {/* Modals */}
+      {isImportModalOpen && (
+        <ImportModal 
+          type="equipment"
+          onClose={() => setIsImportModalOpen(false)}
+          onImport={importEquipment}
+        />
+      )}
     </div>
   );
 };
@@ -270,18 +316,4 @@ const StockSquare = ({ color, current, min }: { color: 'C' | 'M' | 'Y' | 'K', cu
   );
 };
 
-// Alert check utility
-function checkMachineAlerts(entry: any, min: any) {
-  if (!entry || !min) return false;
-  return (
-    (entry.toner_black !== undefined && entry.toner_black <= min.toner_black_min) ||
-    (entry.toner_cyan !== undefined && entry.toner_cyan <= min.toner_cyan_min) ||
-    (entry.toner_magenta !== undefined && entry.toner_magenta <= min.toner_magenta_min) ||
-    (entry.toner_yellow !== undefined && entry.toner_yellow <= min.toner_yellow_min) ||
-    (entry.drum_black !== undefined && entry.drum_black <= min.drum_black_min) ||
-    (entry.drum_cyan !== undefined && entry.drum_cyan <= min.drum_cyan_min) ||
-    (entry.drum_magenta !== undefined && entry.drum_magenta <= min.drum_magenta_min) ||
-    (entry.drum_yellow !== undefined && entry.drum_yellow <= min.drum_yellow_min)
-  );
-}
 

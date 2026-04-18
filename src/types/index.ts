@@ -166,3 +166,13 @@ export interface StockAlert {
   resolved: boolean;
   notified_email: boolean;
 }
+
+export interface UserConfig {
+  id: string;
+  user_id: string;
+  operation_days: number[];
+  reminder_times: string[];
+  push_subscription: any;
+  created_at?: string;
+  updated_at?: string;
+}

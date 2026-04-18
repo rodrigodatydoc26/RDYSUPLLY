@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useUIStore } from '../../store/useUIStore';
-import { cn } from '../ui/Base';
+import { cn } from '../../lib/utils';
 
 export const Sidebar = () => {
   const { user, logout } = useAuthStore();

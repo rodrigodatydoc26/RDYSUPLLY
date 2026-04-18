@@ -1,15 +1,16 @@
+import type { Session } from '@supabase/supabase-js';
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 import type { Profile } from '../types';
 
 interface AuthState {
   user: Profile | null;
-  session: any | null;
+  session: Session | null;
   isLoading: boolean;
   _hasHydrated: boolean;
   themeColor: string;
   setUser: (user: Profile | null) => void;
-  setSession: (session: any | null) => void;
+  setSession: (session: Session | null) => void;
   setLoading: (loading: boolean) => void;
   logout: () => Promise<void>;
   setThemeColor: (color: string) => void;
@@ -43,11 +44,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (!session?.user) return;
 
     // Check if profile exists
-    let { data: profile, error } = await supabase
+    const { data: profile, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', session.user.id)
       .single();
+
+    let finalProfile = profile;
 
     // If it doesn't exist, create a default one (fallback)
     if (error && error.code === 'PGRST116') {
@@ -55,7 +58,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         id: session.user.id,
         name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Novo Usuário',
         email: session.user.email || '',
-        role: (session.user.user_metadata?.role as any) || 'technician',
+        role: (session.user.user_metadata?.role as 'admin' | 'technician' | 'analyst' | 'cto') || 'technician',
         active: true,
         created_at: new Date().toISOString()
       };
@@ -67,15 +70,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         .single();
 
       if (!createError && created) {
-        profile = created;
+        finalProfile = created;
       } else {
         console.error('[Supabase Error] profile_creation:', createError);
       }
     }
 
-    if (profile) {
-      set({ user: profile as Profile });
-      localStorage.setItem('rdy-user', JSON.stringify(profile));
+    if (finalProfile) {
+      set({ user: finalProfile as Profile });
+      localStorage.setItem('rdy-user', JSON.stringify(finalProfile));
     }
   }
 }));

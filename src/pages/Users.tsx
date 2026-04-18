@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   Plus, Search, Edit2, User,
-  X, Eye, EyeOff, Building2, Check,
+  X, Eye, EyeOff, Building2, Check, Clock,
 } from 'lucide-react';
 import { useDataStore } from '../store/useDataStore';
 import { useAuthStore } from '../store/useAuthStore';
@@ -22,6 +22,10 @@ export const Users = () => {
   const [formData, setFormData] = useState<Omit<Profile, 'id' | 'created_at'>>({
     name: '', email: '', role: 'technician', active: true, password: '',
   });
+  const [reminders, setReminders] = useState<{ times: string[], days: number[] }>({
+    times: [],
+    days: [1, 2, 3, 4, 5]
+  });
 
   const filteredUsers = users.filter(u =>
     u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -35,6 +39,7 @@ export const Users = () => {
   const openAddModal = () => {
     setEditingId(null);
     setFormData({ name: '', email: '', role: 'technician', active: true, password: '' });
+    setReminders({ times: [], days: [1, 2, 3, 4, 5] });
     setTechContracts([]);
     setIsModalOpen(true);
   };
@@ -43,6 +48,14 @@ export const Users = () => {
     setEditingId(user.id);
     setFormData({ name: user.name, email: user.email, role: user.role, active: user.active, password: user.password || '' });
     setTechContracts(contracts.filter(c => c.technicianIds?.includes(user.id)).map(c => c.id));
+    
+    // Load existing config
+    const config = useDataStore.getState().userConfigs.find(c => c.user_id === user.id);
+    setReminders({ 
+      times: config?.reminder_times || [], 
+      days: config?.operation_days || [1, 2, 3, 4, 5] 
+    });
+    
     setIsModalOpen(true);
   };
 
@@ -63,6 +76,13 @@ export const Users = () => {
       });
     } else {
       addUser(formData);
+    }
+
+    if (editingId) {
+      useDataStore.getState().updateUserConfig(editingId, { 
+        reminder_times: reminders.times,
+        operation_days: reminders.days 
+      });
     }
     
     toast.success('Perfil atualizado com sucesso');
@@ -169,6 +189,8 @@ export const Users = () => {
                         <button
                           onClick={() => openEditModal(u)}
                           className="w-8 h-8 rounded-lg text-text-2 hover:text-text-1 transition-colors"
+                          title="Editar Perfil"
+                          aria-label={`Editar perfil de ${u.name}`}
                         >
                           <Edit2 size={14} />
                         </button>
@@ -195,6 +217,8 @@ export const Users = () => {
               <button 
                 onClick={() => setIsModalOpen(false)} 
                 className="w-6 h-6 rounded bg-surface border border-border flex items-center justify-center text-text-2 hover:text-danger px-0 transition-colors"
+                title="Fechar"
+                aria-label="Fechar janela de perfil"
               >
                 <X size={14} />
               </button>
@@ -203,19 +227,20 @@ export const Users = () => {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[8px] font-black text-text-2 uppercase tracking-widest ml-1 mb-1.5 block">Nome Completo</label>
-                  <input className="rdy-input h-9" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+                  <label htmlFor="user-name" className="text-[8px] font-black text-text-2 uppercase tracking-widest ml-1 mb-1.5 block cursor-pointer">Nome Completo</label>
+                  <input id="user-name" className="rdy-input h-9" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
                 </div>
                 <div>
-                  <label className="text-[8px] font-black text-text-2 uppercase tracking-widest ml-1 mb-1.5 block">Identidade de E-mail</label>
-                  <input type="email" className="rdy-input h-9" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+                  <label htmlFor="user-email" className="text-[8px] font-black text-text-2 uppercase tracking-widest ml-1 mb-1.5 block cursor-pointer">Identidade de E-mail</label>
+                  <input id="user-email" type="email" className="rdy-input h-9" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
                 </div>
               </div>
 
               <div>
-                <label className="text-[8px] font-black text-text-2 uppercase tracking-widest ml-1 mb-1.5 block">Credencial de Acesso (Senha)</label>
+                <label htmlFor="user-password" className="text-[8px] font-black text-text-2 uppercase tracking-widest ml-1 mb-1.5 block cursor-pointer">Credencial de Acesso (Senha)</label>
                 <div className="relative">
                   <input 
+                    id="user-password"
                     type={showPassword ? "text" : "password"} 
                     className="rdy-input h-9 pr-10" 
                     value={formData.password} 
@@ -226,15 +251,17 @@ export const Users = () => {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-text-2 hover:text-primary transition-colors"
+                    title={showPassword ? "Esconder senha" : "Ver senha"}
+                    aria-label={showPassword ? "Esconder senha" : "Ver senha"}
                   >
                     {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[8px] font-black text-text-2 uppercase tracking-widest ml-1 mb-1.5 block">Nível de Acesso</label>
-                  <select className="rdy-input h-9" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value as UserRole })}>
+                  <label htmlFor="user-role" className="text-[8px] font-black text-text-2 uppercase tracking-widest ml-1 mb-1.5 block cursor-pointer">Nível de Acesso</label>
+                  <select id="user-role" className="rdy-input h-9" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value as UserRole })}>
                     <option value="technician">Técnico</option>
                     <option value="analyst">Analista</option>
                     <option value="admin">Administrador</option>
@@ -281,6 +308,64 @@ export const Users = () => {
                   </div>
                 </div>
               )}
+               {formData.role === 'technician' && (
+                <div className="space-y-4 pt-2 border-t border-border/50">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Clock size={12} className="text-primary" />
+                    <p className="text-[10px] font-black text-text-1 uppercase italic tracking-tighter">Lembretes Táticos</p>
+                  </div>
+                  
+                  {/* Days */}
+                  <div className="flex justify-between gap-1">
+                    {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((day, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setReminders(prev => ({
+                          ...prev,
+                          days: prev.days.includes(i) ? prev.days.filter(d => d !== i) : [...prev.days, i]
+                        }))}
+                        className={`w-8 h-8 rounded-lg border text-[8px] font-black transition-all ${reminders.days.includes(i) ? 'bg-primary border-primary text-black' : 'bg-surface border-border text-text-2'}`}
+                      >
+                        {day}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Times */}
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      {reminders.times.map((time, i) => (
+                        <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-bg border border-border rounded-xl">
+                          <span className="text-[10px] font-black text-text-1">{time}</span>
+                          <button 
+                            type="button"
+                            onClick={() => setReminders(prev => ({ ...prev, times: prev.times.filter((_, idx) => idx !== i) }))}
+                            className="text-text-2 hover:text-danger"
+                            title="Remover horário"
+                            aria-label={`Remover lembrete das ${time}`}
+                          >
+                            <X size={10} />
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const time = prompt('Digite o horário (HH:MM):', '08:00');
+                          if (time && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time)) {
+                            setReminders(prev => ({ ...prev, times: [...prev.times, time].sort() }));
+                          }
+                        }}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-surface border border-dashed border-border rounded-xl text-text-2 hover:border-primary hover:text-primary transition-all"
+                      >
+                        <Plus size={10} />
+                        <span className="text-[8px] font-black uppercase">Adicionar Hora</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <button onClick={handleSave} className="rdy-btn-primary w-full h-10 mt-2 text-[10px]">
                  Confirmar Alterações de Perfil
@@ -303,6 +388,8 @@ export const Users = () => {
               <button 
                 onClick={() => setIsContractModalOpen(false)} 
                 className="w-6 h-6 rounded bg-surface border border-border flex items-center justify-center text-text-2 hover:text-danger px-0 transition-colors"
+                title="Fechar"
+                aria-label="Fechar janela de seleção de contratos"
               >
                 <X size={14} />
               </button>

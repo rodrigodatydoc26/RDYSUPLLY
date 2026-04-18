@@ -5,7 +5,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useDataStore } from '../../store/useDataStore';
 import { Navigate } from 'react-router-dom';
 import { useUIStore } from '../../store/useUIStore';
-import { cn } from '../ui/Base';
+import { cn } from '../../lib/utils';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -20,7 +20,7 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
     if (user) {
       fetchInitialData();
     }
-  }, [user]);
+  }, [user, fetchInitialData]);
 
   if (isAuthLoading || !_hasHydrated) {
     return (

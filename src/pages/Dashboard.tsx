@@ -13,6 +13,7 @@ import { useDataStore } from '../store/useDataStore';
 import { format, subDays } from 'date-fns';
 import { useMemo, useState, useEffect } from 'react';
 import { Card, Badge, Button } from '../components/ui/Base';
+import type { EquipmentStockEntry, EquipmentMinStock } from '../types';
 
 export const Dashboard = () => {
   const navigate = useNavigate();
@@ -84,6 +85,7 @@ export const Dashboard = () => {
 
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
   }, []);
 
@@ -110,7 +112,15 @@ export const Dashboard = () => {
       {/* KPI GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {kpis.map((kpi, i) => (
-          <Card key={i} className="group hover:-translate-y-1 transition-transform cursor-pointer">
+          <Card 
+            key={i} 
+            className="group hover:-translate-y-1 transition-transform cursor-pointer focus:ring-2 focus:ring-primary outline-none"
+            onClick={() => navigate('/unidades')}
+            role="button"
+            tabIndex={0}
+            aria-label={`Ver detalhes de ${kpi.label}: ${kpi.value}`}
+            onKeyDown={(e) => e.key === 'Enter' && navigate('/unidades')}
+          >
              <div className="p-8">
                 <div className="flex justify-between items-start mb-6">
                    <div className="w-12 h-12 rounded-2xl bg-bg border border-border flex items-center justify-center text-text-2 group-hover:bg-primary group-hover:text-secondary group-hover:border-transparent transition-all">
@@ -173,8 +183,12 @@ export const Dashboard = () => {
                 criticalMachines.map((m, i) => (
                   <div 
                     key={i} 
-                    className="p-5 bg-bg border border-border rounded-2xl hover:border-danger transition-all cursor-pointer group"
+                    className="p-5 bg-bg border border-border rounded-2xl hover:border-danger transition-all cursor-pointer group focus:ring-2 focus:ring-danger outline-none"
                     onClick={() => navigate('/estoque')}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Equipamento crítico em ${m.name}: Serial ${m.serial}`}
+                    onKeyDown={(e) => e.key === 'Enter' && navigate('/estoque')}
                   >
                      <div className="flex justify-between items-start mb-2">
                         <p className="text-sm font-black text-text-1 uppercase italic tracking-tight">{m.name}</p>
@@ -208,7 +222,7 @@ export const Dashboard = () => {
 };
 
 // Utility to check alerts
-function checkMachineAlerts(entry: any, min: any) {
+function checkMachineAlerts(entry: EquipmentStockEntry | undefined, min: EquipmentMinStock | undefined) {
   if (!entry || !min) return false;
   return (
     (entry.toner_black !== undefined && entry.toner_black <= min.toner_black_min) ||

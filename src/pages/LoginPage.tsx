@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
@@ -19,7 +19,7 @@ export const LoginPage = () => {
     }
   }, [user, navigate]);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       toast.error('Informe suas credenciais');
@@ -43,7 +43,7 @@ export const LoginPage = () => {
       }
 
       toast.success('Acesso autorizado!');
-    } catch (err: any) {
+    } catch {
       toast.error('Erro de conexão com o servidor');
     } finally {
       setIsAuthenticating(false);

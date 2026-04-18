@@ -110,8 +110,10 @@ export const History = () => {
       {/* Filters Bar */}
       <div className="bg-surface border border-border p-6 rounded-[32px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 shadow-sm">
          <div className="relative group">
+            <label htmlFor="history-search" className="sr-only">Pesquisar histórico</label>
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-2 group-focus-within:text-primary transition-colors" size={16} />
             <input 
+              id="history-search"
               type="text" 
               placeholder="PESQUISAR..." 
               className="w-full h-11 bg-bg border border-border rounded-xl pl-11 pr-4 text-xs font-bold text-text-1 outline-none focus:border-primary transition-all"
@@ -119,17 +121,27 @@ export const History = () => {
               onChange={e => setSearchTerm(e.target.value)}
             />
          </div>
-         <select 
-           className="h-11 bg-bg border border-border rounded-xl px-4 text-xs font-bold text-text-1 outline-none focus:border-primary transition-all"
-           value={selectedContract}
-           onChange={e => setSelectedContract(e.target.value)}
-         >
-            <option value="all">TODOS OS CONTRATOS</option>
-            {contracts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-         </select>
+         <div className="relative group">
+           <label htmlFor="contract-filter" className="sr-only">Filtrar por Contrato</label>
+           <select 
+             id="contract-filter"
+             className="w-full h-11 bg-bg border border-border rounded-xl px-4 text-xs font-bold text-text-1 outline-none focus:border-primary transition-all"
+             value={selectedContract}
+             onChange={e => setSelectedContract(e.target.value)}
+           >
+              <option value="all">TODOS OS CONTRATOS</option>
+              {contracts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+           </select>
+         </div>
          <div className="flex gap-2">
-            <input type="date" className="flex-1 h-11 bg-bg border border-border rounded-xl px-3 text-[10px] font-bold text-text-1 outline-none" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
-            <input type="date" className="flex-1 h-11 bg-bg border border-border rounded-xl px-3 text-[10px] font-bold text-text-1 outline-none" value={dateTo} onChange={e => setDateTo(e.target.value)} />
+            <div className="flex-1 space-y-1">
+               <label htmlFor="date-from" className="text-[8px] font-black text-text-2 uppercase ml-2">De</label>
+               <input id="date-from" type="date" className="w-full h-11 bg-bg border border-border rounded-xl px-3 text-[10px] font-bold text-text-1 outline-none" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+            </div>
+            <div className="flex-1 space-y-1">
+               <label htmlFor="date-to" className="text-[8px] font-black text-text-2 uppercase ml-2">Até</label>
+               <input id="date-to" type="date" className="w-full h-11 bg-bg border border-border rounded-xl px-3 text-[10px] font-bold text-text-1 outline-none" value={dateTo} onChange={e => setDateTo(e.target.value)} />
+            </div>
          </div>
          <div className="flex items-center justify-center bg-bg border border-border rounded-xl">
             <Filter size={14} className="text-text-2" />

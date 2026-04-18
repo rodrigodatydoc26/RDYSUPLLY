@@ -8,12 +8,16 @@ import {
   LayoutGrid,
   Hash,
   MapPin,
+  Bell,
+  BellOff,
 } from 'lucide-react';
 import { useDataStore } from '../store/useDataStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { cn, Button, Badge, CMYKBadge } from '../components/ui/Base';
+import { cn } from '../lib/utils';
+import { Button, Badge, CMYKBadge } from '../components/ui/Base';
+import { usePushNotifications } from '../hooks/usePushNotifications';
 
 export const TechnicianPortal = () => {
   const { user } = useAuthStore();
@@ -28,9 +32,14 @@ export const TechnicianPortal = () => {
   
   const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
   const [selectedMachineId, setSelectedMachineId] = useState<string | null>(null);
+  const { subscribeUser } = usePushNotifications();
+  const userConfigs = useDataStore(state => state.userConfigs);
+  
+  const config = userConfigs.find(c => c.user_id === user?.id);
+  const hasSubscription = !!config?.push_subscription;
   
   // Local storage cache for the current session
-  const [entryData, setEntryData] = useState<any>({});
+  const [entryData, setEntryData] = useState<Record<string, { current: number; in: number; out: number }>>({});
   const [paperEntry, setPaperEntry] = useState({ current: 0, incoming: 0, outgoing: 0 });
 
   const assignedContracts = useMemo(() => {
@@ -47,11 +56,11 @@ export const TechnicianPortal = () => {
 
   useEffect(() => {
     if (user) fetchInitialData();
-  }, [user]);
+  }, [user, fetchInitialData]);
 
   const handleValueChange = (field: string, subfield: 'current' | 'in' | 'out', valValue: string) => {
     const val = parseInt(valValue) || 0;
-    setEntryData((prev: any) => ({
+    setEntryData((prev) => ({
       ...prev,
       [field]: {
         ...(prev[field] || { current: 0, in: 0, out: 0 }),
@@ -103,7 +112,7 @@ export const TechnicianPortal = () => {
       toast.success('Leitura da máquina sincronizada!');
       setSelectedMachineId(null);
       setEntryData({});
-    } catch (err) {
+    } catch {
       toast.error('Erro ao sincronizar leitura.');
     }
   };
@@ -121,7 +130,7 @@ export const TechnicianPortal = () => {
       });
       toast.success('Estoque de papel atualizado!');
       setPaperEntry({ current: 0, incoming: 0, outgoing: 0 });
-    } catch (err) {
+    } catch {
       toast.error('Erro ao atualizar papel.');
     }
   };
@@ -130,6 +139,33 @@ export const TechnicianPortal = () => {
   if (!selectedContractId) {
     return (
       <div className="space-y-8 animate-fade pb-10">
+        {/* Notificações Banner */}
+        <div className="bg-surface border border-border rounded-[32px] p-5 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className={cn(
+              "w-12 h-12 rounded-2xl flex items-center justify-center",
+              hasSubscription ? "bg-success/10 text-success shadow-[0_0_15px_rgba(var(--rdy-success-rgb),0.2)]" : "bg-primary/10 text-primary shadow-[0_0_15px_rgba(var(--rdy-primary-rgb),0.2)]"
+            )}>
+              {hasSubscription ? <Bell size={20} /> : <BellOff size={20} />}
+            </div>
+            <div>
+              <p className="text-[10px] font-black text-text-1 uppercase italic tracking-tighter">
+                {hasSubscription ? 'SISTEMA DE AVISOS ATIVO' : 'CADASTRO DE DISPOSITIVO'}
+              </p>
+              <p className="text-[8px] font-black text-text-2 uppercase tracking-[0.2em] mt-0.5">
+                {hasSubscription ? 'VOCÊ RECEBERÁ ALERTAS NA BARRA DO CELULAR' : 'ATIVE PARA RECEBER OS LEMBRETES DE ESTOQUE'}
+              </p>
+            </div>
+          </div>
+          {!hasSubscription && (
+            <button 
+              onClick={subscribeUser}
+              className="px-6 h-10 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 text-[8px] font-black uppercase tracking-widest rounded-xl transition-all active:scale-95"
+            >
+              Ativar Agora
+            </button>
+          )}
+        </div>
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-border pb-8">
            <div className="space-y-1">
               <div className="flex items-center gap-2 mb-2">
@@ -232,16 +268,16 @@ export const TechnicianPortal = () => {
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <div className="space-y-2">
-                       <label className="text-[8px] font-black text-text-2 uppercase block text-center">Saldo</label>
-                       <input type="number" className="w-full h-10 bg-bg border border-border rounded-xl text-center text-xs font-black" value={paperEntry.current || ''} onChange={e => handlePaperChange('current', e.target.value)} />
+                       <label htmlFor="paper-saldo" className="text-[8px] font-black text-text-2 uppercase block text-center cursor-pointer">Saldo</label>
+                       <input id="paper-saldo" type="number" className="w-full h-10 bg-bg border border-border rounded-xl text-center text-xs font-black" value={paperEntry.current || ''} onChange={e => handlePaperChange('current', e.target.value)} />
                     </div>
                     <div className="space-y-2">
-                       <label className="text-[8px] font-black text-success uppercase block text-center">Entrou</label>
-                       <input type="number" className="w-full h-10 bg-success/5 border border-success rounded-xl text-center text-xs font-black text-success" value={paperEntry.incoming || ''} onChange={e => handlePaperChange('incoming', e.target.value)} />
+                       <label htmlFor="paper-in" className="text-[8px] font-black text-success uppercase block text-center cursor-pointer">Entrou</label>
+                       <input id="paper-in" type="number" className="w-full h-10 bg-success/5 border border-success rounded-xl text-center text-xs font-black text-success" value={paperEntry.incoming || ''} onChange={e => handlePaperChange('incoming', e.target.value)} />
                     </div>
                     <div className="space-y-2">
-                       <label className="text-[8px] font-black text-danger uppercase block text-center">Saída</label>
-                       <input type="number" className="w-full h-10 bg-danger/5 border border-danger rounded-xl text-center text-xs font-black text-danger" value={paperEntry.outgoing || ''} onChange={e => handlePaperChange('outgoing', e.target.value)} />
+                       <label htmlFor="paper-out" className="text-[8px] font-black text-danger uppercase block text-center cursor-pointer">Saída</label>
+                       <input id="paper-out" type="number" className="w-full h-10 bg-danger/5 border border-danger rounded-xl text-center text-xs font-black text-danger" value={paperEntry.outgoing || ''} onChange={e => handlePaperChange('outgoing', e.target.value)} />
                     </div>
                   </div>
                   <Button size="sm" className="w-full h-10 text-[9px] rounded-xl" onClick={handleSubmitPaper}>
@@ -359,6 +395,8 @@ const MachineField = ({ label, type, data, onChange }: {
   data?: { current?: number; in?: number; out?: number };
   onChange: (sub: 'current' | 'in' | 'out', val: string) => void;
 }) => {
+  const baseId = label.toLowerCase().replace(/\s+/g, '-');
+  
   return (
     <div className="space-y-4">
        <div className="flex items-center justify-between h-5">
@@ -367,30 +405,33 @@ const MachineField = ({ label, type, data, onChange }: {
        </div>
        <div className="grid grid-cols-3 gap-3">
           <div className="space-y-1.5">
-             <span className="text-[8px] font-bold text-text-2 uppercase tracking-widest block text-center">Saldo</span>
+             <label htmlFor={`${baseId}-saldo`} className="text-[8px] font-bold text-text-2 uppercase tracking-widest block text-center cursor-pointer">Saldo</label>
              <input 
+               id={`${baseId}-saldo`}
                type="number" 
-               className="w-full h-12 bg-bg border border-border rounded-xl text-center text-sm font-black text-text-1" 
+               className="w-full h-12 bg-bg border border-border rounded-xl text-center text-sm font-black text-text-1 focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
                placeholder="0"
                value={data?.current || ''}
                onChange={e => onChange('current', e.target.value)}
              />
           </div>
           <div className="space-y-1.5">
-             <span className="text-[8px] font-bold text-success uppercase tracking-widest block text-center">In</span>
+             <label htmlFor={`${baseId}-in`} className="text-[8px] font-bold text-success uppercase tracking-widest block text-center cursor-pointer">In</label>
              <input 
+               id={`${baseId}-in`}
                type="number" 
-               className="w-full h-12 bg-success/5 border border-success rounded-xl text-center text-sm font-black text-success" 
+               className="w-full h-12 bg-success/5 border border-success rounded-xl text-center text-sm font-black text-success focus:ring-2 focus:ring-success/20 outline-none transition-all" 
                placeholder="0"
                value={data?.in || ''}
                onChange={e => onChange('in', e.target.value)}
              />
           </div>
           <div className="space-y-1.5">
-             <span className="text-[8px] font-bold text-danger uppercase tracking-widest block text-center">Out</span>
+             <label htmlFor={`${baseId}-out`} className="text-[8px] font-bold text-danger uppercase tracking-widest block text-center cursor-pointer">Out</label>
              <input 
+               id={`${baseId}-out`}
                type="number" 
-               className="w-full h-12 bg-danger/5 border border-danger rounded-xl text-center text-sm font-black text-danger" 
+               className="w-full h-12 bg-danger/5 border border-danger rounded-xl text-center text-sm font-black text-danger focus:ring-2 focus:ring-danger/20 outline-none transition-all" 
                placeholder="0"
                value={data?.out || ''}
                onChange={e => onChange('out', e.target.value)}

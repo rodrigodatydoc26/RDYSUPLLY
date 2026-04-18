@@ -9,6 +9,7 @@ import type {
   EquipmentStockEntry,
   PaperStockEntry,
   StockAlert,
+  UserConfig,
 } from '../types';
 
 interface DataState {
@@ -20,6 +21,7 @@ interface DataState {
   equipmentStockEntries: EquipmentStockEntry[];
   paperStockEntries: PaperStockEntry[];
   stockAlerts: StockAlert[];
+  userConfigs: UserConfig[];
   isLoading: boolean;
   _hasHydrated: boolean;
 
@@ -38,9 +40,13 @@ interface DataState {
   updateEquipmentModel: (model: EquipmentModel) => Promise<void>;
   deleteEquipmentModel: (id: string) => Promise<void>;
 
-  addStockEntry: (data: Omit<EquipmentStockEntry, 'id' | 'created_at'>) => Promise<void>;
+   addStockEntry: (data: Omit<EquipmentStockEntry, 'id' | 'created_at'>) => Promise<void>;
   addPaperEntry: (data: Omit<PaperStockEntry, 'id' | 'created_at'>) => Promise<void>;
   updateMinStock: (contractEquipmentId: string, field: string, value: number) => Promise<void>;
+  updateUserConfig: (userId: string, data: Partial<UserConfig>) => Promise<void>;
+
+  importEquipment: (data: any[]) => Promise<void>;
+  importCatalogue: (data: any[]) => Promise<void>;
 
   wipeDatabase: () => Promise<void>;
   resetToDefaults: () => void;
@@ -55,13 +61,14 @@ export const useDataStore = create<DataState>((set, get) => ({
   equipmentStockEntries: [],
   paperStockEntries: [],
   stockAlerts: [],
+  userConfigs: [],
   isLoading: false,
   _hasHydrated: false,
 
   setHasHydrated: (v) => set({ _hasHydrated: v }),
 
   fetchInitialData: async () => {
-    if (get().isLoading) return;
+    if (get()._hasHydrated || get().isLoading) return;
     set({ isLoading: true });
     try {
       const [
@@ -74,16 +81,18 @@ export const useDataStore = create<DataState>((set, get) => ({
         { data: paperEntriesRaw },
         { data: alertsRaw },
         { data: contractTechs },
+        { data: configsRaw },
       ] = await Promise.all([
         supabase.from('contracts').select('*').order('created_at', { ascending: false }),
         supabase.from('profiles').select('*').order('name'),
         supabase.from('equipment_models').select('*').order('name'),
         supabase.from('contract_equipment').select('*').order('created_at', { ascending: false }),
         supabase.from('equipment_min_stock').select('*'),
-        supabase.from('equipment_stock_entries').select('*').order('created_at', { ascending: false }),
-        supabase.from('paper_stock_entries').select('*').order('created_at', { ascending: false }),
+        supabase.from('equipment_stock_entries').select('*').order('created_at', { ascending: false }).limit(500),
+        supabase.from('paper_stock_entries').select('*').order('created_at', { ascending: false }).limit(200),
         supabase.from('stock_alerts').select('*').eq('resolved', false).order('triggered_at', { ascending: false }),
         supabase.from('contract_technicians').select('*'),
+        supabase.from('user_configs').select('*'),
       ]);
 
       const contracts: Contract[] = (contractsRaw || []).map(c => ({
@@ -184,10 +193,11 @@ export const useDataStore = create<DataState>((set, get) => ({
         equipmentStockEntries,
         paperStockEntries,
         stockAlerts,
+        userConfigs: (configsRaw || []) as UserConfig[],
         _hasHydrated: true,
       });
-    } catch (err) {
-      console.error('fetchInitialData error:', err);
+    } catch (_err) {
+      console.error('fetchInitialData error:', _err);
       set({ _hasHydrated: true });
     } finally {
       set({ isLoading: false });
@@ -368,6 +378,52 @@ export const useDataStore = create<DataState>((set, get) => ({
       .single();
     if (error) throw error;
     const entry: EquipmentStockEntry = { ...data, id: row.id, created_at: row.created_at ?? new Date().toISOString() };
+    
+    // Check stock levels for alerts
+    const minStock = get().equipmentMinStock.find(ms => ms.contract_equipment_id === data.contract_equipment_id);
+    if (minStock) {
+      const supplies = [
+        { type: 'Toner Black', current: data.toner_black ?? 0, min: minStock.toner_black_min },
+        { type: 'Toner Cyan', current: data.toner_cyan ?? 0, min: minStock.toner_cyan_min },
+        { type: 'Toner Magenta', current: data.toner_magenta ?? 0, min: minStock.toner_magenta_min },
+        { type: 'Toner Yellow', current: data.toner_yellow ?? 0, min: minStock.toner_yellow_min },
+        { type: 'Drum Black', current: data.drum_black ?? 0, min: minStock.drum_black_min },
+        { type: 'Drum Cyan', current: data.drum_cyan ?? 0, min: minStock.drum_cyan_min },
+        { type: 'Drum Magenta', current: data.drum_magenta ?? 0, min: minStock.drum_magenta_min },
+        { type: 'Drum Yellow', current: data.drum_yellow ?? 0, min: minStock.drum_yellow_min },
+      ];
+
+      for (const supply of supplies) {
+        if (supply.min > 0 && supply.current <= supply.min) {
+          // Trigger Alert In Database
+          const { data: alertRow } = await supabase.from('stock_alerts').insert({
+            contract_equipment_id: data.contract_equipment_id,
+            alert_type: supply.type,
+            current_value: supply.current,
+            min_value: supply.min,
+          }).select().single();
+
+          if (alertRow) {
+            const newAlert: StockAlert = {
+              id: alertRow.id,
+              contract_id: alertRow.contract_id ?? '',
+              contract_equipment_id: alertRow.contract_equipment_id ?? undefined,
+              alert_type: alertRow.alert_type,
+              current_value: alertRow.current_value ?? 0,
+              min_value: alertRow.min_value ?? 0,
+              triggered_at: alertRow.triggered_at ?? new Date().toISOString(),
+              resolved: false,
+              notified_email: false,
+            };
+            set(state => ({ stockAlerts: [newAlert, ...state.stockAlerts] }));
+            supabase.functions.invoke('send-stock-alert', {
+              body: { alert_id: alertRow.id, technician_id: data.technician_id }
+            }).catch(e => console.error('Failed to invoke alert function:', e));
+          }
+        }
+      }
+    }
+
     set(state => ({ equipmentStockEntries: [entry, ...state.equipmentStockEntries] }));
   },
 
@@ -424,10 +480,117 @@ export const useDataStore = create<DataState>((set, get) => ({
       supabase.from('contract_technicians').delete().neq('contract_id', NEVER),
       supabase.from('contracts').delete().neq('id', NEVER),
     ]);
+    set({
+      contracts: [], contractEquipment: [], equipmentMinStock: [],
+      equipmentStockEntries: [], paperStockEntries: [], stockAlerts: [],
+      _hasHydrated: false,
+    });
     await get().fetchInitialData();
   },
 
+  updateUserConfig: async (userId, data) => {
+    const { error } = await supabase
+      .from('user_configs')
+      .upsert({ user_id: userId, ...data }, { onConflict: 'user_id' });
+    if (error) throw error;
+    set(state => ({
+      userConfigs: state.userConfigs.some(c => c.user_id === userId)
+        ? state.userConfigs.map(c => c.user_id === userId ? { ...c, ...data } : c)
+        : [...state.userConfigs, { user_id: userId, ...data } as UserConfig]
+    }));
+  },
+
   resetToDefaults: () => {
+    set({ _hasHydrated: false });
     get().fetchInitialData();
+  },
+
+  importEquipment: async (data) => {
+    const { contracts, equipmentModels } = get();
+    const equipmentToInsert: any[] = [];
+    const minStockToInsert: any[] = [];
+
+    for (const row of data) {
+      // Find contract by name or code
+      const contract = contracts.find(c => 
+        c.code === String(row.CONTRATO_CODIGO) || 
+        c.name === String(row.CONTRATO_NOME)
+      );
+      if (!contract) continue;
+
+      // Find model by name
+      const model = equipmentModels.find(m => 
+        m.name.toLowerCase() === String(row.MODELO).toLowerCase()
+      );
+      if (!model) continue;
+
+      equipmentToInsert.push({
+        contract_id: contract.id,
+        equipment_model_id: model.id,
+        serial_number: String(row.SERIAL),
+        location: row.LOCALIZACAO || '',
+        active: true
+      });
+    }
+
+    if (equipmentToInsert.length === 0) throw new Error('Nenhum dado válido para importar');
+
+    const { data: insertedCE, error } = await supabase
+      .from('contract_equipment')
+      .insert(equipmentToInsert)
+      .select();
+
+    if (error) throw error;
+
+    // Create default min stock for imported machines
+    if (insertedCE) {
+      for (const ce of insertedCE) {
+        minStockToInsert.push({
+          contract_equipment_id: ce.id,
+          toner_black_min: 2,
+          toner_cyan_min: 0,
+          toner_magenta_min: 0,
+          toner_yellow_min: 0,
+        });
+      }
+      const { data: msRows } = await supabase.from('equipment_min_stock').insert(minStockToInsert).select();
+      const newCE: ContractEquipment[] = insertedCE.map(ce => ({
+        id: ce.id, contract_id: ce.contract_id ?? '', equipment_model_id: ce.equipment_model_id ?? '',
+        serial_number: ce.serial_number ?? '', location: ce.location ?? '',
+        active: ce.active ?? true, created_at: ce.created_at ?? new Date().toISOString(),
+      }));
+      const newMS: EquipmentMinStock[] = (msRows || []).map(ms => ({
+        id: ms.id, contract_equipment_id: ms.contract_equipment_id ?? '',
+        toner_black_min: ms.toner_black_min ?? 2, toner_cyan_min: ms.toner_cyan_min ?? 0,
+        toner_magenta_min: ms.toner_magenta_min ?? 0, toner_yellow_min: ms.toner_yellow_min ?? 0,
+        drum_black_min: ms.drum_black_min ?? 0, drum_cyan_min: ms.drum_cyan_min ?? 0,
+        drum_magenta_min: ms.drum_magenta_min ?? 0, drum_yellow_min: ms.drum_yellow_min ?? 0,
+      }));
+      set(state => ({
+        contractEquipment: [...state.contractEquipment, ...newCE],
+        equipmentMinStock: [...state.equipmentMinStock, ...newMS],
+      }));
+    }
+  },
+
+  importCatalogue: async (data) => {
+    const modelsToInsert = data.map(row => ({
+      brand: String(row.MARCA).toUpperCase(),
+      name: String(row.MODELO),
+      is_color: String(row['COLOR(S/N)']).toUpperCase() === 'S',
+      has_drum: String(row['CILINDRO(S/N)']).toUpperCase() === 'S',
+      toner_black: row.TONER_BLACK || '',
+      toner_cyan: row.TONER_CYAN || '',
+      toner_magenta: row.TONER_MAGENTA || '',
+      toner_yellow: row.TONER_YELLOW || '',
+      drum_black: row.DRUM_BLACK || '',
+      drum_cyan: row.DRUM_CYAN || '',
+      drum_magenta: row.DRUM_MAGENTA || '',
+      drum_yellow: row.DRUM_YELLOW || '',
+    }));
+
+    const { data: rows, error } = await supabase.from('equipment_models').insert(modelsToInsert).select();
+    if (error) throw error;
+    if (rows) set(state => ({ equipmentModels: [...state.equipmentModels, ...rows as EquipmentModel[]] }));
   },
 }));

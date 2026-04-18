@@ -11,19 +11,23 @@ import { useDataStore } from '../store/useDataStore';
 import { useAuthStore } from '../store/useAuthStore';
 import type { EquipmentModel } from '../types';
 import { toast } from 'sonner';
-import { cn, Button, Input, Card, Badge, CMYKBadge } from '../components/ui/Base';
+import { cn } from '../lib/utils';
+import { Button, Input, Card, Badge, CMYKBadge } from '../components/ui/Base';
+import { ImportModal } from '../components/features/ImportModal';
+import { FileSpreadsheet } from 'lucide-react';
 
 export const Supplies = () => {
   const { 
     equipmentModels, 
     addEquipmentModel, 
     updateEquipmentModel,
-    // deleteEquipmentModel // Not implemented in store yet, but we'll stick to what we have
+    importCatalogue,
   } = useDataStore();
   const { user } = useAuthStore();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   // Form State
@@ -100,7 +104,7 @@ export const Supplies = () => {
         toast.success('Novo modelo registrado com sucesso');
       }
       setIsModalOpen(false);
-    } catch (err) {
+    } catch {
       toast.error('Erro ao salvar no catálogo');
     }
   };
@@ -118,15 +122,24 @@ export const Supplies = () => {
             CATÁLOGO <span className="text-text-2 font-light not-italic  text-3xl">DE MODELOS</span>
           </h2>
         </div>
-        {user?.role !== 'technician' && (
-          <Button 
-            className="h-12 px-8 rounded-2xl text-[10px] font-black uppercase tracking-widest gap-2 shadow-xl shadow-primary/10"
-            onClick={openAddModal}
-          >
-            <Plus size={18} strokeWidth={3} />
-            Novo Modelo
-          </Button>
-        )}
+        <div className="flex gap-2">
+           {user?.role !== 'technician' && (
+             <Button 
+               variant="outline"
+               className="h-12 px-8 rounded-2xl text-[10px] font-black uppercase tracking-widest gap-2 bg-surface/50 border-border/50 hover:bg-surface hover:border-primary/50"
+               onClick={() => setIsImportModalOpen(true)}
+             >
+               <FileSpreadsheet size={16} />
+               Importar Lote
+             </Button>
+           )}
+           {user?.role !== 'technician' && (
+             <Button onClick={openAddModal} className="h-12 px-8 rounded-2xl text-[10px] font-black uppercase tracking-widest gap-2 shadow-xl shadow-primary/20">
+               <Plus size={18} strokeWidth={3} />
+               Novo Modelo
+             </Button>
+           )}
+        </div>
       </div>
 
       {/* Control Bar */}
@@ -216,6 +229,8 @@ export const Supplies = () => {
               <button 
                 onClick={() => setIsModalOpen(false)}
                 className="w-10 h-10 rounded-2xl bg-surface border border-border flex items-center justify-center text-text-2 hover:text-danger transition-all"
+                title="Fechar Modal"
+                aria-label="Fechar janela de edição de modelo"
               >
                 <X size={20} strokeWidth={3} />
               </button>
@@ -243,6 +258,8 @@ export const Supplies = () => {
                     <span className="text-[10px] font-black uppercase tracking-widest text-text-1">Sistema Colorido</span>
                     <button 
                       onClick={() => setForm({...form, is_color: !form.is_color})}
+                      title="Alternar Sistema Colorido"
+                      aria-label={form.is_color ? "Desativar sistema colorido" : "Ativar sistema colorido"}
                       className={cn(
                         "w-12 h-6 rounded-full transition-all relative px-1 flex items-center",
                         form.is_color ? "bg-primary" : "bg-border"
@@ -259,6 +276,8 @@ export const Supplies = () => {
                     <span className="text-[10px] font-black uppercase tracking-widest text-text-1">Possui Cilindro</span>
                     <button 
                       onClick={() => setForm({...form, has_drum: !form.has_drum})}
+                      title="Alternar Presença de Cilindro"
+                      aria-label={form.has_drum ? "Desativar unidade de cilindro" : "Ativar unidade de cilindro"}
                       className={cn(
                         "w-12 h-6 rounded-full transition-all relative px-1 flex items-center",
                         form.has_drum ? "bg-primary" : "bg-border"
@@ -352,6 +371,14 @@ export const Supplies = () => {
             </div>
           </div>
         </div>
+      )}
+      {/* Modals */}
+      {isImportModalOpen && (
+        <ImportModal 
+          type="catalogue"
+          onClose={() => setIsImportModalOpen(false)}
+          onImport={importCatalogue}
+        />
       )}
     </div>
   );

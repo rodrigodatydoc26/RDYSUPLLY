@@ -10,7 +10,8 @@ import { useDataStore } from '../store/useDataStore';
 import { useAuthStore } from '../store/useAuthStore';
 import type { Contract } from '../types';
 import { toast } from 'sonner';
-import { cn, Button, Input, Card, Badge, CMYKBadge } from '../components/ui/Base';
+import { cn } from '../lib/utils';
+import { Button, Input, Card, Badge, CMYKBadge } from '../components/ui/Base';
 
 export const Contracts = () => {
   const {
@@ -71,7 +72,7 @@ export const Contracts = () => {
         toast.success('Contrato criado com sucesso');
       }
       setIsModalOpen(false);
-    } catch (err) {
+    } catch {
       toast.error('Erro ao salvar contrato');
     }
   };
@@ -104,7 +105,7 @@ export const Contracts = () => {
       toast.success('Equipamento instalado no contrato');
       setIsEquipmentModalOpen(false);
       setEqForm({ equipment_model_id: '', serial_number: '', location: '' });
-    } catch (err) {
+    } catch {
       toast.error('Erro ao instalar equipamento');
     }
   };
@@ -211,7 +212,11 @@ export const Contracts = () => {
                                       <CMYKBadge type="K" className="scale-75 origin-left" />
                                       {model?.is_color && <Badge variant="info" className="scale-75 origin-left">Color</Badge>}
                                    </div>
-                                   <button className="p-2 text-text-2 hover:text-text-1 transition-colors">
+                                   <button 
+                                      className="p-2 text-text-2 hover:text-text-1 transition-colors"
+                                      title="Configurações da Máquina"
+                                      aria-label="Ver mais detalhes e configurações"
+                                    >
                                       <Settings2 size={14} />
                                    </button>
                                 </div>
@@ -238,6 +243,8 @@ export const Contracts = () => {
               <button 
                 onClick={() => setIsModalOpen(false)}
                 className="w-10 h-10 rounded-2xl bg-surface border border-border flex items-center justify-center text-text-2 hover:text-danger transition-all"
+                title="Fechar Modal"
+                aria-label="Fechar janela de contrato"
               >
                 <X size={20} strokeWidth={3} />
               </button>
@@ -254,6 +261,8 @@ export const Contracts = () => {
                   <span className="text-[10px] font-black uppercase text-text-1">Contrato Ativo</span>
                   <button 
                     onClick={() => setFormData({...formData, active: !formData.active})}
+                    title="Alternar Status do Contrato"
+                    aria-label={formData.active ? "Desativar contrato" : "Ativar contrato"}
                     className={cn(
                       "w-12 h-6 rounded-full transition-all relative px-1 flex items-center",
                       formData.active ? "bg-success" : "bg-border"
@@ -281,15 +290,26 @@ export const Contracts = () => {
                 <h3 className="text-2xl font-black text-text-1 italic uppercase tracking-tighter">
                   Instalar <span className="text-primary italic">Equipamento</span>
                 </h3>
-                <button onClick={() => setIsEquipmentModalOpen(false)} className="w-10 h-10 rounded-2xl bg-surface border border-border flex items-center justify-center text-text-2 hover:text-danger">
+                <button 
+                  onClick={() => setIsEquipmentModalOpen(false)} 
+                  className="w-10 h-10 rounded-2xl bg-surface border border-border flex items-center justify-center text-text-2 hover:text-danger"
+                  title="Fechar Modal"
+                  aria-label="Fechar janela de instalação"
+                >
                   <X size={20} strokeWidth={3} />
                 </button>
              </div>
 
              <div className="p-10 space-y-6">
                 <div>
-                   <label className="text-[10px] font-black text-text-2 uppercase tracking-widest block mb-2">Modelo do Catálogo</label>
+                   <label 
+                      htmlFor="machine-model-select"
+                      className="text-[10px] font-black text-text-2 uppercase tracking-widest block mb-2 cursor-pointer"
+                    >
+                      Modelo do Catálogo
+                    </label>
                    <select 
+                     id="machine-model-select"
                      className="w-full h-14 bg-bg border border-border rounded-xl px-4 text-sm font-bold text-text-1 outline-none focus:border-primary"
                      value={eqForm.equipment_model_id}
                      onChange={e => setEqForm({...eqForm, equipment_model_id: e.target.value})}

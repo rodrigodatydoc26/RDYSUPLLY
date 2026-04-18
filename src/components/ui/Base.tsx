@@ -1,14 +1,8 @@
-import React from 'react';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-/** Utility for tailwind classes merging */
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+import type { ReactNode, ButtonHTMLAttributes, InputHTMLAttributes } from 'react';
+import { cn } from '../../lib/utils';
 
 /** Button Component */
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
   size?: 'sm' | 'md' | 'lg' | 'icon';
 }
@@ -43,16 +37,26 @@ export const Button = ({ className, variant = 'primary', size = 'md', ...props }
 };
 
 /** Input Component */
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
 }
 
-export const Input = ({ label, error, className, ...props }: InputProps) => {
+export const Input = ({ label, error, className, id, ...props }: InputProps) => {
+  const inputId = id || (label ? `input-${label.toLowerCase().replace(/\s+/g, '-')}` : undefined);
+  
   return (
     <div className="space-y-1 w-full">
-      {label && <label className="text-xs font-bold text-text-2 uppercase tracking-wider">{label}</label>}
+      {label && (
+        <label 
+          htmlFor={inputId}
+          className="text-xs font-bold text-text-2 uppercase tracking-wider cursor-pointer"
+        >
+          {label}
+        </label>
+      )}
       <input 
+        id={inputId}
         className={cn(
           'w-full bg-white border border-border rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-text-2',
           error && 'border-danger focus:ring-danger/20 focus:border-danger',
@@ -66,15 +70,15 @@ export const Input = ({ label, error, className, ...props }: InputProps) => {
 };
 
 /** Card Component */
-export const Card = ({ children, className }: { children: React.ReactNode, className?: string }) => (
-  <div className={cn('bg-surface border border-border rounded-xl shadow-sm overflow-hidden animate-fade', className)}>
+export const Card = ({ children, className, ...props }: React.HTMLAttributes<HTMLDivElement> & { children: React.ReactNode }) => (
+  <div className={cn('bg-surface border border-border rounded-xl shadow-sm overflow-hidden animate-fade', className)} {...props}>
     {children}
   </div>
 );
 
 /** Badge Component */
 export const Badge = ({ children, variant = 'neutral', className }: { 
-  children: React.ReactNode, 
+  children: ReactNode, 
   variant?: 'neutral' | 'success' | 'warning' | 'danger' | 'info',
   className?: string
 }) => {
