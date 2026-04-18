@@ -45,7 +45,6 @@ export const TechnicianPortal = () => {
   const assignedContracts = useMemo(() => {
     if (!user) return [];
     if (user.role === 'admin' || user.role === 'cto') return contracts;
-    // In V2, we assume technicians see all contracts they are active in (this logic can be refined)
     return contracts.filter(c => c.active);
   }, [contracts, user]);
 
@@ -83,29 +82,29 @@ export const TechnicianPortal = () => {
         technician_id: user.id,
         entry_date: format(new Date(), 'yyyy-MM-dd'),
         toner_black: entryData.toner_black?.current || 0,
-        toner_black_in: entryData.toner_black?.in || 0,
-        toner_black_out: entryData.toner_black?.out || 0,
+        toner_black_in: 0,
+        toner_black_out: 0,
         toner_cyan: entryData.toner_cyan?.current || 0,
-        toner_cyan_in: entryData.toner_cyan?.in || 0,
-        toner_cyan_out: entryData.toner_cyan?.out || 0,
+        toner_cyan_in: 0,
+        toner_cyan_out: 0,
         toner_magenta: entryData.toner_magenta?.current || 0,
-        toner_magenta_in: entryData.toner_magenta?.in || 0,
-        toner_magenta_out: entryData.toner_magenta?.out || 0,
+        toner_magenta_in: 0,
+        toner_magenta_out: 0,
         toner_yellow: entryData.toner_yellow?.current || 0,
-        toner_yellow_in: entryData.toner_yellow?.in || 0,
-        toner_yellow_out: entryData.toner_yellow?.out || 0,
+        toner_yellow_in: 0,
+        toner_yellow_out: 0,
         drum_black: entryData.drum_black?.current || 0,
-        drum_black_in: entryData.drum_black?.in || 0,
-        drum_black_out: entryData.drum_black?.out || 0,
+        drum_black_in: 0,
+        drum_black_out: 0,
         drum_cyan: entryData.drum_cyan?.current || 0,
-        drum_cyan_in: entryData.drum_cyan?.in || 0,
-        drum_cyan_out: entryData.drum_cyan?.out || 0,
+        drum_cyan_in: 0,
+        drum_cyan_out: 0,
         drum_magenta: entryData.drum_magenta?.current || 0,
-        drum_magenta_in: entryData.drum_magenta?.in || 0,
-        drum_magenta_out: entryData.drum_magenta?.out || 0,
+        drum_magenta_in: 0,
+        drum_magenta_out: 0,
         drum_yellow: entryData.drum_yellow?.current || 0,
-        drum_yellow_in: entryData.drum_yellow?.in || 0,
-        drum_yellow_out: entryData.drum_yellow?.out || 0,
+        drum_yellow_in: 0,
+        drum_yellow_out: 0,
       };
 
       await addStockEntry(entryFields);
@@ -135,16 +134,14 @@ export const TechnicianPortal = () => {
     }
   };
 
-  // Render Logic
   if (!selectedContractId) {
     return (
       <div className="space-y-8 animate-fade pb-10">
-        {/* Notificações Banner */}
         <div className="bg-surface border border-border rounded-[32px] p-5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className={cn(
               "w-12 h-12 rounded-2xl flex items-center justify-center",
-              hasSubscription ? "bg-success/10 text-success shadow-[0_0_15px_rgba(var(--rdy-success-rgb),0.2)]" : "bg-primary/10 text-primary shadow-[0_0_15px_rgba(var(--rdy-primary-rgb),0.2)]"
+              hasSubscription ? "bg-success/10 text-success" : "bg-primary/10 text-primary"
             )}>
               {hasSubscription ? <Bell size={20} /> : <BellOff size={20} />}
             </div>
@@ -160,7 +157,7 @@ export const TechnicianPortal = () => {
           {!hasSubscription && (
             <button 
               onClick={subscribeUser}
-              className="px-6 h-10 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 text-[8px] font-black uppercase tracking-widest rounded-xl transition-all active:scale-95"
+              className="px-6 h-10 bg-primary text-secondary text-[8px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
             >
               Ativar Agora
             </button>
@@ -173,7 +170,7 @@ export const TechnicianPortal = () => {
                  <p className="text-[10px] font-black text-text-2 uppercase tracking-[0.3em] ">Operações de Campo</p>
               </div>
               <h2 className="text-4xl font-black text-text-1 italic tracking-tighter uppercase leading-none">
-                CENTRAL <span className="text-text-2 font-light not-italic opacity-50">DO TÉCNICO</span>
+                CENTRAL <span className="text-text-2 font-light not-italic">DO TÉCNICO</span>
               </h2>
            </div>
         </header>
@@ -183,7 +180,7 @@ export const TechnicianPortal = () => {
             <button
               key={contract.id}
               onClick={() => setSelectedContractId(contract.id)}
-              className="group text-left p-8 bg-surface border border-border rounded-[40px] hover:border-text-1 transition-all active:scale-[0.98] shadow-sm hover:shadow-2xl hover:shadow-primary/5"
+              className="group text-left p-8 bg-surface border border-border rounded-[40px] hover:border-text-1 transition-all active:scale-[0.98] shadow-sm"
             >
                <div className="flex justify-between items-start mb-6">
                   <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-secondary shadow-lg shadow-primary transition-transform group-hover:-rotate-3">
@@ -220,7 +217,6 @@ export const TechnicianPortal = () => {
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-         {/* Left Column: Machine List */}
          <div className="lg:col-span-1 space-y-4">
             <div className="flex items-center gap-2 px-2">
                <Monitor size={16} className="text-primary" />
@@ -229,7 +225,6 @@ export const TechnicianPortal = () => {
             {contractMachines.map(me => {
               const model = equipmentModels.find(m => m.id === me.equipment_model_id);
               const isSelected = selectedMachineId === me.id;
-              
               return (
                 <button
                   key={me.id}
@@ -246,7 +241,6 @@ export const TechnicianPortal = () => {
                      {isSelected && <CheckCircle2 size={16} className="text-primary" />}
                   </div>
                   <p className="text-base font-black truncate mb-4">{model?.name}</p>
-                  
                   <div className="flex items-center justify-between text-[10px] font-bold ">
                      <span className="flex items-center gap-1"><Hash size={10} /> {me.serial_number}</span>
                      <span className="flex items-center gap-1"><MapPin size={10} /> {me.location}</span>
@@ -255,7 +249,6 @@ export const TechnicianPortal = () => {
               )
             })}
 
-            {/* Paper Control as a constant item */}
             <div className="pt-8 border-t border-border/50">
                <div className="flex items-center gap-2 mb-4 px-2">
                   <LayoutGrid size={16} className="text-primary" />
@@ -287,10 +280,9 @@ export const TechnicianPortal = () => {
             </div>
          </div>
 
-         {/* Right Column: Dynamic Fields */}
          <div className="lg:col-span-2">
             {!selectedMachineId ? (
-              <div className="h-full min-h-[400px] flex flex-col items-center justify-center border-2 border-dashed border-border rounded-[40px] opacity-50">
+              <div className="h-full min-h-[400px] flex flex-col items-center justify-center border-2 border-dashed border-border rounded-[40px]">
                  <div className="w-20 h-20 rounded-full border-2 border-text-1 flex items-center justify-center mb-6">
                     <Monitor size={32} />
                  </div>
@@ -298,11 +290,7 @@ export const TechnicianPortal = () => {
               </div>
             ) : (
               <div className="space-y-8 animate-in slide-in-from-right-8 duration-500">
-                 <div className="bg-surface border border-border p-10 rounded-[48px] shadow-2xl overflow-hidden relative">
-                    <div className="absolute top-0 right-0 p-10 opacity-5">
-                       <Monitor size={120} />
-                    </div>
-                    
+                 <div className="bg-surface border border-border p-10 rounded-[48px] shadow-2xl relative overflow-hidden">
                     <div className="relative">
                        <div className="flex items-center gap-4 mb-8">
                           <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-secondary">
@@ -314,31 +302,17 @@ export const TechnicianPortal = () => {
                           </div>
                        </div>
 
-                       {/* Toners Grid */}
-                       <div className="space-y-6 mb-12">
+                       <div className="space-y-6 mb-12 text-center">
                           <div className="flex items-center gap-3 border-b border-border pb-3">
-                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-text-1 italic">Níveis de Toner</span>
-                             <div className="flex gap-1 ml-auto">
-                                <CMYKBadge type="K" />
-                                {activeModel?.is_color && (
-                                  <>
-                                    <CMYKBadge type="C" />
-                                    <CMYKBadge type="M" />
-                                    <CMYKBadge type="Y" />
-                                  </>
-                                )}
-                             </div>
+                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-text-1 italic font-bold">Leitura Atual de Insumos</span>
                           </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                             {/* Black Toner - Always visible */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12 py-8">
                              <MachineField 
-                               label="Toner Black" 
-                               type="K" 
-                               data={entryData.toner_black} 
-                               onChange={(sub, val) => handleValueChange('toner_black', sub, val)} 
+                                label="Toner Black" 
+                                type="K" 
+                                data={entryData.toner_black} 
+                                onChange={(sub, val) => handleValueChange('toner_black', sub, val)} 
                              />
-                             
                              {activeModel?.is_color && (
                                <>
                                  <MachineField label="Toner Cyan" type="C" data={entryData.toner_cyan} onChange={(sub, val) => handleValueChange('toner_cyan', sub, val)} />
@@ -346,36 +320,28 @@ export const TechnicianPortal = () => {
                                  <MachineField label="Toner Yellow" type="Y" data={entryData.toner_yellow} onChange={(sub, val) => handleValueChange('toner_yellow', sub, val)} />
                                </>
                              )}
+                             {activeModel?.has_drum && (
+                               <>
+                                 <MachineField label="Cilindro Black" type="K" data={entryData.drum_black} onChange={(sub, val) => handleValueChange('drum_black', sub, val)} />
+                                 {activeModel.is_color && (
+                                   <>
+                                     <MachineField label="Cilindro Cyan" type="C" data={entryData.drum_cyan} onChange={(sub, val) => handleValueChange('drum_cyan', sub, val)} />
+                                     <MachineField label="Cilindro Magenta" type="M" data={entryData.drum_magenta} onChange={(sub, val) => handleValueChange('drum_magenta', sub, val)} />
+                                     <MachineField label="Cilindro Yellow" type="Y" data={entryData.drum_yellow} onChange={(sub, val) => handleValueChange('drum_yellow', sub, val)} />
+                                   </>
+                                 )}
+                               </>
+                             )}
                           </div>
                        </div>
 
-                       {/* Drums Grid - If enabled */}
-                       {activeModel?.has_drum && (
-                         <div className="space-y-6">
-                            <div className="flex items-center gap-3 border-b border-border pb-3">
-                               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-text-1 italic font-bold text-warning/50">Monitoramento de Cilindro / Fotocondutor</span>
-                            </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                               <MachineField label="Cilindro Black" type="K" data={entryData.drum_black} onChange={(sub, val) => handleValueChange('drum_black', sub, val)} />
-                               {activeModel.is_color && (
-                                 <>
-                                   <MachineField label="Cilindro Cyan" type="C" data={entryData.drum_cyan} onChange={(sub, val) => handleValueChange('drum_cyan', sub, val)} />
-                                   <MachineField label="Cilindro Magenta" type="M" data={entryData.drum_magenta} onChange={(sub, val) => handleValueChange('drum_magenta', sub, val)} />
-                                   <MachineField label="Cilindro Yellow" type="Y" data={entryData.drum_yellow} onChange={(sub, val) => handleValueChange('drum_yellow', sub, val)} />
-                                 </>
-                               )}
-                            </div>
-                         </div>
-                       )}
-
-                       <div className="mt-12 pt-12 border-t border-border flex justify-end">
+                       <div className="mt-8 pt-12 border-t border-border flex justify-end">
                           <Button 
-                            className="h-16 px-16 rounded-3xl text-[10px] font-black uppercase tracking-[0.3em] gap-3 shadow-2xl shadow-primary"
+                            className="h-20 px-16 rounded-3xl text-[12px] font-black uppercase tracking-[0.3em] gap-3 shadow-2xl shadow-primary"
                             onClick={handleSubmitMachine}
                           >
-                             <Save size={18} strokeWidth={3} />
-                             Sincronizar Leitura
+                             <Save size={20} strokeWidth={3} />
+                             Confirmar Saldo Atual
                           </Button>
                        </div>
                     </div>
@@ -388,7 +354,6 @@ export const TechnicianPortal = () => {
   );
 };
 
-// Sub-component for input fields
 const MachineField = ({ label, type, data, onChange }: {
   label: string;
   type: 'C' | 'M' | 'Y' | 'K';
@@ -396,49 +361,23 @@ const MachineField = ({ label, type, data, onChange }: {
   onChange: (sub: 'current' | 'in' | 'out', val: string) => void;
 }) => {
   const baseId = label.toLowerCase().replace(/\s+/g, '-');
-  
   return (
-    <div className="space-y-4">
-       <div className="flex items-center justify-between h-5">
-          <label className="text-[10px] font-black text-text-2 uppercase tracking-widest">{label}</label>
-          <CMYKBadge type={type} className="scale-75" />
+    <div className="space-y-4 flex flex-col items-center">
+       <div className="flex items-center gap-3">
+          <CMYKBadge type={type} />
+          <label className="text-[11px] font-black text-text-1 uppercase tracking-widest">{label}</label>
        </div>
-       <div className="grid grid-cols-3 gap-3">
-          <div className="space-y-1.5">
-             <label htmlFor={`${baseId}-saldo`} className="text-[8px] font-bold text-text-2 uppercase tracking-widest block text-center cursor-pointer">Saldo</label>
-             <input 
-               id={`${baseId}-saldo`}
-               type="number" 
-               className="w-full h-12 bg-bg border border-border rounded-xl text-center text-sm font-black text-text-1 focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
-               placeholder="0"
-               value={data?.current || ''}
-               onChange={e => onChange('current', e.target.value)}
-             />
-          </div>
-          <div className="space-y-1.5">
-             <label htmlFor={`${baseId}-in`} className="text-[8px] font-bold text-success uppercase tracking-widest block text-center cursor-pointer">In</label>
-             <input 
-               id={`${baseId}-in`}
-               type="number" 
-               className="w-full h-12 bg-success/5 border border-success rounded-xl text-center text-sm font-black text-success focus:ring-2 focus:ring-success/20 outline-none transition-all" 
-               placeholder="0"
-               value={data?.in || ''}
-               onChange={e => onChange('in', e.target.value)}
-             />
-          </div>
-          <div className="space-y-1.5">
-             <label htmlFor={`${baseId}-out`} className="text-[8px] font-bold text-danger uppercase tracking-widest block text-center cursor-pointer">Out</label>
-             <input 
-               id={`${baseId}-out`}
-               type="number" 
-               className="w-full h-12 bg-danger/5 border border-danger rounded-xl text-center text-sm font-black text-danger focus:ring-2 focus:ring-danger/20 outline-none transition-all" 
-               placeholder="0"
-               value={data?.out || ''}
-               onChange={e => onChange('out', e.target.value)}
-             />
-          </div>
+       <div className="w-full max-w-[120px] space-y-2">
+          <label htmlFor={`${baseId}-saldo`} className="text-[10px] font-black text-text-2 uppercase tracking-widest block text-center cursor-pointer">Saldo Físico</label>
+          <input 
+            id={`${baseId}-saldo`}
+            type="number" 
+            className="w-full h-16 bg-bg border-4 border-border rounded-[24px] text-center text-2xl font-black text-text-1 focus:border-primary focus:ring-0 outline-none transition-all shadow-inner" 
+            placeholder="0"
+            value={data?.current || ''}
+            onChange={e => onChange('current', e.target.value)}
+          />
        </div>
     </div>
-  )
-}
-
+  );
+};

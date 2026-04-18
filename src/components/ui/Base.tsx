@@ -58,7 +58,7 @@ export const Input = ({ label, error, className, id, ...props }: InputProps) => 
       <input 
         id={inputId}
         className={cn(
-          'w-full bg-white border border-border rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-text-2',
+          'w-full bg-white border border-border rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-text-2 placeholder:opacity-100',
           error && 'border-danger focus:ring-danger/20 focus:border-danger',
           className
         )}
@@ -79,15 +79,16 @@ export const Card = ({ children, className, ...props }: React.HTMLAttributes<HTM
 /** Badge Component */
 export const Badge = ({ children, variant = 'neutral', className }: { 
   children: ReactNode, 
-  variant?: 'neutral' | 'success' | 'warning' | 'danger' | 'info',
+  variant?: 'neutral' | 'success' | 'warning' | 'danger' | 'info' | 'primary',
   className?: string
 }) => {
   const variants = {
-    neutral: 'bg-bg text-text-2 border border-border',
+    neutral: 'bg-bg text-text-1 border border-border',
     success: 'bg-success/10 text-success border border-success/20',
     warning: 'bg-warning/10 text-warning border border-warning/20',
     danger: 'bg-danger/10 text-danger border border-danger/20',
     info: 'bg-cyan/10 text-cyan border border-cyan/20',
+    primary: 'bg-primary text-secondary font-black border border-primary/20',
   };
 
   return (

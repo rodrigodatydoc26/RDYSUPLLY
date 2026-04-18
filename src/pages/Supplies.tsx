@@ -268,7 +268,7 @@ export const Supplies = () => {
                       <div className={cn("w-4 h-4 bg-white rounded-full transition-all", form.is_color ? "translate-x-6" : "translate-x-0")} />
                     </button>
                   </div>
-                  <p className="text-[9px] font-medium text-text-2/50 leading-relaxed italic">Habilita os campos para Cyan, Magenta e Yellow na ficha técnica e portal do técnico.</p>
+                  <p className="text-[9px] font-medium text-text-2 leading-relaxed italic">Habilita os campos para Cyan, Magenta e Yellow na ficha técnica e portal do técnico.</p>
                 </div>
 
                 <div className="p-5 bg-bg rounded-[24px] border border-border space-y-4">
@@ -286,7 +286,7 @@ export const Supplies = () => {
                       <div className={cn("w-4 h-4 bg-white rounded-full transition-all", form.has_drum ? "translate-x-6" : "translate-x-0")} />
                     </button>
                   </div>
-                  <p className="text-[9px] font-medium text-text-2/50 leading-relaxed italic">Habilita campos de monitoramento para Unidades de Imagem / Fotocondutores.</p>
+                  <p className="text-[9px] font-medium text-text-2 leading-relaxed italic">Habilita campos de monitoramento para Unidades de Imagem / Fotocondutores.</p>
                 </div>
               </div>
 

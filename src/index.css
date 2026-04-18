@@ -11,19 +11,19 @@
     --rdy-cyan: #00AEEF;
     --rdy-magenta: #E6007E;
 
-    --rdy-bg: #F4F5F7;
+    --rdy-bg: #FFFFFF;
     --rdy-surface: #FFFFFF;
-    --rdy-border: #E2E4E9;
+    --rdy-border: #000000;
     --rdy-text-1: #000000;
-    --rdy-text-2: #1A1A1A;
+    --rdy-text-2: #000000;
   }
 
   [data-theme="dark"] {
-    --rdy-bg: #0F0F0F;
-    --rdy-surface: #1A1A1A;
-    --rdy-border: #2A2A2A;
+    --rdy-bg: #000000;
+    --rdy-surface: #000000;
+    --rdy-border: #F5C800; /* Yellow border for dark mode cards */
     --rdy-text-1: #FFFFFF;
-    --rdy-text-2: #F5F5F5;
+    --rdy-text-2: #FFFFFF;
   }
 
   body {

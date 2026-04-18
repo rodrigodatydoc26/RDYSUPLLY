@@ -45,7 +45,7 @@ export const Sidebar = () => {
           {!isSidebarCollapsed && (
             <div className="flex flex-col">
               <span className="font-black text-lg tracking-tight leading-none">RDY <span className="text-primary italic">SUPPLY</span></span>
-              <span className="text-[7px] font-bold text-white/30 tracking-[0.4em] uppercase">Tactical Inventory</span>
+              <span className="text-[7px] font-bold text-white tracking-[0.4em] uppercase">Tactical Inventory</span>
             </div>
           )}
         </div>
@@ -68,7 +68,7 @@ export const Sidebar = () => {
               "flex items-center gap-4 px-4 py-3 rounded-xl transition-all group relative font-medium",
               isActive 
                 ? "bg-primary text-secondary" 
-                : "text-white/60 hover:text-white hover:bg-white/5",
+                : "text-white hover:bg-white/5",
               isSidebarCollapsed && "justify-center px-0 mx-auto w-12"
             )}
           >
@@ -104,7 +104,7 @@ export const Sidebar = () => {
             </div>
             <button 
               onClick={logout}
-              className="p-2 text-white/40 hover:text-danger transition-colors"
+              className="p-2 text-white hover:text-danger transition-colors"
               title="Sair"
             >
               <LogOut size={16} />
@@ -113,7 +113,7 @@ export const Sidebar = () => {
         ) : (
           <button 
             onClick={logout}
-            className="w-12 h-12 mx-auto flex items-center justify-center rounded-xl bg-white/5 text-white/40 hover:text-danger transition-all"
+            className="w-12 h-12 mx-auto flex items-center justify-center rounded-xl bg-white/5 text-white hover:text-danger transition-all"
             title="Sair"
           >
             <LogOut size={20} />

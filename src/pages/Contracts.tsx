@@ -1,27 +1,34 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Plus,
   Monitor,
-  Hash,
-  Settings2,
   X,
+  UserPlus,
+  Package,
+  Settings2,
+  Check,
 } from 'lucide-react';
 import { useDataStore } from '../store/useDataStore';
 import { useAuthStore } from '../store/useAuthStore';
 import type { Contract } from '../types';
 import { toast } from 'sonner';
 import { cn } from '../lib/utils';
-import { Button, Input, Card, Badge, CMYKBadge } from '../components/ui/Base';
+import { Button, Input, Card, Badge } from '../components/ui/Base';
 
 export const Contracts = () => {
   const {
     contracts,
+    users,
     equipmentModels,
     contractEquipment,
     equipmentMinStock,
     addContract,
     updateContract,
+    deleteContract,
     addEquipmentToContract,
+    removeEquipmentFromContract,
+    updateEquipmentMinStock,
+    updateContractTechnicians,
   } = useDataStore();
   const { user } = useAuthStore();
   
@@ -29,24 +36,19 @@ export const Contracts = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  // Equipment Management state
-  const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
-  const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
-  
-  // New Equipment Form
-  const [eqForm, setEqForm] = useState({
-    equipment_model_id: '',
-    serial_number: '',
-    location: '',
-  });
-
   // Modal Form State for Contract
   const [formData, setFormData] = useState({
     name: '',
     client: '',
     code: '',
     active: true,
+    technicianIds: [] as string[],
   });
+
+  // Machine Addition State
+  const [selectedModelId, setSelectedModelId] = useState('');
+  const [serialNumber, setSerialNumber] = useState('');
+  const [location, setLocation] = useState('');
 
   const filteredContracts = contracts.filter(c =>
     c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -54,9 +56,23 @@ export const Contracts = () => {
     c.code.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const technicians = users.filter(p => p.role === 'technician' || p.role === 'admin');
+
   const openAddModal = () => {
     setEditingId(null);
-    setFormData({ name: '', client: '', code: '', active: true });
+    setFormData({ name: '', client: '', code: '', active: true, technicianIds: [] });
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (contract: Contract) => {
+    setEditingId(contract.id);
+    setFormData({
+      name: contract.name,
+      client: contract.client,
+      code: contract.code,
+      active: contract.active,
+      technicianIds: contract.technicianIds || [],
+    });
     setIsModalOpen(true);
   };
 
@@ -66,6 +82,7 @@ export const Contracts = () => {
     try {
       if (editingId) {
         await updateContract({ id: editingId, ...formData } as Contract);
+        await updateContractTechnicians(editingId, formData.technicianIds);
         toast.success('Contrato atualizado');
       } else {
         await addContract(formData);
@@ -77,38 +94,49 @@ export const Contracts = () => {
     }
   };
 
-  const handleAddEquipment = async () => {
-    if (!eqForm.equipment_model_id || !eqForm.serial_number) return toast.error('Selecione o modelo e informe o Serial');
-    if (!selectedContractId) return;
+  const handleToggleTech = (techId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      technicianIds: prev.technicianIds.includes(techId)
+        ? prev.technicianIds.filter(id => id !== techId)
+        : [...prev.technicianIds, techId]
+    }));
+  };
+
+  const handleAddMachine = async () => {
+    if (!editingId) return;
+    if (!selectedModelId || !serialNumber) return toast.error('Selecione o modelo e o serial');
+    
+    const model = equipmentModels.find(m => m.id === selectedModelId);
+    if (!model) return;
 
     try {
-      const model = equipmentModels.find(m => m.id === eqForm.equipment_model_id);
-      if (!model) return;
-
-      // Default min stock for new equipment
-      const minStockData = {
-        toner_black_min: 2,
-        toner_cyan_min: model.is_color ? 2 : 0,
-        toner_magenta_min: model.is_color ? 2 : 0,
-        toner_yellow_min: model.is_color ? 2 : 0,
-        drum_black_min: model.has_drum ? 1 : 0,
-        drum_cyan_min: (model.has_drum && model.is_color) ? 1 : 0,
-        drum_magenta_min: (model.has_drum && model.is_color) ? 1 : 0,
-        drum_yellow_min: (model.has_drum && model.is_color) ? 1 : 0,
-      };
-
       await addEquipmentToContract(
-        { ...eqForm, contract_id: selectedContractId, active: true },
-        minStockData
+        { contract_id: editingId, equipment_model_id: selectedModelId, serial_number: serialNumber.toUpperCase(), location, active: true },
+        {
+          toner_black_min: 2,
+          toner_cyan_min: model.is_color ? 2 : 0,
+          toner_magenta_min: model.is_color ? 2 : 0,
+          toner_yellow_min: model.is_color ? 2 : 0,
+          drum_black_min: model.has_drum ? 1 : 0,
+          drum_cyan_min: model.has_drum && model.is_color ? 1 : 0,
+          drum_magenta_min: model.has_drum && model.is_color ? 1 : 0,
+          drum_yellow_min: model.has_drum && model.is_color ? 1 : 0,
+        }
       );
-      
-      toast.success('Equipamento instalado no contrato');
-      setIsEquipmentModalOpen(false);
-      setEqForm({ equipment_model_id: '', serial_number: '', location: '' });
+      setSerialNumber('');
+      setLocation('');
+      setSelectedModelId('');
+      toast.success('Equipamento vinculado');
     } catch {
-      toast.error('Erro ao instalar equipamento');
+      toast.error('Erro ao vincular');
     }
   };
+
+  const machinesInContract = useMemo(() => {
+    if (!editingId) return [];
+    return contractEquipment.filter(ce => ce.contract_id === editingId);
+  }, [editingId, contractEquipment]);
 
   return (
     <div className="space-y-6 animate-fade pb-10">
@@ -120,12 +148,12 @@ export const Contracts = () => {
             <p className="text-[10px] font-black text-text-2 uppercase tracking-[0.3em]">Gestão de Unidades</p>
           </div>
           <h2 className="text-4xl font-black text-text-1 italic tracking-tighter uppercase leading-none">
-            CONTRATOS <span className="text-text-2 font-light not-italic  text-3xl">E PARQUE</span>
+            CONTRATOS <span className="text-text-2 font-light not-italic text-3xl">E PARQUE</span>
           </h2>
         </div>
         {user?.role !== 'technician' && (
           <Button 
-            className="h-12 px-8 rounded-2xl text-[10px] font-black uppercase tracking-widest gap-2 shadow-xl shadow-primary/10"
+            className="rdy-btn-primary h-12 px-8"
             onClick={openAddModal}
           >
             <Plus size={18} strokeWidth={3} />
@@ -135,217 +163,330 @@ export const Contracts = () => {
       </div>
 
       {/* Grid of Contracts */}
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredContracts.map((contract) => {
-          const machines = contractEquipment.filter(ce => ce.contract_id === contract.id);
+          const machinesCount = contractEquipment.filter(ce => ce.contract_id === contract.id).length;
           
           return (
-            <Card key={contract.id} className="overflow-hidden group">
-              <div className="flex flex-col lg:flex-row h-full">
-                {/* Contract Info Sidebar */}
-                <div className="w-full lg:w-80 bg-bg p-8 border-r border-border flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <Badge variant={contract.active ? 'success' : 'neutral'}>
-                        {contract.active ? 'Ativo' : 'Pausado'}
-                      </Badge>
-                      <span className="text-[10px] font-black text-text-2 tracking-widest uppercase italic">{contract.code}</span>
-                    </div>
-                    <h3 className="text-xl font-black text-text-1 uppercase tracking-tight mb-2 leading-tight">{contract.name}</h3>
-                    <p className="text-xs font-bold text-text-2 uppercase tracking-widest">{contract.client}</p>
-                  </div>
-                  
-                  <div className="mt-8 space-y-3">
-                     <Button 
-                       variant="outline" 
-                       className="w-full justify-between group/btn text-[10px] uppercase font-black"
-                       onClick={() => { setSelectedContractId(contract.id); setIsEquipmentModalOpen(true); }}
-                     >
-                       Instalar Máquina
-                       <Plus size={14} className="group-hover/btn:rotate-90 transition-transform" />
-                     </Button>
-                     <Button variant="ghost" className="w-full text-text-2 hover:text-text-1 text-[9px] uppercase font-bold" onClick={() => { setEditingId(contract.id); setFormData({...contract}); setIsModalOpen(true); }}>
-                       Editar Contrato
-                     </Button>
-                  </div>
+            <Card key={contract.id} className="rdy-card group hover:scale-[1.02] transition-all p-8 flex flex-col justify-between h-[300px]">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <Badge variant={contract.active ? 'success' : 'neutral'}>
+                    {contract.active ? 'Ativo' : 'Pausado'}
+                  </Badge>
+                  <span className="text-[10px] font-black text-text-2 tracking-widest uppercase italic">{contract.code}</span>
                 </div>
-
-                {/* Equipment List Area */}
-                <div className="flex-1 p-8 bg-surface">
-                   <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center gap-3">
-                         <Monitor size={18} className="text-primary" />
-                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-text-1">Parque de Máquinas ({machines.length})</span>
-                      </div>
+                <h3 className="text-2xl font-black text-text-1 uppercase tracking-tight mb-1 leading-tight">{contract.name}</h3>
+                <p className="text-[10px] font-bold text-text-2 uppercase tracking-widest truncate">{contract.client}</p>
+              </div>
+              
+              <div className="pt-6 border-t border-border mt-auto flex items-center justify-between">
+                <div className="flex items-center gap-4 text-[10px] font-black uppercase text-text-2">
+                   <div className="flex items-center gap-1.5">
+                      <Monitor size={14} className="text-primary" />
+                      {machinesCount} Máquinas
                    </div>
-
-                   {machines.length === 0 ? (
-                     <div className="py-12 flex flex-col items-center justify-center border-2 border-dashed border-border rounded-[32px] opacity-30">
-                        <Monitor size={32} className="mb-3" />
-                        <p className="text-[9px] font-black uppercase tracking-widest">Nenhuma máquina instalada</p>
-                     </div>
-                   ) : (
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {machines.map(me => {
-                           const model = equipmentModels.find(m => m.id === me.equipment_model_id);
-                           void equipmentMinStock.find(ms => ms.contract_equipment_id === me.id);
-                           
-                           return (
-                             <div key={me.id} className="p-5 rounded-2xl bg-bg border border-border group/card hover:border-primary transition-all">
-                                <div className="flex justify-between items-start mb-4">
-                                   <div>
-                                      <p className="text-[9px] font-black text-primary uppercase tracking-widest mb-1">{model?.brand}</p>
-                                      <h4 className="text-sm font-black text-text-1 tracking-tight">{model?.name}</h4>
-                                   </div>
-                                   <Badge variant="neutral" className="text-[8px]">{me.location}</Badge>
-                                </div>
-                                
-                                <div className="flex items-center gap-4 text-[10px] font-bold text-text-2 mb-4">
-                                   <div className="flex items-center gap-1.5 uppercase">
-                                      <Hash size={12} />
-                                      {me.serial_number}
-                                   </div>
-                                </div>
-
-                                <div className="pt-4 border-t border-border/50 flex items-center justify-between">
-                                   <div className="flex gap-1">
-                                      <CMYKBadge type="K" className="scale-75 origin-left" />
-                                      {model?.is_color && <Badge variant="info" className="scale-75 origin-left">Color</Badge>}
-                                   </div>
-                                   <button 
-                                      className="p-2 text-text-2 hover:text-text-1 transition-colors"
-                                      title="Configurações da Máquina"
-                                      aria-label="Ver mais detalhes e configurações"
-                                    >
-                                      <Settings2 size={14} />
-                                   </button>
-                                </div>
-                             </div>
-                           )
-                        })}
-                     </div>
-                   )}
                 </div>
+                <Button 
+                   variant="ghost" 
+                   className="h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-black transition-all"
+                   onClick={() => openEditModal(contract)}
+                >
+                  <Settings2 size={16} />
+                  Parametrizar
+                </Button>
               </div>
             </Card>
           )
         })}
       </div>
 
-      {/* Contract Modal */}
+      {/* PARAMETRIZAR CONTRATO MODAL (Premium Mockup Style) */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-xl bg-secondary/80">
-          <div className="w-full max-w-xl bg-surface border border-border rounded-[40px] shadow-2xl animate-fade">
-            <div className="px-10 py-8 border-b border-border flex justify-between items-center bg-bg/50">
-              <h3 className="text-2xl font-black text-text-1 italic uppercase tracking-tighter">
-                {editingId ? 'Editar' : 'Novo'} <span className="text-primary italic">Contrato</span>
-              </h3>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10 backdrop-blur-2xl bg-secondary/90 overflow-y-auto">
+          <div className="w-full max-w-6xl bg-surface border border-border rounded-[48px] shadow-2xl animate-fade overflow-hidden flex flex-col my-auto border-t-8 border-t-primary">
+            {/* Header */}
+            <div className="px-10 py-10 border-b border-border flex justify-between items-center bg-bg/20">
+              <div className="space-y-1">
+                 <h3 className="text-4xl font-black text-text-1 italic uppercase tracking-tighter leading-none">
+                    PARAMETRIZAR <span className="text-primary">CONTRATO</span>
+                 </h3>
+                 <p className="text-[10px] font-bold text-text-2 uppercase tracking-[0.3em]">Configuração granular de ativos e regras de estoque</p>
+              </div>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="w-10 h-10 rounded-2xl bg-surface border border-border flex items-center justify-center text-text-2 hover:text-danger transition-all"
                 title="Fechar Modal"
-                aria-label="Fechar janela de contrato"
+                className="w-14 h-14 rounded-3xl bg-surface border border-border flex items-center justify-center text-text-2 hover:bg-danger hover:text-white hover:border-danger transition-all rotate-0 hover:rotate-90"
               >
-                <X size={20} strokeWidth={3} />
+                <X size={24} strokeWidth={3} />
               </button>
             </div>
             
-            <div className="p-10 space-y-6">
-               <div className="grid grid-cols-2 gap-6">
-                 <Input label="Código RDY" placeholder="Ex: SC001" value={formData.code} onChange={e => setFormData({...formData, code: e.target.value.toUpperCase()})} />
-                 <Input label="Unidade / Nome" placeholder="Ex: HOSPITAL SANTA CASA" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value.toUpperCase()})} />
-               </div>
-               <Input label="Razão Social / Cliente" placeholder="Ex: SANTA CASA DE MISERICÓRDIA S/A" value={formData.client} onChange={e => setFormData({...formData, client: e.target.value})} />
+            {/* Main Content Area */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 overflow-hidden h-full">
                
-               <div className="flex items-center gap-3 p-4 bg-bg rounded-2xl border border-border">
-                  <span className="text-[10px] font-black uppercase text-text-1">Contrato Ativo</span>
-                  <button 
-                    onClick={() => setFormData({...formData, active: !formData.active})}
-                    title="Alternar Status do Contrato"
-                    aria-label={formData.active ? "Desativar contrato" : "Ativar contrato"}
-                    className={cn(
-                      "w-12 h-6 rounded-full transition-all relative px-1 flex items-center",
-                      formData.active ? "bg-success" : "bg-border"
-                    )}
-                  >
-                    <div className={cn("w-4 h-4 bg-white rounded-full transition-all", formData.active ? "translate-x-6" : "translate-x-0")} />
-                  </button>
+               {/* Left Column: Info & Techs */}
+               <div className="lg:col-span-5 p-10 space-y-10 border-r border-border bg-bg/10">
+                  <div className="space-y-6">
+                     <div className="grid grid-cols-2 gap-4">
+                        <Input label="Código RDY" placeholder="Ex: SC001" value={formData.code} onChange={e => setFormData({...formData, code: e.target.value.toUpperCase()})} />
+                        <div className="flex flex-col">
+                           <label className="text-[10px] font-black text-text-2 uppercase tracking-widest block mb-2 px-1">Status</label>
+                           <button 
+                             onClick={() => setFormData({...formData, active: !formData.active})}
+                             className={cn(
+                               "h-12 rounded-2xl flex items-center justify-center gap-2 px-6 transition-all font-black text-[10px] uppercase tracking-widest",
+                               formData.active ? "bg-success/10 text-success border border-success/30" : "bg-border/20 text-text-2 border border-border"
+                             )}
+                           >
+                              <div className={cn("w-2 h-2 rounded-full", formData.active ? "bg-success" : "bg-text-2")} />
+                              {formData.active ? "Contrato Ativo" : "Contrato Pausado"}
+                           </button>
+                        </div>
+                     </div>
+                     <Input label="Nome Identificador" placeholder="HOSPITAL SANTA CASA" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value.toUpperCase()})} />
+                     <Input label="Portal do Cliente / Razão Social" placeholder="FUNDAÇÃO SANTA CASA..." value={formData.client} onChange={e => setFormData({...formData, client: e.target.value})} />
+                  </div>
+
+                  {/* Tech Selection */}
+                  <div className="space-y-4">
+                     <div className="flex items-center gap-2 mb-2">
+                        <UserPlus size={16} className="text-primary" />
+                        <h4 className="text-xs font-black text-text-1 uppercase tracking-widest">Equipe Técnica</h4>
+                     </div>
+                     <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-2 scroll-elite">
+                        {technicians.map(tech => {
+                           const isSelected = formData.technicianIds.includes(tech.id);
+                           return (
+                              <button 
+                                 key={tech.id}
+                                 onClick={() => handleToggleTech(tech.id)}
+                                 className={cn(
+                                    "p-4 rounded-2xl flex items-center justify-between border transition-all text-left",
+                                    isSelected 
+                                       ? "bg-primary/10 border-primary text-text-1" 
+                                       : "bg-surface border-border text-text-2 hover:border-text-2/30"
+                                 )}
+                              >
+                                 <div className="flex flex-col">
+                                    <span className="text-[10px] font-black uppercase text-inherit">{tech.name}</span>
+                                    <span className="text-[9px] font-medium">{tech.email}</span>
+                                 </div>
+                                 {isSelected && <Check size={14} className="text-primary" strokeWidth={4} />}
+                              </button>
+                           )
+                        })}
+                     </div>
+                  </div>
+               </div>
+
+               {/* Right Column: Insumos & Equipamentos */}
+               <div className="lg:col-span-7 p-10 space-y-10 h-full overflow-y-auto scroll-elite bg-bg/5">
+                  
+                  {/* Supplies Dashboard */}
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                       <div className="flex items-center gap-2">
+                          <Package size={20} className="text-primary" />
+                          <h4 className="text-lg font-black text-text-1 uppercase tracking-tight italic">CATÁLOGO DE <span className="text-primary">INSUMOS</span></h4>
+                       </div>
+                       <Button variant="outline" className="h-10 text-[9px] uppercase font-black tracking-widest">Vincular Insumos <Plus size={12} className="ml-1" /></Button>
+                    </div>
+                    {/* Placeholder Supply List until further implementation */}
+                    <div className="space-y-3">
+                       <div className="p-5 rounded-3xl bg-surface border border-border flex items-center justify-between group hover:border-primary transition-all shadow-xl shadow-black/[0.02]">
+                          <div>
+                             <h5 className="text-[11px] font-black uppercase text-text-1">PAPEL A4 REPROGRAF</h5>
+                             <p className="text-[9px] font-bold text-text-2 uppercase">Papelaria / Outros</p>
+                          </div>
+                          <div className="flex items-center gap-4">
+                             <div className="text-right">
+                                <p className="text-[8px] font-black uppercase text-text-2">Mínimo</p>
+                                 <Input className="h-10 w-20 text-center font-black text-lg p-0" value="10" />
+                              </div>
+                              <button 
+                                title="Remover Insumo"
+                                className="text-text-2 hover:text-danger p-2 opacity-0 group-hover:opacity-100 transition-all"
+                              >
+                                <X size={16} />
+                              </button>
+                          </div>
+                       </div>
+                    </div>
+                  </div>
+
+                  {/* Machines (Equipments) Section */}
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                       <div className="flex items-center gap-2">
+                          <Monitor size={20} className="text-primary" />
+                          <h4 className="text-lg font-black text-text-1 uppercase tracking-tight italic">PARQUE DE <span className="text-primary">MÁQUINAS</span></h4>
+                       </div>
+                    </div>
+
+                    {/* New Machine Form Inline */}
+                    <Card className="p-6 bg-secondary border-none rounded-[32px] space-y-4">
+                       <div className="grid grid-cols-2 gap-4">
+                           <select 
+                             className="bg-surface border border-border rounded-2xl h-12 px-4 text-[10px] font-black uppercase outline-none focus:border-primary text-text-1"
+                             title="Selecionar Modelo de Equipamento"
+                             value={selectedModelId}
+                             onChange={e => setSelectedModelId(e.target.value)}
+                           >
+                             <option value="">SELECIONAR MODELO...</option>
+                             {equipmentModels.map(m => (
+                               <option key={m.id} value={m.id}>{m.brand} {m.name}</option>
+                             ))}
+                          </select>
+                           <Input 
+                              placeholder="NS (EX: SERIAL123)" 
+                              className="bg-surface h-12 rounded-2xl border border-border px-4" 
+                              value={serialNumber} 
+                              onChange={e => setSerialNumber(e.target.value.toUpperCase())} 
+                           />
+                       </div>
+                       <div className="flex gap-4">
+                           <Input 
+                              placeholder="LOCALIZAÇÃO (EX: RECEPÇÃO)" 
+                              className="bg-surface flex-1 h-12 rounded-2xl border border-border px-4" 
+                              value={location} 
+                              onChange={e => setLocation(e.target.value)} 
+                           />
+                          <Button className="rdy-btn-primary h-12 px-8" onClick={handleAddMachine}>VINCULAR</Button>
+                       </div>
+                    </Card>
+
+                    {/* Linked Machines List */}
+                    <div className="space-y-4">
+                       {machinesInContract.map(machine => {
+                          const model = equipmentModels.find(m => m.id === machine.equipment_model_id);
+                          const rules = equipmentMinStock.find(ms => ms.contract_equipment_id === machine.id);
+
+                          return (
+                             <div key={machine.id} className="p-6 bg-surface border border-border rounded-[32px] shadow-xl shadow-black/[0.02] flex flex-col gap-6 group hover:border-primary/50 transition-all">
+                                <div className="flex items-center justify-between">
+                                   <div className="flex items-center gap-4">
+                                      <div className="w-12 h-12 rounded-2xl bg-bg flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-black transition-all">
+                                         <Monitor size={24} />
+                                      </div>
+                                      <div>
+                                         <div className="flex items-center gap-2">
+                                            <Badge variant="neutral" className="bg-primary text-black border-none text-[8px]">{model?.brand}</Badge>
+                                            <h5 className="text-sm font-black uppercase text-text-1">{model?.name}</h5>
+                                         </div>
+                                         <p className="text-[10px] font-bold text-text-2 uppercase tracking-widest">{machine.serial_number} • {machine.location}</p>
+                                      </div>
+                                   </div>
+                                    <button 
+                                       onClick={() => removeEquipmentFromContract(machine.id)}
+                                       title="Remover Equipamento do Contrato"
+                                       className="text-text-2 hover:text-danger p-2 transition-colors"
+                                    >
+                                       <X size={18} />
+                                    </button>
+                                </div>
+
+                                {/* TONER RULES SECTION (Regras do Toner) */}
+                                <div className="bg-bg/50 rounded-2xl p-5 space-y-4 border border-border/50">
+                                   <div className="flex items-center justify-between">
+                                      <span className="text-[10px] font-black text-text-1 uppercase tracking-widest flex items-center gap-2">
+                                         <Settings2 size={12} className="text-primary" />
+                                         REGRAS DE ESTOQUE (MÍNIMO)
+                                      </span>
+                                      {model?.is_color ? <Badge variant="info" className="text-[8px]">Colorida</Badge> : <Badge variant="neutral" className="text-[8px]">Monocromática</Badge>}
+                                   </div>
+                                   
+                                   <div className="grid grid-cols-4 gap-4">
+                                      <div className="space-y-1">
+                                         <p className="text-[8px] font-black text-center text-text-2">PRETO (K)</p>
+                                         <div className="relative group/field">
+                                             <Input 
+                                                type="number" 
+                                                className="h-10 text-center font-black bg-surface rounded-xl border border-border focus:border-primary w-full" 
+                                                value={rules?.toner_black_min || 0}
+                                                onChange={e => updateEquipmentMinStock(machine.id, 'toner_black_min', Number(e.target.value))}
+                                             />
+                                            <div className="absolute inset-y-0 left-0 w-1 bg-black rounded-l-xl opacity-50" />
+                                         </div>
+                                      </div>
+                                      {model?.is_color && (
+                                         <>
+                                            <div className="space-y-1">
+                                               <p className="text-[8px] font-black text-center text-text-2">CIANO (C)</p>
+                                               <div className="relative group/field">
+                                                   <Input 
+                                                      type="number" 
+                                                      className="h-10 text-center font-black bg-surface rounded-xl border border-border focus:border-cyan w-full" 
+                                                      value={rules?.toner_cyan_min || 0}
+                                                      onChange={e => updateEquipmentMinStock(machine.id, 'toner_cyan_min', Number(e.target.value))}
+                                                   />
+                                                  <div className="absolute inset-y-0 left-0 w-1 bg-cyan rounded-l-xl opacity-50" />
+                                               </div>
+                                            </div>
+                                            <div className="space-y-1">
+                                               <p className="text-[8px] font-black text-center text-text-2">MAGENTA (M)</p>
+                                               <div className="relative group/field">
+                                                   <Input 
+                                                      type="number" 
+                                                      className="h-10 text-center font-black bg-surface rounded-xl border border-border focus:border-magenta w-full" 
+                                                      value={rules?.toner_magenta_min || 0}
+                                                      onChange={e => updateEquipmentMinStock(machine.id, 'toner_magenta_min', Number(e.target.value))}
+                                                   />
+                                                  <div className="absolute inset-y-0 left-0 w-1 bg-magenta rounded-l-xl opacity-50" />
+                                               </div>
+                                            </div>
+                                            <div className="space-y-1">
+                                               <p className="text-[8px] font-black text-center text-text-2">YELLOW (Y)</p>
+                                               <div className="relative group/field">
+                                                   <Input 
+                                                      type="number" 
+                                                      className="h-10 text-center font-black bg-surface rounded-xl border border-border focus:border-primary w-full" 
+                                                      value={rules?.toner_yellow_min || 0}
+                                                      onChange={e => updateEquipmentMinStock(machine.id, 'toner_yellow_min', Number(e.target.value))}
+                                                   />
+                                                  <div className="absolute inset-y-0 left-0 w-1 bg-primary rounded-l-xl opacity-50" />
+                                               </div>
+                                            </div>
+                                         </>
+                                      )}
+                                   </div>
+                                </div>
+                             </div>
+                          )
+                       })}
+                    </div>
+                  </div>
+
                </div>
             </div>
 
-            <div className="px-10 py-8 bg-bg border-t border-border flex justify-end">
-               <Button onClick={handleSaveContract} className="h-14 px-12 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary">
-                 Salvar Alterações
+            {/* Sticky Footer */}
+            <div className="px-10 py-8 bg-bg border-t border-border flex justify-between items-center bg-bg/40">
+               <div className="flex items-center gap-6">
+                  <div className="flex flex-col">
+                     <span className="text-[9px] font-black text-text-2 uppercase">Criado em</span>
+                     <span className="text-[10px] font-medium text-text-1">18/04/2026</span>
+                  </div>
+                  <div className="h-8 w-[1px] bg-border" />
+                  {editingId && (
+                     <button 
+                        onClick={() => { if(confirm('Excluir contrato Permanentemente?')) deleteContract(editingId).then(() => setIsModalOpen(false)); }}
+                        className="text-[9px] font-black uppercase text-danger hover:underline"
+                     >
+                        Excluir Contrato
+                     </button>
+                  )}
+               </div>
+               <Button 
+                  onClick={handleSaveContract} 
+                  className="rdy-btn-primary h-16 px-16 text-[12px] shadow-2xl"
+               >
+                 SALVAR PARÂMETROS DE CONTRATO
                </Button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Equipment Installation Modal */}
-      {isEquipmentModalOpen && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 backdrop-blur-xl bg-secondary/80">
-          <div className="w-full max-w-lg bg-surface border border-border rounded-[40px] shadow-2xl animate-fade">
-             <div className="px-10 py-8 border-b border-border flex justify-between items-center bg-bg/50">
-                <h3 className="text-2xl font-black text-text-1 italic uppercase tracking-tighter">
-                  Instalar <span className="text-primary italic">Equipamento</span>
-                </h3>
-                <button 
-                  onClick={() => setIsEquipmentModalOpen(false)} 
-                  className="w-10 h-10 rounded-2xl bg-surface border border-border flex items-center justify-center text-text-2 hover:text-danger"
-                  title="Fechar Modal"
-                  aria-label="Fechar janela de instalação"
-                >
-                  <X size={20} strokeWidth={3} />
-                </button>
-             </div>
-
-             <div className="p-10 space-y-6">
-                <div>
-                   <label 
-                      htmlFor="machine-model-select"
-                      className="text-[10px] font-black text-text-2 uppercase tracking-widest block mb-2 cursor-pointer"
-                    >
-                      Modelo do Catálogo
-                    </label>
-                   <select 
-                     id="machine-model-select"
-                     className="w-full h-14 bg-bg border border-border rounded-xl px-4 text-sm font-bold text-text-1 outline-none focus:border-primary"
-                     value={eqForm.equipment_model_id}
-                     onChange={e => setEqForm({...eqForm, equipment_model_id: e.target.value})}
-                   >
-                      <option value="">Selecione um modelo...</option>
-                      {equipmentModels.map(m => (
-                        <option key={m.id} value={m.id}>{m.brand} {m.name} {m.is_color ? '(Color)' : '(PB)'}</option>
-                      ))}
-                   </select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-6">
-                   <Input 
-                     label="Número de Série (NS)" 
-                     placeholder="Ex: ABC123456" 
-                     value={eqForm.serial_number} 
-                     onChange={e => setEqForm({...eqForm, serial_number: e.target.value.toUpperCase()})} 
-                   />
-                   <Input 
-                     label="Localização / Setor" 
-                     placeholder="Ex: Recepção" 
-                     value={eqForm.location} 
-                     onChange={e => setEqForm({...eqForm, location: e.target.value})} 
-                   />
-                </div>
-             </div>
-
-             <div className="px-10 py-8 bg-bg border-t border-border flex justify-end">
-                <Button onClick={handleAddEquipment} className="h-14 px-12 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary">
-                   Confirmar Instalação
-                </Button>
-             </div>
           </div>
         </div>
       )}
     </div>
   );
 };
-

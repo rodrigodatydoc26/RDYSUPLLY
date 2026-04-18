@@ -301,7 +301,7 @@ export const Users = () => {
                         </div>
                       ))
                     ) : (
-                      <div className="py-4 text-center opacity-50">
+                      <div className="py-4 text-center">
                         <p className="text-[8px] font-black uppercase">Nenhum contrato vinculado</p>
                       </div>
                     )}
@@ -449,7 +449,7 @@ export const Users = () => {
             <div className="bg-black border border-white/5 p-10 rounded-[32px] flex flex-col justify-between group hover:border-danger transition-all shadow-2xl">
               <div>
                 <h3 className="text-xl font-black text-white uppercase italic tracking-tighter">Limpeza Total</h3>
-                <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest mt-4 leading-relaxed max-w-[80%]">
+                <p className="text-[9px] text-white font-bold uppercase tracking-widest mt-4 leading-relaxed max-w-[80%]">
                   Apaga todos os contratos, insumos, histórico de estoque e movimentações. 
                   <span className="text-danger italic ml-1">Apenas perfis de Administrador serão preservados.</span>
                 </p>
@@ -472,7 +472,7 @@ export const Users = () => {
             <div className="bg-black border border-white/5 p-10 rounded-[32px] flex flex-col justify-between group hover:border-primary transition-all shadow-2xl">
               <div>
                 <h3 className="text-xl font-black text-white uppercase italic tracking-tighter">Restaurar Padrões</h3>
-                <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest mt-4 leading-relaxed max-w-[80%]">
+                <p className="text-[9px] text-white font-bold uppercase tracking-widest mt-4 leading-relaxed max-w-[80%]">
                   Restaura o sistema para o estado inicial com dados fictícios de demonstração.
                   Útil para resetar o ambiente de treinamento.
                 </p>

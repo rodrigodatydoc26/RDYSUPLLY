@@ -10,6 +10,7 @@ import type {
   PaperStockEntry,
   StockAlert,
   UserConfig,
+  ContractSupply,
 } from '../types';
 
 interface DataState {
@@ -18,6 +19,7 @@ interface DataState {
   equipmentModels: EquipmentModel[];
   contractEquipment: ContractEquipment[];
   equipmentMinStock: EquipmentMinStock[];
+  contractSupplies: ContractSupply[];
   equipmentStockEntries: EquipmentStockEntry[];
   paperStockEntries: PaperStockEntry[];
   stockAlerts: StockAlert[];
@@ -42,8 +44,13 @@ interface DataState {
 
    addStockEntry: (data: Omit<EquipmentStockEntry, 'id' | 'created_at'>) => Promise<void>;
   addPaperEntry: (data: Omit<PaperStockEntry, 'id' | 'created_at'>) => Promise<void>;
-  updateMinStock: (contractEquipmentId: string, field: string, value: number) => Promise<void>;
   updateUserConfig: (userId: string, data: Partial<UserConfig>) => Promise<void>;
+
+  addContractSupply: (data: Omit<ContractSupply, 'id'>) => Promise<void>;
+  removeContractSupply: (id: string) => Promise<void>;
+  removeEquipmentFromContract: (id: string) => Promise<void>;
+  updateContractTechnicians: (contractId: string, technicianIds: string[]) => Promise<void>;
+  updateEquipmentMinStock: (contractEquipmentId: string, field: string, value: number) => Promise<void>;
 
   importEquipment: (data: any[]) => Promise<void>;
   importCatalogue: (data: any[]) => Promise<void>;
@@ -58,6 +65,7 @@ export const useDataStore = create<DataState>((set, get) => ({
   equipmentModels: [],
   contractEquipment: [],
   equipmentMinStock: [],
+  contractSupplies: [],
   equipmentStockEntries: [],
   paperStockEntries: [],
   stockAlerts: [],
@@ -82,6 +90,7 @@ export const useDataStore = create<DataState>((set, get) => ({
         { data: alertsRaw },
         { data: contractTechs },
         { data: configsRaw },
+        { data: csRaw },
       ] = await Promise.all([
         supabase.from('contracts').select('*').order('created_at', { ascending: false }),
         supabase.from('profiles').select('*').order('name'),
@@ -93,6 +102,7 @@ export const useDataStore = create<DataState>((set, get) => ({
         supabase.from('stock_alerts').select('*').eq('resolved', false).order('triggered_at', { ascending: false }),
         supabase.from('contract_technicians').select('*'),
         supabase.from('user_configs').select('*'),
+        supabase.from('contract_supplies').select('*'),
       ]);
 
       const contracts: Contract[] = (contractsRaw || []).map(c => ({
@@ -184,12 +194,20 @@ export const useDataStore = create<DataState>((set, get) => ({
         notified_email: a.notified_email ?? false,
       }));
 
+      const contractSupplies: ContractSupply[] = (csRaw || []).map(cs => ({
+        id: cs.id,
+        contract_id: cs.contract_id,
+        supply_type_id: cs.supply_type_id,
+        min_stock: Number(cs.min_stock) || 0,
+      }));
+
       set({
         contracts,
         users: (profiles || []) as Profile[],
         equipmentModels: (equipModels || []) as EquipmentModel[],
         contractEquipment,
         equipmentMinStock,
+        contractSupplies,
         equipmentStockEntries,
         paperStockEntries,
         stockAlerts,
@@ -448,7 +466,7 @@ export const useDataStore = create<DataState>((set, get) => ({
     set(state => ({ paperStockEntries: [entry, ...state.paperStockEntries] }));
   },
 
-  updateMinStock: async (contractEquipmentId, field, value) => {
+  updateEquipmentMinStock: async (contractEquipmentId, field, value) => {
     const existing = get().equipmentMinStock.find(ms => ms.contract_equipment_id === contractEquipmentId);
     if (existing) {
       await supabase.from('equipment_min_stock').update({ [field]: value }).eq('contract_equipment_id', contractEquipmentId);
@@ -473,6 +491,41 @@ export const useDataStore = create<DataState>((set, get) => ({
       };
       set(state => ({ equipmentMinStock: [...state.equipmentMinStock, ms] }));
     }
+  },
+
+  addContractSupply: async (data) => {
+    const { data: row, error } = await supabase.from('contract_supplies').insert(data).select().single();
+    if (error) throw error;
+    set(state => ({ contractSupplies: [...state.contractSupplies, { ...data, id: row.id }] }));
+  },
+
+  removeContractSupply: async (id) => {
+    const { error } = await supabase.from('contract_supplies').delete().eq('id', id);
+    if (error) throw error;
+    set(state => ({ contractSupplies: state.contractSupplies.filter(s => s.id !== id) }));
+  },
+
+  removeEquipmentFromContract: async (id) => {
+    const { error } = await supabase.from('contract_equipment').delete().eq('id', id);
+    if (error) throw error;
+    set(state => ({
+      contractEquipment: state.contractEquipment.filter(e => e.id !== id),
+      equipmentMinStock: state.equipmentMinStock.filter(ms => ms.contract_equipment_id !== id),
+    }));
+  },
+
+  updateContractTechnicians: async (contractId, technicianIds) => {
+    await supabase.from('contract_technicians').delete().eq('contract_id', contractId);
+    if (technicianIds.length > 0) {
+      await supabase.from('contract_technicians').insert(
+        technicianIds.map(tid => ({ contract_id: contractId, technician_id: tid }))
+      );
+    }
+    set(state => ({
+      contracts: state.contracts.map(c => 
+        c.id === contractId ? { ...c, technicianIds } : c
+      )
+    }));
   },
 
   wipeDatabase: async () => {
@@ -511,10 +564,10 @@ export const useDataStore = create<DataState>((set, get) => ({
     get().fetchInitialData();
   },
 
-  importEquipment: async (data) => {
+  importEquipment: async (data: any[]) => {
     const { contracts, equipmentModels } = get();
-    const equipmentToInsert: any[] = [];
-    const minStockToInsert: any[] = [];
+    const equipmentToInsert = [];
+    const minStockToInsert = [];
 
     for (const row of data) {
       // Find contract by name or code
@@ -597,6 +650,6 @@ export const useDataStore = create<DataState>((set, get) => ({
 
     const { data: rows, error } = await supabase.from('equipment_models').insert(modelsToInsert).select();
     if (error) throw error;
-    if (rows) set(state => ({ equipmentModels: [...state.equipmentModels, ...rows as EquipmentModel[]] }));
+    if (rows) set(state => ({ equipmentModels: [...state.equipmentModels, ...rows] }));
   },
 }));

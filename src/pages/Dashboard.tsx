@@ -98,7 +98,7 @@ export const Dashboard = () => {
             <p className="text-[10px] font-black text-text-2 uppercase tracking-[0.3em] leading-none">Intelligence Dashboard v2</p>
           </div>
           <h2 className="text-4xl font-black text-text-1 italic tracking-tighter uppercase leading-none">
-            RDY <span className="text-text-2 font-light not-italic opacity-30">COMMAND CENTER</span>
+            RDY <span className="text-text-2 font-light not-italic">COMMAND CENTER</span>
           </h2>
         </div>
         <div className="flex bg-surface p-1 rounded-2xl border border-border">
