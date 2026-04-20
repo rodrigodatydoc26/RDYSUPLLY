@@ -78,6 +78,7 @@ export const Users = () => {
     if (!formData.name || !formData.email) return toast.error('Preencha os campos obrigatórios');
     if (!editingId && !formData.password) return toast.error('Defina uma Chave de Acesso inicial');
 
+    console.log('[Users] Iniciando handleSave. Modo:', editingId ? 'Edição' : 'Criação');
     setIsSaving(true);
     try {
       if (editingId) {
@@ -86,9 +87,12 @@ export const Users = () => {
           toast.error('Usuário não encontrado. Recarregue a página.');
           return;
         }
+        console.log('[Users] Atualizando usuário existente:', editingId);
         // Only update auth password if it was actually changed by the user
         const passwordChanged = formData.password !== originalPassword;
         await updateUser({ id: editingId, ...formData, created_at: existing.created_at }, passwordChanged);
+        
+        console.log('[Users] Sincronizando vínculos de contrato...');
         await Promise.all(contracts.map(c => {
           const isLinked = techContracts.includes(c.id);
           const alreadyLinked = c.technicianIds?.includes(editingId) ?? false;
@@ -98,19 +102,24 @@ export const Users = () => {
             return updateContract({ ...c, technicianIds: (c.technicianIds ?? []).filter(id => id !== editingId) });
           }
         }));
+        
+        console.log('[Users] Atualizando configurações do usuário...');
         await useDataStore.getState().updateUserConfig(editingId, {
           reminder_times: reminders.times,
           operation_days: reminders.days,
         });
         toast.success('Perfil atualizado com sucesso!');
       } else {
+        console.log('[Users] Criando novo usuário...');
         await addUser(formData);
         toast.success('Usuário criado com sucesso!');
       }
       setIsModalOpen(false);
     } catch (err: unknown) {
+      console.error('[Users] Erro fatal no handleSave:', err);
       toast.error(err instanceof Error ? err.message : 'Erro ao salvar usuário');
     } finally {
+      console.log('[Users] handleSave finalizado. Destravando botão.');
       setIsSaving(false);
     }
   };

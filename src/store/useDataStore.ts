@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type {
   Contract,
@@ -330,65 +329,35 @@ export const useDataStore = create<DataState>()(
   },
 
   addUser: async (data) => {
-    // Custom storageKey isolates this client's BroadcastChannel from the main client.
-    // Without this, signUp broadcasts a SIGNED_IN event that replaces the admin's session.
-    const tempClient = createClient(
-      import.meta.env.VITE_SUPABASE_URL,
-      import.meta.env.VITE_SUPABASE_ANON_KEY,
-      { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'sb-admin-user-creation' } },
-    );
     const pass = data.password || 'RDY@2024!';
-    const { data: authData, error: authError } = await tempClient.auth.signUp({
-      email: data.email,
-      password: pass,
-      options: { data: { name: data.name, role: data.role } },
-    });
-    if (authError) {
-      if (authError.message === 'User already registered') {
-        throw new Error('Este email já está cadastrado. Use outro email.');
+
+    const res = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin_create_user`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ email: data.email, password: pass, name: data.name, role: data.role, active: data.active }),
       }
-      throw authError;
-    }
-    if (!authData.user) throw new Error('Falha ao criar usuário');
+    );
 
-    // Fix: Supabase leaves NULL on nullable token columns which causes 500 on login.
-    // Also auto-confirm the email so the user can log in immediately.
-    const userId = authData.user.id;
-    
-    try {
-      await supabase.rpc('fix_user_tokens', { target_user_id: userId });
-    } catch (e) {
-      console.warn('RPC fix_user_tokens failed, skipping...', e);
-    }
+    const result = await res.json();
+    if (!res.ok) throw new Error(result?.error ?? 'Erro ao criar usuário');
 
-    try {
-      await supabase.rpc('admin_confirm_user', { user_id: userId });
-    } catch (e) {
-      console.warn('RPC admin_confirm_user failed, skipping...', e);
-    }
-
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .upsert({ 
-        id: userId, 
-        name: data.name, 
-        email: data.email, 
-        role: data.role, 
-        active: data.active, 
-        password: pass 
-      });
-    if (profileError) throw profileError;
-
-    const newProfile: Profile = {
-      id: userId, 
-      name: data.name, 
-      email: data.email,
-      role: data.role, 
-      active: data.active, 
-      password: pass, 
-      created_at: new Date().toISOString(),
-    };
-    set(state => ({ users: [...state.users, newProfile] }));
+    set(state => ({
+      users: [...state.users, {
+        id: result.user?.id ?? crypto.randomUUID(),
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        active: data.active,
+        password: pass,
+        created_at: result.user?.created_at ?? new Date().toISOString(),
+      }],
+    }));
   },
 
   updateUser: async (user, passwordChanged = false) => {
