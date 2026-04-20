@@ -348,24 +348,40 @@ export const useDataStore = create<DataState>()(
 
     // Fix: Supabase leaves NULL on nullable token columns which causes 500 on login.
     // Also auto-confirm the email so the user can log in immediately.
-    await supabase.rpc('fix_user_tokens', { target_user_id: authData.user.id }).catch(() => {
-      // Fallback: patch directly via SQL through a raw query if rpc not available
-    });
-    // Patch via direct SQL to ensure tokens are not NULL
-    await supabase.from('profiles').select('id').eq('id', authData.user.id).single()
-      .then(async () => {
-        // Use a raw update on auth schema via a service-level call
-        await supabase.rpc('admin_confirm_user', { user_id: authData.user.id }).catch(() => undefined);
-      }).catch(() => undefined);
+    const userId = authData.user.id;
+    
+    try {
+      await supabase.rpc('fix_user_tokens', { target_user_id: userId });
+    } catch (e) {
+      console.warn('RPC fix_user_tokens failed, skipping...', e);
+    }
+
+    try {
+      await supabase.rpc('admin_confirm_user', { user_id: userId });
+    } catch (e) {
+      console.warn('RPC admin_confirm_user failed, skipping...', e);
+    }
 
     const { error: profileError } = await supabase
       .from('profiles')
-      .upsert({ id: authData.user.id, name: data.name, email: data.email, role: data.role, active: data.active, password: pass });
+      .upsert({ 
+        id: userId, 
+        name: data.name, 
+        email: data.email, 
+        role: data.role, 
+        active: data.active, 
+        password: pass 
+      });
     if (profileError) throw profileError;
 
     const newProfile: Profile = {
-      id: authData.user.id, name: data.name, email: data.email,
-      role: data.role, active: data.active, password: pass, created_at: new Date().toISOString(),
+      id: userId, 
+      name: data.name, 
+      email: data.email,
+      role: data.role, 
+      active: data.active, 
+      password: pass, 
+      created_at: new Date().toISOString(),
     };
     set(state => ({ users: [...state.users, newProfile] }));
   },
@@ -776,7 +792,7 @@ export const useDataStore = create<DataState>()(
     }));
 
     for (const u of usersToInsert) {
-      const { data: profile, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email: u.email,
         password: u.password,
         options: { data: { name: u.name, role: u.role } }
