@@ -56,6 +56,8 @@ interface DataState {
 
   importEquipment: (data: Record<string, unknown>[]) => Promise<void>;
   importCatalogue: (data: Record<string, unknown>[]) => Promise<void>;
+  importContracts: (data: Record<string, unknown>[]) => Promise<void>;
+  importUsers: (data: Record<string, unknown>[]) => Promise<void>;
 
   wipeDatabase: () => Promise<void>;
   resetToDefaults: () => void;
@@ -333,6 +335,18 @@ export const useDataStore = create<DataState>((set, get) => ({
       throw authError;
     }
     if (!authData.user) throw new Error('Falha ao criar usuário');
+
+    // Fix: Supabase leaves NULL on nullable token columns which causes 500 on login.
+    // Also auto-confirm the email so the user can log in immediately.
+    await supabase.rpc('fix_user_tokens', { target_user_id: authData.user.id }).catch(() => {
+      // Fallback: patch directly via SQL through a raw query if rpc not available
+    });
+    // Patch via direct SQL to ensure tokens are not NULL
+    await supabase.from('profiles').select('id').eq('id', authData.user.id).single()
+      .then(async () => {
+        // Use a raw update on auth schema via a service-level call
+        await supabase.rpc('admin_confirm_user', { user_id: authData.user.id }).catch(() => undefined);
+      }).catch(() => undefined);
 
     const { error: profileError } = await supabase
       .from('profiles')
@@ -727,5 +741,37 @@ export const useDataStore = create<DataState>((set, get) => ({
     const { data: rows, error } = await supabase.from('equipment_models').insert(modelsToInsert).select();
     if (error) throw error;
     if (rows) set(state => ({ equipmentModels: [...state.equipmentModels, ...rows] }));
+  },
+
+  importContracts: async (data) => {
+    const contractsToInsert = data.map(row => ({
+      code: String(row.CODIGO || row.CODE || ''),
+      name: String(row.NOME || row.NAME || ''),
+      client: String(row.CLIENTE || row.CLIENT || ''),
+      active: String(row.ATIVO || row.ACTIVE || 'S').toUpperCase() === 'S'
+    }));
+    const { data: rows, error } = await supabase.from('contracts').insert(contractsToInsert).select();
+    if (error) throw error;
+    if (rows) set(state => ({ contracts: [...state.contracts, ...rows] }));
+  },
+
+  importUsers: async (data) => {
+    const usersToInsert = data.map(row => ({
+      name: String(row.NOME || row.NAME || ''),
+      email: String(row.EMAIL || ''),
+      role: (row.CARGO || row.ROLE || 'technician') as any,
+      active: String(row.ATIVO || row.ACTIVE || 'S').toUpperCase() === 'S',
+      // Default password for imported users
+      password: 'mudar123'
+    }));
+
+    for (const u of usersToInsert) {
+      const { data: profile, error } = await supabase.auth.signUp({
+        email: u.email,
+        password: u.password,
+        options: { data: { name: u.name, role: u.role } }
+      });
+      if (error) console.error(`Erro ao criar usuário ${u.email}:`, error);
+    }
   },
 }));

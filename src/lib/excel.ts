@@ -4,29 +4,48 @@ export const ExcelService = {
   /**
    * Gera e baixa um template Excel para importação
    */
-  downloadTemplate: (type: 'equipment' | 'catalogue') => {
+  downloadTemplate: (type: 'equipment' | 'catalogue' | 'contracts' | 'users') => {
     let headers: string[] = [];
     let exampleData: (string | number | boolean)[][] = [];
     let fileName = '';
 
-    if (type === 'equipment') {
-      headers = ['CONTRATO_CODIGO', 'MARCA', 'MODELO', 'SERIAL', 'LOCALIZACAO'];
-      exampleData = [
-        ['SC001', 'HP', 'LaserJet M177fw', 'ABC123456', 'Recepção'],
-        ['SC001', 'Ricoh', 'MP 301', 'XYZ789012', 'Faturamento']
-      ];
-      fileName = 'template_equipamentos_rdy.xlsx';
-    } else {
-      headers = [
-        'MARCA', 'MODELO', 'COLOR(S/N)', 'CILINDRO(S/N)', 
-        'TONER_BLACK', 'TONER_CYAN', 'TONER_MAGENTA', 'TONER_YELLOW',
-        'DRUM_BLACK', 'DRUM_CYAN', 'DRUM_MAGENTA', 'DRUM_YELLOW'
-      ];
-      exampleData = [
-        ['HP', 'LaserJet M177fw', 'S', 'N', 'CF350A', 'CF351A', 'CF352A', 'CF353A', '', '', '', ''],
-        ['Ricoh', 'MP 301', 'N', 'S', '841711', '', '', '', 'D1272110', '', '', '']
-      ];
-      fileName = 'template_catalogo_rdy.xlsx';
+    switch (type) {
+      case 'equipment':
+        headers = ['CONTRATO_CODIGO', 'MARCA', 'MODELO', 'SERIAL', 'LOCALIZACAO'];
+        exampleData = [
+          ['SC001', 'HP', 'LaserJet M177fw', 'ABC123456', 'Recepção'],
+          ['SC001', 'Ricoh', 'MP 301', 'XYZ789012', 'Faturamento']
+        ];
+        fileName = 'template_maquinas_rdy.xlsx';
+        break;
+      case 'catalogue':
+        headers = [
+          'MARCA', 'MODELO', 'TIPO(equipment/supply/part)', 'COLOR(S/N)', 'CILINDRO(S/N)', 
+          'TONER_BLACK', 'TONER_CYAN', 'TONER_MAGENTA', 'TONER_YELLOW',
+          'DRUM_BLACK', 'DRUM_CYAN', 'DRUM_MAGENTA', 'DRUM_YELLOW'
+        ];
+        exampleData = [
+          ['HP', 'LaserJet M177fw', 'equipment', 'S', 'N', 'CF350A', 'CF351A', 'CF352A', 'CF353A', '', '', '', ''],
+          ['Ricoh', 'MP 301', 'equipment', 'N', 'S', '841711', '', '', '', 'D1272110', '', '', '']
+        ];
+        fileName = 'template_catalogo_rdy.xlsx';
+        break;
+      case 'contracts':
+        headers = ['CODIGO', 'NOME', 'CLIENTE', 'ATIVO(S/N)'];
+        exampleData = [
+          ['SC001', 'Contrato Alfa', 'Cliente X', 'S'],
+          ['SC002', 'Contrato Beta', 'Cliente Y', 'S']
+        ];
+        fileName = 'template_contratos_rdy.xlsx';
+        break;
+      case 'users':
+        headers = ['NOME', 'EMAIL', 'CARGO(admin/analyst/technician/cto)', 'ATIVO(S/N)'];
+        exampleData = [
+          ['João Silva', 'joao@rdy.com.br', 'technician', 'S'],
+          ['Maria Oliveira', 'maria@rdy.com.br', 'analyst', 'S']
+        ];
+        fileName = 'template_usuarios_rdy.xlsx';
+        break;
     }
 
     const ws = XLSX.utils.aoa_to_sheet([headers, ...exampleData]);

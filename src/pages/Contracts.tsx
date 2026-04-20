@@ -8,6 +8,7 @@ import {
   Check,
   Search,
   Cpu,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useDataStore } from '../store/useDataStore';
 import { useAuthStore } from '../store/useAuthStore';
@@ -15,6 +16,7 @@ import type { Contract, EquipmentModelType } from '../types';
 import { toast } from 'sonner';
 import { cn } from '../lib/utils';
 import { Button, Input, Card, Badge } from '../components/ui/Base';
+import { ImportModal } from '../components/features/ImportModal';
 
 export const Contracts = () => {
   const {
@@ -32,11 +34,13 @@ export const Contracts = () => {
     addEquipmentToContract,
     removeEquipmentFromContract,
     equipmentStockEntries,
+    importContracts,
   } = useDataStore();
   const { user } = useAuthStore();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isLinkerOpen, setIsLinkerOpen] = useState(false);
   const [isTechSelectorOpen, setIsTechSelectorOpen] = useState(false);
   const [linkerFilter, setLinkerFilter] = useState<EquipmentModelType>('equipment');
@@ -208,11 +212,23 @@ export const Contracts = () => {
         <div className="space-y-1">
           <h2 className="text-4xl md:text-6xl font-black text-text-1 tracking-tighter uppercase italic leading-none">GESTÃO <span className="opacity-20 not-italic">DE CONTRATOS</span></h2>
         </div>
-        {user?.role !== 'technician' && (
-          <Button className="h-14 px-10 rdy-btn-elite text-[11px]" onClick={openAddModal}>
-            <Plus size={20} className="mr-2" /> NOVO CONTRATO
-          </Button>
-        )}
+        <div className="flex items-center gap-3">
+          {user?.role !== 'technician' && (
+            <Button 
+              variant="outline"
+              className="h-14 px-6 rounded-2xl text-[11px] font-black uppercase tracking-widest gap-3 border-border hover:bg-black hover:text-white transition-all bg-surface shadow-sm"
+              onClick={() => setIsImportModalOpen(true)}
+            >
+              <FileSpreadsheet size={18} />
+              <span className="hidden sm:inline">Importar Lote</span>
+            </Button>
+          )}
+          {user?.role !== 'technician' && (
+            <Button className="h-14 px-10 rdy-btn-elite text-[11px]" onClick={openAddModal}>
+              <Plus size={20} className="mr-2" /> NOVO CONTRATO
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* List */}
@@ -530,6 +546,14 @@ export const Contracts = () => {
            </div>
         </div>,
         document.body
+      )}
+
+      {isImportModalOpen && (
+        <ImportModal 
+          type="contracts"
+          onClose={() => setIsImportModalOpen(false)}
+          onImport={importContracts}
+        />
       )}
     </div>
   );

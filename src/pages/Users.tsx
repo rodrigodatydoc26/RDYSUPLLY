@@ -9,6 +9,7 @@ import {
   Plus,
   Check,
   Search,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useDataStore } from '../store/useDataStore';
 import { useAuthStore } from '../store/useAuthStore';
@@ -16,12 +17,14 @@ import type { Profile, UserRole } from '../types';
 import { toast } from 'sonner';
 import { cn } from '../lib/utils';
 import { Button, Card } from '../components/ui/Base';
+import { ImportModal } from '../components/features/ImportModal';
 
 export const Users = () => {
   const { user } = useAuthStore();
-  const { users, addUser, updateUser, deleteUser, contracts, updateContract } = useDataStore();
+  const { users, addUser, updateUser, deleteUser, contracts, updateContract, importUsers } = useDataStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [techContracts, setTechContracts] = useState<string[]>([]);
   const [showPassword, setShowPassword] = useState(true);
@@ -125,10 +128,20 @@ export const Users = () => {
             ESTRUTURA <span className="font-light not-italic text-text-1 opacity-20">DE EQUIPE</span>
           </h2>
         </div>
-        <Button onClick={openAddModal} className="h-14 px-12 rdy-btn-elite text-[11px]">
-          <Plus size={20} />
-          Convidar Usuário
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline"
+            className="h-14 px-6 rounded-2xl text-[11px] font-black uppercase tracking-widest gap-3 border-border hover:bg-black hover:text-white transition-all bg-surface shadow-sm"
+            onClick={() => setIsImportModalOpen(true)}
+          >
+            <FileSpreadsheet size={18} />
+            <span className="hidden sm:inline">Importar Time</span>
+          </Button>
+          <Button onClick={openAddModal} className="h-14 px-12 rdy-btn-elite text-[11px]">
+            <Plus size={20} />
+            Convidar Usuário
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-6">
@@ -454,6 +467,14 @@ export const Users = () => {
            </div>
         </div>,
         document.body
+      )}
+
+      {isImportModalOpen && (
+        <ImportModal 
+          type="users"
+          onClose={() => setIsImportModalOpen(false)}
+          onImport={importUsers}
+        />
       )}
     </div>
   );

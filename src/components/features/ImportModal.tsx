@@ -4,7 +4,7 @@ import { Button, Card } from '../ui/Base';
 import { ExcelService } from '../../lib/excel';
 
 interface ImportModalProps {
-  type: 'equipment' | 'catalogue';
+  type: 'equipment' | 'catalogue' | 'contracts' | 'users';
   onClose: () => void;
   onImport: (data: Record<string, unknown>[]) => Promise<void>;
 }
@@ -13,6 +13,16 @@ export const ImportModal = ({ type, onClose, onImport }: ImportModalProps) => {
   const [data, setData] = useState<Record<string, unknown>[] | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const getTitle = () => {
+    switch (type) {
+      case 'equipment': return 'Parque de Máquinas';
+      case 'catalogue': return 'Catálogo de Modelos';
+      case 'contracts': return 'Contratos Operativos';
+      case 'users': return 'Time de Colaboradores';
+      default: return '';
+    }
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -50,7 +60,7 @@ export const ImportModal = ({ type, onClose, onImport }: ImportModalProps) => {
         <div className="px-10 py-8 border-b border-border flex justify-between items-center bg-bg/50">
           <div>
             <h3 className="text-2xl font-black text-text-1 italic uppercase tracking-tighter">
-              Importar <span className="text-primary italic">{type === 'equipment' ? 'Parque de Máquinas' : 'Catálogo de Modelos'}</span>
+              Importar <span className="text-primary italic">{getTitle()}</span>
             </h3>
             <p className="text-[8px] font-black text-text-2 uppercase tracking-widest mt-1">Sincronização em Massa via XLSX</p>
           </div>
@@ -66,9 +76,9 @@ export const ImportModal = ({ type, onClose, onImport }: ImportModalProps) => {
 
         <div className="p-10 space-y-8">
           {/* Step 1: Template */}
-          <div className="flex items-center justify-between p-6 bg-secondary border border-border rounded-3xl group hover:border-primary/50 transition-all">
+          <div className="flex items-center justify-between p-6 bg-primary/[0.03] border border-primary/20 rounded-3xl group hover:border-primary/50 transition-all shadow-inner">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-surface border border-border flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+              <div className="w-12 h-12 rounded-2xl bg-white border border-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform shadow-sm">
                 <Download size={24} />
               </div>
               <div>
@@ -79,7 +89,7 @@ export const ImportModal = ({ type, onClose, onImport }: ImportModalProps) => {
             <Button 
               variant="outline" 
               size="sm" 
-              className="rounded-xl border-border px-6"
+              className="rounded-xl border-primary/20 hover:border-primary px-6 bg-white shadow-sm font-black text-[10px] tracking-widest"
               onClick={() => ExcelService.downloadTemplate(type)}
             >
               Documento XLSX
