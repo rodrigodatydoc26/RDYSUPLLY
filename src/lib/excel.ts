@@ -6,7 +6,7 @@ export const ExcelService = {
    */
   downloadTemplate: (type: 'equipment' | 'catalogue') => {
     let headers: string[] = [];
-    let exampleData: any[] = [];
+    let exampleData: (string | number | boolean)[][] = [];
     let fileName = '';
 
     if (type === 'equipment') {
@@ -39,7 +39,7 @@ export const ExcelService = {
   /**
    * Lê um arquivo e retorna um array de objetos
    */
-  parseFile: (file: File): Promise<any[]> => {
+  parseFile: (file: File): Promise<Record<string, unknown>[]> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       
@@ -49,7 +49,7 @@ export const ExcelService = {
           const workbook = XLSX.read(data, { type: 'array' });
           const sheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[sheetName];
-          const json = XLSX.utils.sheet_to_json(worksheet);
+          const json = XLSX.utils.sheet_to_json(worksheet) as Record<string, unknown>[];
           resolve(json);
         } catch (err) {
           reject(err);

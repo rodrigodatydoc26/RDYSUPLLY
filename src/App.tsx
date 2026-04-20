@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { AppLayout } from './components/layout/AppLayout';
@@ -14,10 +14,19 @@ const Contracts       = lazy(() => import('./pages/Contracts').then(m => ({ defa
 const Supplies        = lazy(() => import('./pages/Supplies').then(m => ({ default: m.Supplies })));
 const History         = lazy(() => import('./pages/History').then(m => ({ default: m.History })));
 const Users           = lazy(() => import('./pages/Users').then(m => ({ default: m.Users })));
+const GlobalInventory = lazy(() => import('./pages/GlobalInventory').then(m => ({ default: m.GlobalInventory })));
 
 const Loader = () => (
-  <div className="min-h-screen bg-bg flex items-center justify-center">
-    <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+  <div className="min-h-screen bg-bg flex flex-col items-center justify-center space-y-8 animate-fade">
+    <div className="relative">
+      <div className="w-20 h-20 border-[6px] border-primary/20 rounded-full" />
+      <div className="absolute top-0 left-0 w-20 h-20 border-[6px] border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-primary/10 blur-[60px] pointer-events-none" />
+    </div>
+    <div className="text-center space-y-2">
+      <p className="text-[12px] font-black text-primary uppercase tracking-[0.6em] animate-pulse">Sincronizando Sistema</p>
+      <p className="text-[8px] font-bold text-text-1 uppercase tracking-[0.3em] opacity-20">INVESTMENT - PERFORMANCE</p>
+    </div>
   </div>
 );
 
@@ -36,12 +45,17 @@ const ProtectedRoute = ({
   children: React.ReactNode; 
   allowedRoles?: string[] 
 }) => {
-  const { user } = useAuthStore();
-  const { _hasHydrated } = useDataStore();
+  const { user, _hasHydrated: isAuthHydrated } = useAuthStore();
+  const { _hasHydrated: isDataHydrated } = useDataStore();
 
-  if (!_hasHydrated) return <Loader />;
-  if (!user) return <Navigate to="/login" replace />;
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
+  // 1. Prioridade: Se não tem usuário, login.
+  if (!user && isAuthHydrated) return <Navigate to="/login" replace />;
+  
+  // 2. Se tem usuário mas dados ainda não sincronizaram, mostra sync.
+  if (user && !isDataHydrated) return <Loader />;
+  
+  // 3. Se sincronizou mas não tem permissão, volta pra home.
+  if (user && allowedRoles && !allowedRoles.includes(user.role)) {
     return <Navigate to={user.role === 'technician' ? '/tecnico' : '/'} replace />;
   }
 
@@ -49,7 +63,33 @@ const ProtectedRoute = ({
 };
 
 function App() {
-  const { user } = useAuthStore();
+  const { user, _hasHydrated: isAuthHydrated, initializeAuth } = useAuthStore();
+  const { fetchInitialData } = useDataStore();
+
+  useEffect(() => {
+    initializeAuth().catch(console.error);
+    const timer = setTimeout(() => {
+      if (!useAuthStore.getState()._hasHydrated) {
+        useAuthStore.setState({ _hasHydrated: true });
+      }
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [initializeAuth]);
+
+  useEffect(() => {
+    if (user) {
+      fetchInitialData().catch(console.error);
+      const timer = setTimeout(() => {
+        if (!useDataStore.getState()._hasHydrated) {
+          useDataStore.setState({ _hasHydrated: true });
+        }
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [user, fetchInitialData]);
+
+  if (!isAuthHydrated) return <Loader />;
 
   return (
     <Router>
@@ -98,6 +138,12 @@ function App() {
         <Route path="/usuarios" element={
           <ProtectedRoute allowedRoles={['admin']}>
             <AppLayout><Page><Users /></Page></AppLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/inventario" element={
+          <ProtectedRoute allowedRoles={['admin', 'analyst', 'cto']}>
+            <AppLayout><Page><GlobalInventory /></Page></AppLayout>
           </ProtectedRoute>
         } />
 

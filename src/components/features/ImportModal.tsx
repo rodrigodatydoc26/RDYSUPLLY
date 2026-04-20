@@ -6,11 +6,11 @@ import { ExcelService } from '../../lib/excel';
 interface ImportModalProps {
   type: 'equipment' | 'catalogue';
   onClose: () => void;
-  onImport: (data: any[]) => Promise<void>;
+  onImport: (data: Record<string, unknown>[]) => Promise<void>;
 }
 
 export const ImportModal = ({ type, onClose, onImport }: ImportModalProps) => {
-  const [data, setData] = useState<any[] | null>(null);
+  const [data, setData] = useState<Record<string, unknown>[] | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,8 +23,9 @@ export const ImportModal = ({ type, onClose, onImport }: ImportModalProps) => {
       const parsedData = await ExcelService.parseFile(file);
       if (parsedData.length === 0) throw new Error('O arquivo está vazio');
       setData(parsedData);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao ler arquivo');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao ler arquivo';
+      setError(message);
     }
   };
 
@@ -34,8 +35,9 @@ export const ImportModal = ({ type, onClose, onImport }: ImportModalProps) => {
     try {
       await onImport(data);
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Erro ao processar importação');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao processar importação';
+      setError(message);
     } finally {
       setIsUploading(false);
     }
@@ -131,7 +133,7 @@ export const ImportModal = ({ type, onClose, onImport }: ImportModalProps) => {
                   <tbody>
                     {data.slice(0, 5).map((row, i) => (
                       <tr key={i} className="border-b border-border/30">
-                        {Object.values(row).map((v: any, j) => (
+                        {Object.values(row).map((v, j) => (
                           <td key={j} className="px-4 py-2 text-[10px] font-medium text-text-1">{String(v)}</td>
                         ))}
                       </tr>

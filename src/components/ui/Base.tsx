@@ -10,7 +10,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 export const Button = ({ className, variant = 'primary', size = 'md', ...props }: ButtonProps) => {
   const variants = {
     primary: 'bg-primary text-secondary font-bold hover:brightness-95 active:scale-[0.98]',
-    secondary: 'bg-secondary text-white hover:bg-opacity-90 active:scale-[0.98]',
+    secondary: 'bg-text-1 text-surface hover:bg-opacity-90 active:scale-[0.98]',
     outline: 'border border-border bg-transparent hover:bg-bg text-text-1',
     ghost: 'bg-transparent hover:bg-bg text-text-1',
     danger: 'bg-danger text-white hover:bg-opacity-90 active:scale-[0.98]',
@@ -40,9 +40,10 @@ export const Button = ({ className, variant = 'primary', size = 'md', ...props }
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
+  suffix?: ReactNode;
 }
 
-export const Input = ({ label, error, className, id, ...props }: InputProps) => {
+export const Input = ({ label, error, suffix, className, id, ...props }: InputProps) => {
   const inputId = id || (label ? `input-${label.toLowerCase().replace(/\s+/g, '-')}` : undefined);
   
   return (
@@ -55,15 +56,23 @@ export const Input = ({ label, error, className, id, ...props }: InputProps) => 
           {label}
         </label>
       )}
-      <input 
-        id={inputId}
-        className={cn(
-          'w-full bg-white border border-border rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-text-2 placeholder:opacity-100',
-          error && 'border-danger focus:ring-danger/20 focus:border-danger',
-          className
+      <div className="relative group/input">
+        <input 
+          id={inputId}
+          className={cn(
+            'w-full bg-surface border border-border rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-text-2 placeholder:opacity-100 text-text-1',
+            suffix && 'pr-12',
+            error && 'border-danger focus:ring-danger/20 focus:border-danger',
+            className
+          )}
+          {...props}
+        />
+        {suffix && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
+            {suffix}
+          </div>
         )}
-        {...props}
-      />
+      </div>
       {error && <p className="text-[10px] font-medium text-danger">{error}</p>}
     </div>
   );
@@ -71,7 +80,7 @@ export const Input = ({ label, error, className, id, ...props }: InputProps) => 
 
 /** Card Component */
 export const Card = ({ children, className, ...props }: React.HTMLAttributes<HTMLDivElement> & { children: React.ReactNode }) => (
-  <div className={cn('bg-surface border border-border rounded-xl shadow-sm overflow-hidden animate-fade', className)} {...props}>
+  <div className={cn('rdy-card animate-fade', className)} {...props}>
     {children}
   </div>
 );
@@ -87,7 +96,7 @@ export const Badge = ({ children, variant = 'neutral', className }: {
     success: 'bg-success/10 text-success border border-success/20',
     warning: 'bg-warning/10 text-warning border border-warning/20',
     danger: 'bg-danger/10 text-danger border border-danger/20',
-    info: 'bg-cyan/10 text-cyan border border-cyan/20',
+    info: 'bg-info/10 text-info border border-info/20',
     primary: 'bg-primary text-secondary font-black border border-primary/20',
   };
 
@@ -101,14 +110,14 @@ export const Badge = ({ children, variant = 'neutral', className }: {
 /** CMYK Badge */
 export const CMYKBadge = ({ type, className }: { type: 'C' | 'M' | 'Y' | 'K', className?: string }) => {
   const styles = {
-    C: 'bg-cyan text-white',
-    M: 'bg-magenta text-white',
-    Y: 'bg-primary text-secondary',
-    K: 'bg-secondary text-white',
+    C: 'bg-cyan text-black',
+    M: 'bg-magenta text-black',
+    Y: 'bg-yellow text-black',
+    K: 'bg-text-1 text-surface',
   };
 
   return (
-    <span className={cn('w-5 h-5 flex items-center justify-center rounded-md text-[11px] font-black', styles[type], className)}>
+    <span className={cn('w-4 h-4 flex items-center justify-center rounded-[3px] text-[10px] font-black', styles[type], className)}>
       {type}
     </span>
   );

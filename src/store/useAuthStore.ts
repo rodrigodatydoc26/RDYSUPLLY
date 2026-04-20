@@ -1,5 +1,6 @@
 import type { Session } from '@supabase/supabase-js';
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { supabase } from '../lib/supabase';
 import type { Profile } from '../types';
 
@@ -8,101 +9,102 @@ interface AuthState {
   session: Session | null;
   isLoading: boolean;
   _hasHydrated: boolean;
-  themeColor: string;
   setUser: (user: Profile | null) => void;
   setSession: (session: Session | null) => void;
   setLoading: (loading: boolean) => void;
   logout: () => Promise<void>;
-  setThemeColor: (color: string) => void;
   refreshProfile: () => Promise<void>;
+  initializeAuth: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
-  user: null,
-  session: null,
-  isLoading: true,
-  _hasHydrated: false,
-  themeColor: localStorage.getItem('rdy-theme') || '#F5C800',
-  
-  setUser: (user) => set({ user }),
-  setSession: (session) => set({ session }),
-  setLoading: (loading) => set({ isLoading: loading }),
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set, get) => ({
+      user: null,
+      session: null,
+      isLoading: true,
+      _hasHydrated: false,
+      
+      setUser: (user) => set({ user }),
+      setSession: (session) => set({ session }),
+      setLoading: (loading) => set({ isLoading: loading }),
 
-  logout: async () => {
-    await supabase.auth.signOut();
-    set({ user: null, session: null });
-    localStorage.removeItem('rdy-user');
-  },
+      logout: async () => {
+        try {
+          await supabase.auth.signOut();
+          // Limpa o estado local
+          set({ user: null, session: null });
+          // Opcional: Se quiser limpar o storage do navegador completamente
+          localStorage.removeItem('rdy-auth-storage');
+          localStorage.removeItem('rdy-inventory-storage');
+          
+          window.location.href = '/login';
+        } catch (err) {
+          console.error('[RDY] logout_error:', err);
+          // Fallback force clear
+          set({ user: null, session: null });
+          window.location.href = '/login';
+        }
+      },
 
-  setThemeColor: (color) => {
-    set({ themeColor: color });
-    localStorage.setItem('rdy-theme', color);
-  },
+      refreshProfile: async () => {
+        const { session } = get();
+        if (!session?.user) return;
 
-  refreshProfile: async () => {
-    const { session } = get();
-    if (!session?.user) return;
+        try {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
 
-    // Check if profile exists
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single();
+          if (!error && profile) {
+            set({ user: profile as Profile });
+          } else if (error && error.code === 'PGRST116') {
+            // Create fallback if needed, but don't block
+             const newProfile: Profile = {
+              id: session.user.id,
+              name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Usuário',
+              email: session.user.email || '',
+              role: (session.user.user_metadata?.role as any) || 'technician',
+              active: true,
+              created_at: new Date().toISOString()
+            };
+            set({ user: newProfile });
+          }
+        } catch (err) {
+          console.error('[RDY] profile_refresh_error:', err);
+        }
+      },
 
-    let finalProfile = profile;
+      initializeAuth: async () => {
+        // First check
+        const { data: { session } } = await supabase.auth.getSession();
+        set({ session, _hasHydrated: true });
+        
+        if (session) {
+          await get().refreshProfile();
+        }
+        set({ isLoading: false });
 
-    // If it doesn't exist, create a default one (fallback)
-    if (error && error.code === 'PGRST116') {
-      const newProfile: Profile = {
-        id: session.user.id,
-        name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Novo Usuário',
-        email: session.user.email || '',
-        role: (session.user.user_metadata?.role as 'admin' | 'technician' | 'analyst' | 'cto') || 'technician',
-        active: true,
-        created_at: new Date().toISOString()
-      };
-
-      const { data: created, error: createError } = await supabase
-        .from('profiles')
-        .insert(newProfile)
-        .select()
-        .single();
-
-      if (!createError && created) {
-        finalProfile = created;
-      } else {
-        console.error('[Supabase Error] profile_creation:', createError);
+        // Listen for changes
+        supabase.auth.onAuthStateChange(async (_event, session) => {
+          set({ session, isLoading: true });
+          if (session) {
+            await get().refreshProfile();
+          } else {
+            set({ user: null });
+          }
+          set({ isLoading: false });
+        });
+      }
+    }),
+    {
+      name: 'rdy-auth-storage',
+      partialize: (state) => ({ user: state.user, session: state.session }),
+      onRehydrateStorage: () => (state) => {
+        if (state) state._hasHydrated = true;
       }
     }
-
-    if (finalProfile) {
-      set({ user: finalProfile as Profile });
-      localStorage.setItem('rdy-user', JSON.stringify(finalProfile));
-    }
-  }
-}));
-
-// Auth Initialization & Listener
-supabase.auth.getSession().then(({ data: { session } }) => {
-  useAuthStore.getState().setSession(session);
-  if (session) {
-    useAuthStore.getState().refreshProfile().finally(() => {
-      useAuthStore.getState().setLoading(false);
-      useAuthStore.setState({ _hasHydrated: true });
-    });
-  } else {
-    useAuthStore.getState().setLoading(false);
-    useAuthStore.setState({ _hasHydrated: true });
-  }
-});
-
-supabase.auth.onAuthStateChange(async (_event, session) => {
-  useAuthStore.getState().setSession(session);
-  if (session) {
-    await useAuthStore.getState().refreshProfile();
-  } else {
-    useAuthStore.getState().setUser(null);
-  }
-  useAuthStore.getState().setLoading(false);
-});
+  )
+);

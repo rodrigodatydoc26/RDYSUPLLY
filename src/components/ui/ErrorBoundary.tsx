@@ -15,8 +15,8 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="flex flex-col items-center justify-center p-20 text-center">
-          <AlertTriangle size={48} className="text-danger mb-4 opacity-50" />
-          <p className="font-black text-white uppercase tracking-widest text-sm">Erro ao carregar módulo</p>
+          <AlertTriangle size={48} className="text-danger mb-4" />
+          <p className="font-black text-text-1 uppercase tracking-widest text-sm">Erro inesperado no sistema</p>
           <button
             onClick={() => this.setState({ hasError: false })}
             className="mt-6 flex items-center gap-2 text-[10px] text-primary uppercase tracking-widest hover:opacity-70 transition-opacity"

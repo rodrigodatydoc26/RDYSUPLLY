@@ -37,13 +37,14 @@ export const usePushNotifications = () => {
 
       if (subscription && user?.id) {
         await updateUserConfig(user.id, { 
-          push_subscription: subscription.toJSON() as any 
+          push_subscription: subscription.toJSON() as Record<string, unknown>
         });
         toast.success('Notificações ativadas com sucesso!');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Falha ao inscrever para Push:', err);
-      toast.error(err.message || 'Erro ao ativar notificações');
+      const message = err instanceof Error ? err.message : 'Erro ao ativar notificações';
+      toast.error(message);
     }
   }, [user, updateUserConfig]);
 

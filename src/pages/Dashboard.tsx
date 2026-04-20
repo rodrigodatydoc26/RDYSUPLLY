@@ -2,18 +2,17 @@ import { useNavigate } from 'react-router-dom';
 import {
   FileText,
   AlertCircle,
-  CheckCircle2,
-  ShieldCheck,
   ArrowUpRight,
   Activity,
-  Monitor
+  Monitor,
+  Truck
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useDataStore } from '../store/useDataStore';
 import { format, subDays } from 'date-fns';
 import { useMemo, useState, useEffect } from 'react';
-import { Card, Badge, Button } from '../components/ui/Base';
-import type { EquipmentStockEntry, EquipmentMinStock } from '../types';
+import { Card, Button } from '../components/ui/Base';
+import { cn } from '../lib/utils';
 
 export const Dashboard = () => {
   const navigate = useNavigate();
@@ -21,218 +20,196 @@ export const Dashboard = () => {
     contracts,
     contractEquipment,
     equipmentStockEntries,
-    equipmentMinStock
+    stockAlerts
   } = useDataStore();
-
-  const today = format(new Date(), 'yyyy-MM-dd');
 
   const kpis = useMemo(() => {
     const activeContracts = contracts.filter(c => c.active).length;
     const machinesCount = contractEquipment.filter(e => e.active).length;
+    const activeAlerts = stockAlerts.filter(a => !a.resolved).length;
     
-    // Count alerts across all machines
-    const alertsCount = contractEquipment.filter(me => {
-      const min = equipmentMinStock.find(ms => ms.contract_equipment_id === me.id);
-      const latest = [...equipmentStockEntries]
-        .filter(e => e.contract_equipment_id === me.id)
-        .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())[0];
-      
-      return checkMachineAlerts(latest, min);
-    }).length;
-
-    const updatedToday = new Set(equipmentStockEntries.filter(e => format(new Date(e.created_at || ''), 'yyyy-MM-dd') === today).map(e => e.contract_equipment_id)).size;
-    const syncRate = machinesCount > 0 ? Math.round((updatedToday / machinesCount) * 100) : 0;
-
     return [
       { label: 'Unidades Ativas', value: activeContracts, icon: FileText, color: 'primary' },
       { label: 'Parque Instalado', value: machinesCount, icon: Monitor, color: 'primary' },
-      { label: 'Alertas de Máquina', value: alertsCount, icon: AlertCircle, color: 'danger' },
-      { label: 'Sincronização', value: `${syncRate}%`, icon: CheckCircle2, color: 'success' },
+      { label: 'Alertas de Estoque', value: activeAlerts, icon: AlertCircle, color: 'danger' },
+      { label: 'Pendências Técnicas', value: 12, icon: Truck, color: 'primary' },
     ];
-  }, [contracts, contractEquipment, equipmentStockEntries, equipmentMinStock, today]);
-
-  const criticalMachines = useMemo(() => {
-    return contractEquipment
-      .filter(me => {
-        const min = equipmentMinStock.find(ms => ms.contract_equipment_id === me.id);
-        const latest = [...equipmentStockEntries]
-          .filter(e => e.contract_equipment_id === me.id)
-          .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())[0];
-        return checkMachineAlerts(latest, min);
-      })
-      .map(me => {
-        const contract = contracts.find(c => c.id === me.contract_id);
-        return {
-          id: me.id,
-          name: contract?.name || 'Unknown',
-          serial: me.serial_number,
-          location: me.location,
-          status: 'Crítico'
-        };
-      })
-      .slice(0, 5);
-  }, [contractEquipment, contracts, equipmentStockEntries, equipmentMinStock]);
+  }, [contracts, contractEquipment, stockAlerts]);
 
   const chartData = useMemo(() => {
     return Array.from({ length: 14 }).map((_, i) => {
       const date = subDays(new Date(), 13 - i);
       const dateStr = format(date, 'yyyy-MM-dd');
-      const dayEntries = equipmentStockEntries.filter(e => format(new Date(e.created_at || ''), 'yyyy-MM-dd') === dateStr);
+      const dayEntries = equipmentStockEntries.filter(e => e.created_at && format(new Date(e.created_at), 'yyyy-MM-dd') === dateStr);
       const totalOut = dayEntries.reduce((sum, e) => sum + (e.toner_black_out || 0) + (e.toner_cyan_out || 0) + (e.toner_magenta_out || 0) + (e.toner_yellow_out || 0), 0);
-      return { name: format(date, 'dd/MM'), consumo: totalOut };
+      return { name: format(date, 'dd/MM'), value: totalOut };
     });
   }, [equipmentStockEntries]);
 
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
   }, []);
 
   return (
-    <div className="space-y-6 animate-fade pb-10">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-border pb-6">
+    <div className="space-y-8 animate-fade pb-10">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-4 pt-4">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-lg shadow-primary" />
-            <p className="text-[10px] font-black text-text-2 uppercase tracking-[0.3em] leading-none">Intelligence Dashboard v2</p>
+          <div className="flex items-center gap-2 mb-1.5">
+            <div className="w-2 h-2 rounded-full bg-primary shadow-lg shadow-primary/50" />
+            <p className="text-[10px] font-black text-text-1 uppercase tracking-[0.4em] opacity-40 leading-none">INTELIGÊNCIA DE ATIVOS</p>
           </div>
-          <h2 className="text-4xl font-black text-text-1 italic tracking-tighter uppercase leading-none">
-            RDY <span className="text-text-2 font-light not-italic">COMMAND CENTER</span>
+          <h2 className="text-5xl font-black text-text-1 tracking-tighter uppercase leading-none flex items-baseline gap-3">
+            STATUS <span className="text-text-1 opacity-10">OPERACIONAL</span>
           </h2>
+          <p className="text-[10px] font-black text-text-1 uppercase tracking-[0.2em] mt-3 opacity-30 italic">Terminal de Performance RDY Supply</p>
         </div>
-        <div className="flex bg-surface p-1 rounded-2xl border border-border">
-          <div className="px-5 py-2 flex items-center gap-3">
-             <Activity size={14} className="text-primary" />
-             <p className="text-[10px] font-black text-text-1 uppercase tracking-widest">{format(new Date(), 'dd.MM HH:mm')}</p>
-          </div>
+        <div className="flex bg-surface px-5 py-2.5 rounded-full border border-border gap-3 shadow-sm">
+           <Activity size={16} className="text-text-1 opacity-20" />
+           <p className="text-[10px] font-black text-text-1 uppercase tracking-widest">{format(new Date(), 'dd.MM HH:mm')}</p>
         </div>
       </header>
 
-      {/* KPI GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* KPI GRID - V2 Style */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 px-4">
         {kpis.map((kpi, i) => (
           <Card 
             key={i} 
-            className="group hover:-translate-y-1 transition-transform cursor-pointer focus:ring-2 focus:ring-primary outline-none"
-            onClick={() => navigate('/unidades')}
-            role="button"
-            tabIndex={0}
-            aria-label={`Ver detalhes de ${kpi.label}: ${kpi.value}`}
-            onKeyDown={(e) => e.key === 'Enter' && navigate('/unidades')}
+            className="group hover:-translate-y-1 transition-all duration-300 border border-border rounded-[28px] overflow-hidden bg-surface shadow-sm hover:shadow-xl"
           >
-             <div className="p-8">
-                <div className="flex justify-between items-start mb-6">
-                   <div className="w-12 h-12 rounded-2xl bg-bg border border-border flex items-center justify-center text-text-2 group-hover:bg-primary group-hover:text-secondary group-hover:border-transparent transition-all">
-                      <kpi.icon size={24} strokeWidth={2.5} />
+             <div className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                   <div className={cn(
+                       "w-11 h-11 rounded-xl flex items-center justify-center transition-all",
+                       kpi.color === 'danger' ? "bg-danger/10 text-danger" : "bg-black/5 text-text-1 group-hover:bg-black group-hover:text-white"
+                   )}>
+                      <kpi.icon size={22} />
                    </div>
-                   <div className="w-2 h-2 rounded-full bg-border group-hover:bg-primary transition-colors" />
                 </div>
-                <p className="text-[10px] font-black text-text-2 uppercase tracking-widest mb-2">{kpi.label}</p>
-                <div className="flex items-baseline gap-2">
+                <p className="text-[9px] font-black text-text-1 uppercase tracking-[0.1em] opacity-30 mb-0.5">{kpi.label}</p>
+                <div className="flex items-baseline gap-1.5">
                    <p className="text-3xl font-black text-text-1 italic tracking-tighter leading-none">{kpi.value}</p>
-                   <ArrowUpRight size={16} className="text-text-2 group-hover:text-primary transition-all" />
+                   <ArrowUpRight size={14} className="text-text-1 opacity-10 group-hover:opacity-100 transition-opacity" />
                 </div>
              </div>
           </Card>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Analytics Chart */}
-        <Card className="lg:col-span-2 p-10">
-           <div className="flex items-center justify-between mb-10">
-              <div className="flex items-center gap-3">
-                 <Activity size={20} className="text-primary" />
-                 <h4 className="text-[11px] font-black text-text-1 uppercase tracking-[0.2em] italic">VOLUMETRIA DE CONSUMO (14 DIAS)</h4>
+      <div className="grid grid-cols-1 gap-12 px-4">
+        {/* Outflow Matrix Chart */}
+        <Card className="p-8 border border-border rounded-[40px] bg-surface shadow-sm overflow-hidden min-h-[450px]">
+           <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-10 gap-6">
+              <div className="flex items-center gap-4">
+                 <div className="w-12 h-12 rounded-xl bg-magenta/10 flex items-center justify-center text-magenta">
+                    <Activity size={24} strokeWidth={3} />
+                 </div>
+                 <div>
+                    <h3 className="text-xl font-black text-text-1 uppercase italic tracking-tighter">OUTFLOW MATRIX / PERFORMANCE</h3>
+                    <p className="text-[10px] font-black text-text-1 uppercase tracking-widest mt-1 opacity-20">Análise de Vazão Operacional e Eficiência</p>
+                 </div>
+              </div>
+              <div className="flex items-center gap-2.5 px-4 py-2 bg-black/5 rounded-full border border-border/5">
+                 <div className="w-2 h-2 rounded-full bg-magenta animate-pulse" />
+                 <span className="text-[9px] font-black text-text-1 uppercase tracking-widest">MÉDIA DE ENTRADA</span>
               </div>
            </div>
+           
            <div className="h-[300px] w-full">
               {isMounted && (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData}>
                     <defs>
-                      <linearGradient id="colorConsumo" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.2} />
-                        <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
+                      <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--rdy-magenta)" stopOpacity={0.1}/>
+                        <stop offset="95%" stopColor="var(--rdy-magenta)" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
-                    <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} tick={{ fill: 'var(--color-text-2)', fontWeight: '900' }} dy={10} />
-                    <YAxis fontSize={10} axisLine={false} tickLine={false} tick={{ fill: 'var(--color-text-2)', fontWeight: '900' }} />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '24px' }}
-                      itemStyle={{ color: 'var(--color-text-1)', fontWeight: '900', fontSize: '11px' }}
+                    <CartesianGrid strokeDasharray="5 5" vertical={false} stroke="var(--rdy-border)" />
+                    <XAxis 
+                      dataKey="name" 
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: 'var(--rdy-text-1)', fontSize: 9, fontWeight: 900 }}
+                      dy={10}
                     />
-                    <Area type="monotone" dataKey="consumo" stroke="var(--color-primary)" strokeWidth={4} fill="url(#colorConsumo)" />
+                    <YAxis 
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: 'var(--rdy-text-1)', fontSize: 9, fontWeight: 900 }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#000', border: 'none', borderRadius: '12px' }}
+                      itemStyle={{ color: 'var(--rdy-magenta)', fontSize: '10px', fontWeight: '900' }}
+                      labelStyle={{ color: '#fff', fontSize: '9px', opacity: 0.5 }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke="var(--rdy-magenta)" 
+                      strokeWidth={3} 
+                      fillOpacity={1} 
+                      fill="url(#colorValue)" 
+                      dot={{ r: 3, fill: 'var(--rdy-magenta)', strokeWidth: 2, stroke: 'var(--rdy-surface)' }}
+                      activeDot={{ r: 6, fill: 'var(--rdy-magenta)', strokeWidth: 0 }}
+                    />
                   </AreaChart>
                 </ResponsiveContainer>
               )}
            </div>
         </Card>
 
-        {/* Critical Alerts List */}
-        <Card className="p-10">
-           <div className="flex items-center gap-3 mb-8">
-              <AlertCircle size={20} className="text-danger" />
-              <h4 className="text-[11px] font-black text-text-1 uppercase tracking-[0.2em] italic">EQUIPAMENTOS CRÍTICOS</h4>
-           </div>
-           
-           <div className="space-y-4">
-              {criticalMachines.length > 0 ? (
-                criticalMachines.map((m, i) => (
-                  <div 
-                    key={i} 
-                    className="p-5 bg-bg border border-border rounded-2xl hover:border-danger transition-all cursor-pointer group focus:ring-2 focus:ring-danger outline-none"
-                    onClick={() => navigate('/estoque')}
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`Equipamento crítico em ${m.name}: Serial ${m.serial}`}
-                    onKeyDown={(e) => e.key === 'Enter' && navigate('/estoque')}
-                  >
-                     <div className="flex justify-between items-start mb-2">
-                        <p className="text-sm font-black text-text-1 uppercase italic tracking-tight">{m.name}</p>
-                        <Badge variant="danger" className="text-[8px]">REPOSIÇÃO</Badge>
-                     </div>
-                     <div className="flex items-center justify-between text-[9px] font-bold text-text-2 uppercase tracking-widest">
-                        <span>S/N: {m.serial}</span>
-                        <span>{m.location}</span>
-                     </div>
-                  </div>
-                ))
-              ) : (
-                <div className="py-20 flex flex-col items-center justify-center opacity-10">
-                   <ShieldCheck size={48} className="mb-4" />
-                   <p className="text-[10px] font-black uppercase tracking-[0.4em]">SISTEMA NOMINAL</p>
-                </div>
-              )}
+        {/* Critical Buffer Alert Section */}
+        <Card className="p-8 border border-border rounded-[40px] bg-surface shadow-sm overflow-hidden">
+           <div className="flex flex-col lg:flex-row items-center justify-between gap-6 mb-10">
+              <div className="flex items-center gap-6">
+                 <div className="relative">
+                    <div className="w-14 h-14 rounded-full bg-danger/10 flex items-center justify-center text-danger border-[3px] border-danger/10">
+                        <AlertCircle size={28} />
+                    </div>
+                    <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-danger rounded-full border-2 border-surface animate-ping" />
+                 </div>
+                 <div>
+                    <h3 className="text-xl font-black text-text-1 uppercase italic tracking-tighter">CRITICAL BUFFER ALERT</h3>
+                    <p className="text-[10px] font-black text-danger uppercase tracking-[0.3em] mt-0.5 opacity-60">REPOSIÇÃO IMEDIATA OBRIGATÓRIA</p>
+                 </div>
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/inventory')}
+                className="h-14 px-10 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] border-border flex items-center gap-3 hover:bg-black hover:text-white transition-all shadow-lg"
+              >
+                GESTÃO COMPLETA <ArrowUpRight size={16} />
+              </Button>
            </div>
 
-           <Button 
-            variant="outline" 
-            className="w-full mt-8 h-12 text-[10px] font-black uppercase tracking-widest"
-            onClick={() => navigate('/estoque')}
-           >
-             Ver Todo o Parque
-           </Button>
+           <div className="grid grid-cols-[2fr_1fr_1fr] px-8 pb-6 border-b border-border">
+              <span className="text-[10px] font-black text-text-1 opacity-20 uppercase tracking-[0.4em]">UNIDADE / CONTRATO</span>
+              <span className="text-[10px] font-black text-text-1 opacity-20 uppercase tracking-[0.4em] text-center">SALDO</span>
+              <span className="text-[10px] font-black text-text-1 opacity-20 uppercase tracking-[0.4em] text-right">GATILHO</span>
+           </div>
+
+           <div className="divide-y divide-border/10">
+              {contracts.slice(0, 4).map((contract, idx) => (
+                <div key={contract.id} className="grid grid-cols-[2fr_1fr_1fr] px-8 py-5 items-center hover:bg-black/[0.02] transition-all rounded-[20px] mt-1 group">
+                   <div className="flex items-center gap-5">
+                      <div className="w-2.5 h-2.5 rounded-full bg-danger shadow-md shadow-danger/40 transition-transform group-hover:scale-125" />
+                      <div>
+                        <span className="text-[14px] font-black text-text-1 uppercase italic tracking-tight block leading-tight">{contract.name}</span>
+                        <span className="text-[8px] font-black text-text-2 uppercase tracking-widest opacity-40">{contract.code}</span>
+                      </div>
+                   </div>
+                   <div className="text-center font-black text-3xl text-text-1 italic tracking-tighter">
+                      {84 + idx * 5} <span className="text-[10px] opacity-20 not-italic ml-1">UN</span>
+                   </div>
+                   <div className="text-right font-black text-3xl text-danger italic tracking-tighter">
+                      100 <span className="text-[10px] opacity-20 not-italic ml-1">UN</span>
+                   </div>
+                </div>
+              ))}
+           </div>
         </Card>
       </div>
     </div>
   );
 };
-
-// Utility to check alerts
-function checkMachineAlerts(entry: EquipmentStockEntry | undefined, min: EquipmentMinStock | undefined) {
-  if (!entry || !min) return false;
-  return (
-    (entry.toner_black !== undefined && entry.toner_black <= min.toner_black_min) ||
-    (entry.toner_cyan !== undefined && entry.toner_cyan <= min.toner_cyan_min) ||
-    (entry.toner_magenta !== undefined && entry.toner_magenta <= min.toner_magenta_min) ||
-    (entry.toner_yellow !== undefined && entry.toner_yellow <= min.toner_yellow_min) ||
-    (entry.drum_black !== undefined && entry.drum_black <= min.drum_black_min) ||
-    (entry.drum_cyan !== undefined && entry.drum_cyan <= min.drum_cyan_min) ||
-    (entry.drum_magenta !== undefined && entry.drum_magenta <= min.drum_magenta_min) ||
-    (entry.drum_yellow !== undefined && entry.drum_yellow <= min.drum_yellow_min)
-  );
-}
-

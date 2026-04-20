@@ -62,10 +62,13 @@ export interface StockAdjustment {
   created_at: string;
 }
 
+export type EquipmentModelType = 'equipment' | 'supply' | 'part';
+
 export interface EquipmentModel {
   id: string;
   name: string;
   brand: string;
+  type: EquipmentModelType;
   is_color?: boolean;
   has_drum?: boolean;
   toner_black?: string;
@@ -172,7 +175,7 @@ export interface UserConfig {
   user_id: string;
   operation_days: number[];
   reminder_times: string[];
-  push_subscription: any;
+  push_subscription: unknown;
   created_at?: string;
   updated_at?: string;
 }
