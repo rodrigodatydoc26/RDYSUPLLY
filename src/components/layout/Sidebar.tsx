@@ -56,17 +56,17 @@ export const Sidebar = memo(() => {
       </button>
 
       {/* Logo Section */}
-      <div className="h-20 flex items-center px-6 border-b border-border relative bg-bg">
+      <div className="h-20 flex items-center px-6 border-b border-border relative bg-white">
         <div className={cn("flex items-center gap-4 transition-all", isSidebarCollapsed && "justify-center w-full")}>
           <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-black shrink-0 shadow-lg shadow-primary/30">
             <Layers size={20} strokeWidth={3} />
           </div>
           {!isSidebarCollapsed && (
             <div className="flex flex-col animate-fade">
-              <h1 className="text-3xl font-black text-text-1 tracking-tighter italic leading-none flex items-center gap-2 group">
-                RDY <span className="text-primary italic">SUPPLY</span>
+              <h1 className="text-2xl font-black italic text-text-1 tracking-tighter leading-none flex items-center gap-1">
+                RDY <span className="text-primary">SUPPLY</span>
               </h1>
-              <span className="text-[7px] font-black text-text-1 tracking-[0.3em] uppercase mt-1.5 opacity-40">Investment - Performance</span>
+              <span className="text-[6px] font-black text-text-1 tracking-[0.4em] uppercase mt-1 opacity-30">Investment - Performance</span>
             </div>
           )}
         </div>

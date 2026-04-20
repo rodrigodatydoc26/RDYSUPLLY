@@ -72,10 +72,10 @@ export const Topbar = memo(() => {
         
         {/* Theme Settings - Compact on mobile */}
         <div className="flex items-center gap-2 lg:gap-3 pr-2 lg:pr-4 border-r border-border/10">
-          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 bg-bg/50 border border-border rounded-full shadow-inner">
-            <button title="Cor Amarela" onClick={() => setAccentColor('yellow')} className={cn("w-2.5 h-2.5 rounded-full bg-[#FFD700] ring-offset-2 transition-all", accentColor === 'yellow' ? "ring-2 ring-black scale-110" : "opacity-30")} />
-            <button title="Cor Magenta" onClick={() => setAccentColor('magenta')} className={cn("w-2.5 h-2.5 rounded-full bg-[#FF007A] ring-offset-2 transition-all", accentColor === 'magenta' ? "ring-2 ring-black scale-110" : "opacity-30")} />
-            <button title="Cor Ciano" onClick={() => setAccentColor('cyan')} className={cn("w-2.5 h-2.5 rounded-full bg-[#00A3FF] ring-offset-2 transition-all", accentColor === 'cyan' ? "ring-2 ring-black scale-110" : "opacity-30")} />
+          <div className="hidden md:flex items-center gap-2.5 px-3 py-1.5 bg-surface border border-border rounded-full shadow-sm">
+            <button title="Cor Amarela" onClick={() => setAccentColor('yellow')} className={cn("w-3 h-3 rounded-full bg-[#FFD700] ring-offset-2 transition-all", accentColor === 'yellow' ? "ring-2 ring-black scale-110" : "opacity-30 hover:opacity-100")} />
+            <button title="Cor Magenta" onClick={() => setAccentColor('magenta')} className={cn("w-3 h-3 rounded-full bg-[#FF007A] ring-offset-2 transition-all", accentColor === 'magenta' ? "ring-2 ring-black scale-110" : "opacity-30 hover:opacity-100")} />
+            <button title="Cor Ciano" onClick={() => setAccentColor('cyan')} className={cn("w-3 h-3 rounded-full bg-[#00A3FF] ring-offset-2 transition-all", accentColor === 'cyan' ? "ring-2 ring-black scale-110" : "opacity-30 hover:opacity-100")} />
           </div>
 
           <button 
@@ -140,9 +140,9 @@ export const Topbar = memo(() => {
 
         {/* User & Info Group */}
         <div className="flex items-center gap-2 lg:gap-4">
-          <div className="hidden xl:block text-right">
-             <p className="text-[10px] font-black text-text-1 uppercase tracking-tight leading-none">{format(new Date(), "dd 'de' MMMM", { locale: ptBR })}</p>
-             <p className="text-[7px] font-black text-text-1 opacity-20 uppercase tracking-[0.4em] mt-1">v2.4</p>
+          <div className="hidden xl:flex flex-col items-end gap-0.5">
+             <p className="text-[9px] font-extrabold text-text-1 uppercase tracking-tight leading-none">{format(new Date(), "dd 'DE' MMMM", { locale: ptBR })}</p>
+             <p className="text-[7px] font-black text-text-1 opacity-20 uppercase tracking-[0.4em]">v2.4</p>
           </div>
           
           <div className="flex items-center gap-2 lg:gap-3">
