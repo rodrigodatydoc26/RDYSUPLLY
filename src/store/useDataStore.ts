@@ -646,20 +646,20 @@ export const useDataStore = create<DataState>()(
 
   wipeDatabase: async () => {
     const NEVER = '00000000-0000-0000-0000-000000000000';
-    await Promise.all([
-      supabase.from('equipment_stock_entries').delete().neq('id', NEVER),
-      supabase.from('paper_stock_entries').delete().neq('id', NEVER),
-      supabase.from('stock_alerts').delete().neq('id', NEVER),
-      supabase.from('equipment_min_stock').delete().neq('id', NEVER),
-      supabase.from('contract_equipment').delete().neq('id', NEVER),
-      supabase.from('contract_technicians').delete().neq('contract_id', NEVER),
-      supabase.from('contracts').delete().neq('id', NEVER),
-    ]);
-    set({
-      contracts: [], contractEquipment: [], equipmentMinStock: [],
-      equipmentStockEntries: [], paperStockEntries: [], stockAlerts: [],
-      contractSupplies: [], _hasHydrated: true,
-    });
+    try {
+      await Promise.all([
+        supabase.from('equipment_stock_entries').delete().neq('id', NEVER),
+        supabase.from('paper_stock_entries').delete().neq('id', NEVER),
+        supabase.from('stock_alerts').delete().neq('id', NEVER),
+        supabase.from('equipment_min_stock').delete().neq('id', NEVER),
+        supabase.from('contract_equipment').delete().neq('id', NEVER),
+        supabase.from('contract_technicians').delete().neq('contract_id', NEVER),
+        supabase.from('contracts').delete().neq('id', NEVER),
+      ]);
+    } catch (err) {
+      console.error('Remote wipe failed', err);
+    }
+    get().resetToDefaults();
   },
 
   updateUserConfig: async (userId, data) => {
@@ -675,8 +675,20 @@ export const useDataStore = create<DataState>()(
   },
 
   resetToDefaults: () => {
-    set({ _hasHydrated: false });
-    get().fetchInitialData();
+    set({
+      contracts: [],
+      users: [],
+      equipmentModels: [],
+      contractEquipment: [],
+      equipmentMinStock: [],
+      contractSupplies: [],
+      equipmentStockEntries: [],
+      paperStockEntries: [],
+      stockAlerts: [],
+      userConfigs: [],
+      isLoading: false,
+      _hasHydrated: true
+    });
   },
 
   importEquipment: async (data: Record<string, unknown>[]) => {
@@ -800,26 +812,6 @@ export const useDataStore = create<DataState>()(
       if (error) console.error(`Erro ao criar usuário ${u.email}:`, error);
     }
   },
-    wipeDatabase: async () => {
-      // Direct SQL for cleanup if allowed/implemented, or iterate deletes
-      // For now, clear local state and force a reload
-      get().resetToDefaults();
-    },
-
-    resetToDefaults: () => {
-      set({
-        contracts: [],
-        users: [],
-        equipmentModels: [],
-        contractEquipment: [],
-        equipmentMinStock: [],
-        contractSupplies: [],
-        equipmentStockEntries: [],
-        paperStockEntries: [],
-        stockAlerts: [],
-        userConfigs: [],
-      });
-    },
   }),
   {
     name: 'rdy-inventory-storage',
