@@ -7,7 +7,7 @@ import {
   LogOut,
   Menu,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, memo, useMemo } from 'react';
 import { useUIStore } from '../../store/useUIStore';
 import { useDataStore } from '../../store/useDataStore';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -16,13 +16,24 @@ import { Badge } from '../ui/Base';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-export const Topbar = () => {
-  const { isSidebarCollapsed, darkMode, accentColor, toggleDarkMode, setAccentColor, toggleSidebar } = useUIStore();
-  const { stockAlerts } = useDataStore();
-  const { user, logout } = useAuthStore();
+export const Topbar = memo(() => {
+  const isSidebarCollapsed = useUIStore(s => s.isSidebarCollapsed);
+  const darkMode = useUIStore(s => s.darkMode);
+  const accentColor = useUIStore(s => s.accentColor);
+  const toggleDarkMode = useUIStore(s => s.toggleDarkMode);
+  const setAccentColor = useUIStore(s => s.setAccentColor);
+  const toggleSidebar = useUIStore(s => s.toggleSidebar);
+
+  const stockAlerts = useDataStore(s => s.stockAlerts);
+  const user = useAuthStore(s => s.user);
+  const logout = useAuthStore(s => s.logout);
+
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
 
-  const activeAlerts = stockAlerts.filter(a => !a.resolved);
+  const activeAlerts = useMemo(() => 
+    stockAlerts.filter(a => !a.resolved),
+    [stockAlerts]
+  );
 
   return (
     <header 
@@ -156,4 +167,4 @@ export const Topbar = () => {
       </div>
     </header>
   );
-};
+});

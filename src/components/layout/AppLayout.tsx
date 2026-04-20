@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { type ReactNode, memo } from 'react';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { useUIStore } from '../../store/useUIStore';
@@ -8,8 +8,9 @@ interface AppLayoutProps {
   children: ReactNode;
 }
 
-export const AppLayout = ({ children }: AppLayoutProps) => {
-  const { isSidebarCollapsed, toggleSidebar } = useUIStore();
+export const AppLayout = memo(({ children }: AppLayoutProps) => {
+  const isSidebarCollapsed = useUIStore(s => s.isSidebarCollapsed);
+  const toggleSidebar = useUIStore(s => s.toggleSidebar);
 
   return (
     <div className="min-h-screen bg-bg flex overflow-hidden selection:bg-primary selection:text-black">
@@ -43,4 +44,4 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
       </div>
     </div>
   );
-};
+});

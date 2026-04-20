@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -15,11 +16,12 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useUIStore } from '../../store/useUIStore';
 import { cn } from '../../lib/utils';
 
-export const Sidebar = () => {
-  const { user } = useAuthStore();
-  const { isSidebarCollapsed, toggleSidebar } = useUIStore();
+export const Sidebar = memo(() => {
+  const user = useAuthStore(state => state.user);
+  const isSidebarCollapsed = useUIStore(state => state.isSidebarCollapsed);
+  const toggleSidebar = useUIStore(state => state.toggleSidebar);
   
-  const menuItems = [
+  const menuItems = useMemo(() => [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/', roles: ['admin', 'analyst', 'cto'] },
     { label: 'Inventário', icon: Package, path: '/inventario', roles: ['admin', 'analyst', 'cto'] },
     { label: 'Gestão de Estoque', icon: Box, path: '/estoque', roles: ['admin', 'analyst', 'cto'] },
@@ -27,10 +29,12 @@ export const Sidebar = () => {
     { label: 'Contratos', icon: ClipboardList, path: '/contratos', roles: ['admin', 'analyst'] },
     { label: 'Catálogo', icon: Layers, path: '/insumos', roles: ['admin', 'analyst'] },
     { label: 'Histórico', icon: History, path: '/historico', roles: ['admin', 'analyst', 'cto'] },
-    { label: 'Usuários', icon: Users, path: '/usuarios', roles: ['admin'] },
-  ];
+  ], []);
 
-  const filteredItems = menuItems.filter(item => item.roles.includes(user?.role || ''));
+  const filteredItems = useMemo(() => 
+    menuItems.filter(item => item.roles.includes(user?.role || '')),
+    [menuItems, user?.role]
+  );
 
   return (
     <aside 
@@ -117,4 +121,4 @@ export const Sidebar = () => {
       </nav>
     </aside>
   );
-};
+});

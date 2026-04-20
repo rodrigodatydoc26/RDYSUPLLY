@@ -30,21 +30,13 @@ export const useAuthStore = create<AuthState>()(
       setLoading: (loading) => set({ isLoading: loading }),
 
       logout: async () => {
-        try {
-          await supabase.auth.signOut();
-          // Limpa o estado local
-          set({ user: null, session: null });
-          // Opcional: Se quiser limpar o storage do navegador completamente
-          localStorage.removeItem('rdy-auth-storage');
-          localStorage.removeItem('rdy-inventory-storage');
-          
-          window.location.href = '/login';
-        } catch (err) {
-          console.error('[RDY] logout_error:', err);
-          // Fallback force clear
-          set({ user: null, session: null });
-          window.location.href = '/login';
-        }
+        // Clear state FIRST for instant UI response
+        set({ user: null, session: null });
+        localStorage.removeItem('rdy-auth-storage');
+        localStorage.removeItem('rdy-inventory-storage');
+        // Fire and forget - don't wait for server
+        supabase.auth.signOut().catch(() => undefined);
+        window.location.href = '/login';
       },
 
       refreshProfile: async () => {
@@ -78,24 +70,45 @@ export const useAuthStore = create<AuthState>()(
       },
 
       initializeAuth: async () => {
-        // First check
-        const { data: { session } } = await supabase.auth.getSession();
-        set({ session, _hasHydrated: true });
+        const state = get();
         
-        if (session) {
-          await get().refreshProfile();
-        }
-        set({ isLoading: false });
-
-        // Listen for changes
-        supabase.auth.onAuthStateChange(async (_event, session) => {
-          set({ session, isLoading: true });
+        // FAST PATH: If we already have a persisted user from localStorage,
+        // mark as hydrated immediately so the UI renders instantly.
+        // Background-refresh the session to validate it.
+        if (state.user && state.session) {
+          set({ _hasHydrated: true, isLoading: false });
+          
+          // Validate session in background (non-blocking)
+          supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+              set({ session });
+              // Refresh profile silently in background
+              get().refreshProfile();
+            } else {
+              // Session expired - force re-login
+              set({ user: null, session: null });
+            }
+          }).catch(() => undefined);
+        } else {
+          // COLD PATH: No persisted data, must fetch
+          const { data: { session } } = await supabase.auth.getSession();
+          set({ session, _hasHydrated: true });
+          
           if (session) {
+            await get().refreshProfile();
+          }
+          set({ isLoading: false });
+        }
+
+        // Listen for changes (runs once)
+        supabase.auth.onAuthStateChange(async (_event, session) => {
+          set({ session });
+          if (session) {
+            // Don't set isLoading=true for auth changes - prevents flash
             await get().refreshProfile();
           } else {
             set({ user: null });
           }
-          set({ isLoading: false });
         });
       }
     }),

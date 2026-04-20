@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type {
@@ -63,32 +64,42 @@ interface DataState {
   resetToDefaults: () => void;
 }
 
-export const useDataStore = create<DataState>((set, get) => ({
-  contracts: [],
-  users: [],
-  equipmentModels: [],
-  contractEquipment: [],
-  equipmentMinStock: [],
-  contractSupplies: [],
-  equipmentStockEntries: [],
-  paperStockEntries: [],
-  stockAlerts: [],
-  userConfigs: [],
-  isLoading: false,
-  _hasHydrated: false,
+export const useDataStore = create<DataState>()(
+  persist(
+    (set, get) => ({
+      contracts: [],
+      users: [],
+      equipmentModels: [],
+      contractEquipment: [],
+      equipmentMinStock: [],
+      contractSupplies: [],
+      equipmentStockEntries: [],
+      paperStockEntries: [],
+      stockAlerts: [],
+      userConfigs: [],
+      isLoading: false,
+      _hasHydrated: false,
 
-  setHasHydrated: (v) => set({ _hasHydrated: v }),
+      setHasHydrated: (v) => set({ _hasHydrated: v }),
 
-  fetchInitialData: async () => {
-    if (get()._hasHydrated || get().isLoading) return;
-    set({ isLoading: true });
-    
-    try {
-      const fetchTable = async (query: PromiseLike<{ data: any[] | null; error: { message: string } | null }>): Promise<any[]> => {
-        const { data, error } = await query;
-        if (error) throw new Error(error.message);
-        return data ?? [];
-      };
+      fetchInitialData: async () => {
+        const state = get();
+        // If already loading, don't start again
+        if (state.isLoading) return;
+
+        // If we have data and have hydrated from storage, we can sync in background
+        const isSyncingInBackground = state.contracts.length > 0;
+        
+        if (!isSyncingInBackground) {
+          set({ isLoading: true });
+        }
+        
+        try {
+          const fetchTable = async (query: PromiseLike<{ data: any[] | null; error: { message: string } | null }>): Promise<any[]> => {
+            const { data, error } = await query;
+            if (error) throw new Error(error.message);
+            return data ?? [];
+          };
 
       const [
         contractsRaw,
@@ -217,25 +228,24 @@ export const useDataStore = create<DataState>((set, get) => ({
         min_stock: Number(cs.min_stock) || 0,
       }));
 
-      set({
-        contracts,
-        users: profiles as Profile[],
-        equipmentModels: equipModels as EquipmentModel[],
-        contractEquipment,
-        equipmentMinStock,
-        contractSupplies,
-        equipmentStockEntries,
-        paperStockEntries,
-        stockAlerts,
-        userConfigs: configsRaw as UserConfig[],
-        _hasHydrated: true,
-      });
-    } catch (err: unknown) {
-      set({ _hasHydrated: true });
-    } finally {
-      set({ isLoading: false });
-    }
-  },
+          set({
+            contracts,
+            users: profiles as Profile[],
+            equipmentModels: equipModels as EquipmentModel[],
+            contractEquipment,
+            equipmentMinStock,
+            contractSupplies,
+            equipmentStockEntries,
+            paperStockEntries,
+            stockAlerts,
+            userConfigs: configsRaw as UserConfig[],
+            _hasHydrated: true,
+            isLoading: false,
+          });
+        } catch (err: unknown) {
+          set({ _hasHydrated: true, isLoading: false });
+        }
+      },
 
   addContract: async (data) => {
     const { data: row, error } = await supabase
@@ -774,4 +784,32 @@ export const useDataStore = create<DataState>((set, get) => ({
       if (error) console.error(`Erro ao criar usuário ${u.email}:`, error);
     }
   },
-}));
+    wipeDatabase: async () => {
+      // Direct SQL for cleanup if allowed/implemented, or iterate deletes
+      // For now, clear local state and force a reload
+      get().resetToDefaults();
+    },
+
+    resetToDefaults: () => {
+      set({
+        contracts: [],
+        users: [],
+        equipmentModels: [],
+        contractEquipment: [],
+        equipmentMinStock: [],
+        contractSupplies: [],
+        equipmentStockEntries: [],
+        paperStockEntries: [],
+        stockAlerts: [],
+        userConfigs: [],
+      });
+    },
+  }),
+  {
+    name: 'rdy-inventory-storage',
+    onRehydrateStorage: () => (state) => {
+      if (state) state._hasHydrated = true;
+    }
+  }
+)
+);

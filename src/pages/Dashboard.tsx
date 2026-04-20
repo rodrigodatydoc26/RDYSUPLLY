@@ -10,18 +10,16 @@ import {
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useDataStore } from '../store/useDataStore';
 import { format, subDays } from 'date-fns';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, memo } from 'react';
 import { Card, Button } from '../components/ui/Base';
 import { cn } from '../lib/utils';
 
-export const Dashboard = () => {
+export const Dashboard = memo(() => {
   const navigate = useNavigate();
-  const {
-    contracts,
-    contractEquipment,
-    equipmentStockEntries,
-    stockAlerts
-  } = useDataStore();
+  const contracts = useDataStore(s => s.contracts);
+  const contractEquipment = useDataStore(s => s.contractEquipment);
+  const equipmentStockEntries = useDataStore(s => s.equipmentStockEntries);
+  const stockAlerts = useDataStore(s => s.stockAlerts);
 
   const kpis = useMemo(() => {
     const activeContracts = contracts.filter(c => c.active).length;
@@ -212,4 +210,4 @@ export const Dashboard = () => {
       </div>
     </div>
   );
-};
+});

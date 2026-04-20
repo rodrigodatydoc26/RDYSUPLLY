@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, memo, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { AppLayout } from './components/layout/AppLayout';
@@ -16,75 +16,78 @@ const History         = lazy(() => import('./pages/History').then(m => ({ defaul
 const Users           = lazy(() => import('./pages/Users').then(m => ({ default: m.Users })));
 const GlobalInventory = lazy(() => import('./pages/GlobalInventory').then(m => ({ default: m.GlobalInventory })));
 
-const Loader = () => (
-  <div className="min-h-screen bg-bg flex flex-col items-center justify-center space-y-8 animate-fade">
+// Minimal inline loader — no heavy blur/animations that cause jank
+const Loader = memo(() => (
+  <div className="min-h-screen bg-bg flex flex-col items-center justify-center gap-6">
     <div className="relative">
-      <div className="w-20 h-20 border-[6px] border-primary/20 rounded-full" />
-      <div className="absolute top-0 left-0 w-20 h-20 border-[6px] border-primary border-t-transparent rounded-full animate-spin" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-primary/10 blur-[60px] pointer-events-none" />
+      <div className="w-16 h-16 border-4 border-primary/20 rounded-full" />
+      <div className="absolute top-0 left-0 w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
     </div>
-    <div className="text-center space-y-2">
-      <p className="text-[12px] font-black text-primary uppercase tracking-[0.6em] animate-pulse">Sincronizando Sistema</p>
-      <p className="text-[8px] font-bold text-text-1 uppercase tracking-[0.3em] opacity-20">INVESTMENT - PERFORMANCE</p>
-    </div>
+    <p className="text-[11px] font-black text-primary uppercase tracking-[0.5em]">RDY SUPPLY</p>
   </div>
-);
+));
 
-const Page = ({ children }: { children: React.ReactNode }) => (
+// Lightweight page-level fallback (no blur, no glow — just a placeholder)
+const PageFallback = memo(() => (
+  <div className="min-h-[60vh] flex items-center justify-center">
+    <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+));
+
+const Page = memo(({ children }: { children: React.ReactNode }) => (
   <ErrorBoundary>
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<PageFallback />}>
       {children}
     </Suspense>
   </ErrorBoundary>
-);
+));
 
-const ProtectedRoute = ({ 
+const ProtectedRoute = memo(({ 
   children, 
   allowedRoles 
 }: { 
   children: React.ReactNode; 
   allowedRoles?: string[] 
 }) => {
-  const { user, _hasHydrated: isAuthHydrated } = useAuthStore();
-  const { _hasHydrated: isDataHydrated } = useDataStore();
+  const user = useAuthStore(s => s.user);
+  const isAuthHydrated = useAuthStore(s => s._hasHydrated);
+  const isDataHydrated = useDataStore(s => s._hasHydrated);
 
-  // 1. Prioridade: Se não tem usuário, login.
   if (!user && isAuthHydrated) return <Navigate to="/login" replace />;
-  
-  // 2. Se tem usuário mas dados ainda não sincronizaram, mostra sync.
   if (user && !isDataHydrated) return <Loader />;
-  
-  // 3. Se sincronizou mas não tem permissão, volta pra home.
   if (user && allowedRoles && !allowedRoles.includes(user.role)) {
     return <Navigate to={user.role === 'technician' ? '/tecnico' : '/'} replace />;
   }
 
   return <>{children}</>;
-};
+});
 
 function App() {
-  const { user, _hasHydrated: isAuthHydrated, initializeAuth } = useAuthStore();
-  const { fetchInitialData } = useDataStore();
+  const user = useAuthStore(s => s.user);
+  const isAuthHydrated = useAuthStore(s => s._hasHydrated);
+  const initializeAuth = useAuthStore(s => s.initializeAuth);
+  const fetchInitialData = useDataStore(s => s.fetchInitialData);
 
   useEffect(() => {
     initializeAuth().catch(console.error);
+    // Reduced timeout since auth store now has fast-path
     const timer = setTimeout(() => {
       if (!useAuthStore.getState()._hasHydrated) {
         useAuthStore.setState({ _hasHydrated: true });
       }
-    }, 3000);
-
+    }, 1500);
     return () => clearTimeout(timer);
   }, [initializeAuth]);
 
   useEffect(() => {
     if (user) {
       fetchInitialData().catch(console.error);
+      // Reduced timeout for data fetch
       const timer = setTimeout(() => {
         if (!useDataStore.getState()._hasHydrated) {
           useDataStore.setState({ _hasHydrated: true });
         }
-      }, 5000);
+      }, 3000);
       return () => clearTimeout(timer);
     }
   }, [user, fetchInitialData]);
@@ -93,7 +96,7 @@ function App() {
 
   return (
     <Router>
-      <Toaster position="top-right" richColors />
+      <Toaster position="top-right" richColors toastOptions={{ duration: 2000 }} />
       <Routes>
         <Route path="/login" element={
           <Page>{!user ? <LoginPage /> : <Navigate to="/" replace />}</Page>
