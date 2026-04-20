@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   ClipboardList,
   Package,
+  Users,
   History,
   Truck,
   ChevronLeft,
@@ -28,6 +29,7 @@ export const Sidebar = memo(() => {
     { label: 'Contratos', icon: ClipboardList, path: '/contratos', roles: ['admin', 'analyst'] },
     { label: 'Catálogo', icon: Layers, path: '/insumos', roles: ['admin', 'analyst'] },
     { label: 'Histórico', icon: History, path: '/historico', roles: ['admin', 'analyst', 'cto'] },
+    { label: 'Usuários', icon: Users, path: '/usuarios', roles: ['admin'] },
   ], []);
 
   const filteredItems = useMemo(() => 
