@@ -56,7 +56,7 @@ export const Sidebar = memo(() => {
       </button>
 
       {/* Logo Section */}
-      <div className="h-20 flex items-center px-6 border-b border-border relative bg-white">
+      <div className="h-20 flex items-center px-6 border-b border-border relative bg-bg">
         <div className={cn("flex items-center gap-4 transition-all", isSidebarCollapsed && "justify-center w-full")}>
           <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-black shrink-0 shadow-lg shadow-primary/30">
             <Layers size={20} strokeWidth={3} />

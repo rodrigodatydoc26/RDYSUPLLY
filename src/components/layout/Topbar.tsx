@@ -38,7 +38,7 @@ export const Topbar = memo(() => {
   return (
     <header 
       className={cn(
-        "h-20 fixed top-0 right-0 z-40 px-4 lg:px-8 flex items-center justify-between border-b border-border bg-surface transition-all duration-300",
+        "h-20 fixed top-0 right-0 z-40 px-4 lg:px-8 flex items-center justify-between border-b border-border bg-bg transition-all duration-300",
         isSidebarCollapsed ? "lg:left-[80px]" : "lg:left-[280px]",
         "left-0"
       )}
@@ -61,7 +61,7 @@ export const Topbar = memo(() => {
             type="text" 
             placeholder="PESQUISAR ATIVOS..."
             title="Campo de Pesquisa"
-            className="w-full h-11 bg-bg border border-border rounded-full pl-12 pr-4 text-[10px] font-black uppercase tracking-widest outline-none focus:bg-surface focus:ring-4 focus:ring-primary/10 transition-all opacity-80"
+            className="w-full h-11 bg-surface border border-border rounded-full pl-12 pr-4 text-[10px] font-black uppercase tracking-widest outline-none focus:ring-4 focus:ring-primary/10 transition-all opacity-80"
           />
         </div>
       </div>
