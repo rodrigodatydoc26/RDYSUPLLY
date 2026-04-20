@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, memo, useCallback } from 'react';
+import { lazy, Suspense, useEffect, memo } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { AppLayout } from './components/layout/AppLayout';
