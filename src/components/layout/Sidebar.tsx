@@ -82,37 +82,25 @@ export const Sidebar = memo(() => {
               to={item.path}
               title={isSidebarCollapsed ? item.label : undefined}
               className={({ isActive }) => cn(
-                "flex items-center gap-4 transition-all duration-500 group relative overflow-hidden",
+                "flex items-center gap-4 transition-all duration-500 group relative",
                 // Base dimensions
-                "h-14 rounded-2xl",
+                "h-12 rounded-xl",
                 // Collapsed vs Expanded logic
                 isSidebarCollapsed 
-                  ? "w-14 items-center justify-center mx-auto px-0" 
+                  ? "w-12 items-center justify-center mx-auto px-0" 
                   : "w-full px-4",
                 // Active vs Inactive logic
                 isActive 
-                  ? "bg-primary text-black shadow-2xl shadow-primary/20 scale-[1.02]" 
+                  ? "bg-primary text-black shadow-xl shadow-primary/20 scale-[1.05]" 
                   : "text-text-1 hover:bg-black/5 hover:text-primary"
               )}
             >
-              {/* Premium Active Indicator */}
-              <div className={cn(
-                "absolute left-0 top-0 bottom-0 w-3 bg-black transition-all duration-500",
-                "opacity-0 -translate-x-full group-[.active]:opacity-100 group-[.active]:translate-x-0"
-              )} />
-
-              <div className={cn(
-                "flex items-center justify-center transition-all duration-500 z-10",
-                "group-[.active]:scale-110 group-[.active]:rotate-3"
-              )}>
-                <Icon size={24} strokeWidth={2.5} />
+              <div className="flex items-center justify-center z-10 transition-transform duration-500 group-hover:scale-110">
+                <Icon size={20} strokeWidth={2.5} />
               </div>
 
               {!isSidebarCollapsed && (
-                <span className={cn(
-                  "text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 z-10",
-                  "group-[.active]:translate-x-2"
-                )}>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] z-10">
                   {item.label}
                 </span>
               )}
