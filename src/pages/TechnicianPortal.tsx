@@ -10,6 +10,8 @@ import {
   MapPin,
   Bell,
   BellOff,
+  Camera,
+  X,
 } from 'lucide-react';
 import { useDataStore } from '../store/useDataStore';
 import { useAuthStore } from '../store/useAuthStore';
@@ -39,6 +41,7 @@ export const TechnicianPortal = () => {
   
   const [entryData, setEntryData] = useState<Record<string, { current: number; in: number; out: number }>>({});
   const [paperEntry, setPaperEntry] = useState({ current: 0, incoming: 0, outgoing: 0 });
+  const [photoData, setPhotoData] = useState<string | null>(null);
 
   const modelMap = useMemo(() => new Map(equipmentModels.map(m => [m.id, m])), [equipmentModels]);
 
@@ -115,10 +118,11 @@ export const TechnicianPortal = () => {
         drum_yellow_out: 0,
       };
 
-      await addStockEntry(entryFields);
+      await addStockEntry({ ...entryFields, photo_data: photoData ?? undefined });
       toast.success('Leitura sincronizada!');
       setSelectedMachineId(null);
       setEntryData({});
+      setPhotoData(null);
     } catch (err: any) {
       console.error('Erro de Sincronização:', err);
       toast.error(err.message || 'Erro na sincronização.');
@@ -375,7 +379,46 @@ export const TechnicianPortal = () => {
                           </div>
                        </div>
 
-                       <div className="mt-16 pt-12 border-t border-border/10 flex justify-end">
+                        <div className="mt-10 pt-8 border-t border-border/10">
+                           <div className="flex items-center gap-3 mb-5">
+                             <Camera size={18} className="text-primary" />
+                             <span className="text-[11px] font-black uppercase tracking-[0.3em] text-text-1 opacity-40 italic">Evidência Fotográfica</span>
+                           </div>
+                           {photoData ? (
+                             <div className="relative rounded-[24px] overflow-hidden border border-border shadow-md max-h-56">
+                               <img src={photoData} alt="Evidência" className="w-full object-cover max-h-56" />
+                               <button
+                                 onClick={() => setPhotoData(null)}
+                                 className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-danger transition-all"
+                                 title="Remover Foto"
+                               >
+                                 <X size={16} />
+                               </button>
+                             </div>
+                           ) : (
+                             <label className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-border rounded-[24px] p-8 cursor-pointer hover:border-primary hover:bg-primary/5 transition-all group">
+                               <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all">
+                                 <Camera size={26} className="text-primary" />
+                               </div>
+                               <span className="text-[10px] font-black uppercase tracking-widest opacity-30 group-hover:opacity-100 transition-all">Tirar Foto ou Selecionar Arquivo</span>
+                               <input
+                                 type="file"
+                                 accept="image/*"
+                                 capture="environment"
+                                 className="hidden"
+                                 onChange={(e) => {
+                                   const file = e.target.files?.[0];
+                                   if (!file) return;
+                                   const reader = new FileReader();
+                                   reader.onload = () => setPhotoData(reader.result as string);
+                                   reader.readAsDataURL(file);
+                                 }}
+                               />
+                             </label>
+                           )}
+                        </div>
+
+                        <div className="mt-16 pt-12 border-t border-border/10 flex justify-end">
                            <Button 
                             className="h-24 px-20 rdy-btn-elite text-[13px] tracking-[0.4em] gap-5"
                             onClick={handleSubmitMachine}

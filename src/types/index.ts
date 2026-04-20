@@ -143,6 +143,7 @@ export interface EquipmentStockEntry {
   drum_yellow_in: number;
   drum_yellow_out: number;
   notes?: string;
+  photo_data?: string;
   created_at: string;
 }
 

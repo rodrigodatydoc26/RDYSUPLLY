@@ -456,6 +456,7 @@ export const useDataStore = create<DataState>((set, get) => ({
         drum_magenta_in: data.drum_magenta_in, drum_magenta_out: data.drum_magenta_out,
         drum_yellow_in: data.drum_yellow_in, drum_yellow_out: data.drum_yellow_out,
         notes: data.notes,
+        photo_data: data.photo_data,
       })
       .select()
       .single();
