@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Package, 
   BarChart3, 
@@ -6,11 +7,17 @@ import {
   Box,
   Monitor,
   Calendar,
-  Search
+  Search,
+  X,
+  ChevronRight,
+  MapPin,
+  Hash,
+  CheckCircle2,
+  Clock,
 } from 'lucide-react';
 import { useDataStore } from '../store/useDataStore';
 import { cn } from '../lib/utils';
-import { Card, Badge } from '../components/ui/Base';
+import { Card, Badge, CMYKBadge } from '../components/ui/Base';
 import { format } from 'date-fns';
 
 export const GlobalInventory = () => {
@@ -18,9 +25,11 @@ export const GlobalInventory = () => {
     equipmentModels, 
     contractEquipment, 
     equipmentStockEntries,
+    contracts,
   } = useDataStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'COLOR' | 'MONO'>('ALL');
+  const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
 
   const consolidatedStock = useMemo(() => {
     return equipmentModels
@@ -33,17 +42,18 @@ export const GlobalInventory = () => {
         return matchesSearch && matchesFilter;
       })
       .map(model => {
-        // Find all machines of this model
         const machines = contractEquipment.filter(me => me.equipment_model_id === model.id && me.active);
         
         const machineStocks = machines.map(me => {
-          // Find latest entry for this specific machine
           const latest = [...equipmentStockEntries]
             .filter(e => e.contract_equipment_id === me.id)
             .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())[0];
           
+          const contract = contracts.find(c => c.id === me.contract_id);
+
           return {
             me,
+            contract,
             latest,
             isSynced: !!latest,
             lastSync: latest?.created_at
@@ -79,10 +89,16 @@ export const GlobalInventory = () => {
           pendingCount: machines.length - syncedCount,
           lastSyncAt,
           totals,
-          grandTotal
+          grandTotal,
+          machineStocks,
         };
       }).sort((a, b) => b.grandTotal - a.grandTotal);
-  }, [equipmentModels, contractEquipment, equipmentStockEntries, searchTerm, activeFilter]);
+  }, [equipmentModels, contractEquipment, equipmentStockEntries, contracts, searchTerm, activeFilter]);
+
+  const selectedModel = useMemo(
+    () => consolidatedStock.find(m => m.id === selectedModelId),
+    [consolidatedStock, selectedModelId]
+  );
 
   const stats = useMemo(() => {
     const totalMachines = consolidatedStock.reduce((sum, s) => sum + s.machineCount, 0);
@@ -117,7 +133,7 @@ export const GlobalInventory = () => {
         </div>
       </header>
       
-      {/* V2 Filter & Search Bar - Replicated from Inventory */}
+      {/* Filter & Search Bar */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 px-4 items-end">
         <div className="relative group">
           <label className="text-[10px] font-black text-text-2 uppercase ml-6 mb-2 block tracking-[0.3em]">Cálculo Global de Ativos</label>
@@ -172,7 +188,7 @@ export const GlobalInventory = () => {
       {/* Main Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4">
         {consolidatedStock.map(model => (
-          <Card key={model.id} className="p-8 border border-border rounded-[40px] bg-surface shadow-sm overflow-hidden group hover:border-primary/30 transition-all">
+          <Card key={model.id} className="p-8 border border-border rounded-[40px] bg-surface shadow-sm overflow-hidden group hover:border-primary/30 transition-all flex flex-col">
              <div className="flex justify-between items-start mb-6 border-b border-border/10 pb-6">
                 <div className="min-w-0">
                    <div className="flex items-center gap-2 mb-2 leading-none flex-wrap">
@@ -198,7 +214,7 @@ export const GlobalInventory = () => {
                 </div>
              </div>
 
-             <div className="space-y-6">
+             <div className="space-y-6 flex-1">
                 {/* Toners Section */}
                 <div className="space-y-4">
                    <div className="text-[9px] font-black text-text-1 uppercase tracking-[0.2em] opacity-30 flex items-center gap-2">
@@ -232,18 +248,16 @@ export const GlobalInventory = () => {
                       )}
                    </div>
                 </div>
-
-                {/* Others/Supplies Section */}
-                <div className="space-y-4">
-                   <div className="text-[9px] font-black text-text-1 uppercase tracking-[0.2em] opacity-30 flex items-center gap-2">
-                      <div className="w-1 h-1 rounded-full bg-primary" /> COMPONENTES
-                   </div>
-                   <div className="grid grid-cols-1 gap-2">
-                      <SuppliesRow label="Resíduo" value={model.totals.waste} icon={Box} />
-                      <SuppliesRow label="Fusor" value={model.totals.fuser} icon={Monitor} />
-                   </div>
-                </div>
              </div>
+
+             {/* Ver Detalhes Button */}
+             <button
+               onClick={() => setSelectedModelId(model.id)}
+               className="mt-8 w-full h-12 flex items-center justify-center gap-2 border border-border rounded-[16px] text-[10px] font-black uppercase tracking-widest text-text-1 opacity-40 hover:opacity-100 hover:border-black hover:bg-black hover:text-white transition-all group/btn"
+             >
+               <span>Ver Detalhes</span>
+               <ChevronRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
+             </button>
           </Card>
         ))}
       </div>
@@ -256,6 +270,155 @@ export const GlobalInventory = () => {
             <h3 className="text-2xl font-black text-text-1 uppercase italic tracking-tighter mb-2">Zonas Sem Ativos</h3>
             <p className="text-[10px] font-black text-text-1 uppercase tracking-widest opacity-30">Nenhum modelo de equipamento corresponde aos critérios de pesquisa</p>
          </div>
+      )}
+
+      {/* Detail Modal */}
+      {selectedModel && createPortal(
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 md:p-8 bg-black/70 backdrop-blur-xl animate-fade">
+          <div className="w-full max-w-5xl bg-surface border border-border rounded-[48px] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.6)] flex flex-col max-h-[90vh] overflow-hidden relative z-[1000] animate-slide-up">
+            
+            {/* Modal Header */}
+            <div className="px-10 py-8 border-b border-border flex justify-between items-center shrink-0">
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-[9px] font-black text-white bg-black px-3 py-1 rounded-lg uppercase tracking-widest">{selectedModel.brand}</span>
+                  <span className="text-[10px] font-black text-text-1 opacity-30 uppercase tracking-widest">{selectedModel.machineCount} UNIDADES NO PARQUE</span>
+                </div>
+                <h3 className="text-4xl font-black text-text-1 uppercase italic tracking-tighter leading-none">{selectedModel.name}</h3>
+                <div className="flex items-center gap-6 mt-3">
+                  <span className={cn("text-[10px] font-black uppercase px-3 py-1 rounded-lg", selectedModel.pendingCount > 0 ? "bg-warning/10 text-warning" : "bg-success/10 text-success")}>
+                    {selectedModel.syncedCount}/{selectedModel.machineCount} sincronizados
+                  </span>
+                  <span className="text-[9px] font-black text-text-1 opacity-20 uppercase tracking-widest">
+                    {selectedModel.is_color ? '4 CORES' : 'MONO'}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedModelId(null)}
+                title="Fechar"
+                className="w-14 h-14 rounded-full bg-black/5 hover:bg-danger hover:text-white transition-all flex items-center justify-center group shrink-0"
+              >
+                <X size={24} className="group-hover:rotate-90 transition-transform" />
+              </button>
+            </div>
+
+            {/* Totals Summary Bar */}
+            <div className="px-10 py-5 bg-black/[0.02] border-b border-border/5 flex flex-wrap gap-6 shrink-0">
+              <div className="flex items-center gap-3">
+                <span className="text-[9px] font-black text-text-1 opacity-30 uppercase tracking-[0.3em]">SALDO TOTAL TONERS</span>
+                <div className="flex gap-2">
+                  {[
+                    { type: 'K' as const, val: selectedModel.totals.k },
+                    ...(selectedModel.is_color ? [
+                      { type: 'C' as const, val: selectedModel.totals.c },
+                      { type: 'M' as const, val: selectedModel.totals.m },
+                      { type: 'Y' as const, val: selectedModel.totals.y },
+                    ] : []),
+                  ].map(({ type, val }) => (
+                    <div key={type} className="flex items-center gap-1.5">
+                      <CMYKBadge type={type} />
+                      <span className="text-[13px] font-black text-text-1 italic">{val}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="w-px bg-border/30" />
+              <div className="flex items-center gap-3">
+                <span className="text-[9px] font-black text-text-1 opacity-30 uppercase tracking-[0.3em]">CILINDROS</span>
+                <div className="flex gap-2">
+                  {[
+                    { type: 'K' as const, val: selectedModel.totals.drum_k },
+                    ...(selectedModel.is_color ? [
+                      { type: 'C' as const, val: selectedModel.totals.drum_c },
+                      { type: 'M' as const, val: selectedModel.totals.drum_m },
+                      { type: 'Y' as const, val: selectedModel.totals.drum_y },
+                    ] : []),
+                  ].map(({ type, val }) => (
+                    <div key={type} className="flex items-center gap-1.5">
+                      <CMYKBadge type={type} className="border border-dashed bg-transparent" />
+                      <span className="text-[13px] font-black text-text-1 italic opacity-60">{val}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Per-Machine List */}
+            <div className="flex-1 overflow-y-auto p-8 space-y-4 custom-scrollbar">
+              <div className="flex items-center gap-3 mb-6">
+                <Monitor size={18} className="text-text-1 opacity-20" />
+                <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-text-1 opacity-40">Saldo por Unidade</h4>
+              </div>
+
+              {selectedModel.machineStocks.map(({ me, contract, latest, isSynced, lastSync }) => (
+                <div key={me.id} className={cn(
+                  "p-6 border rounded-[28px] transition-all",
+                  isSynced ? "border-border bg-surface hover:border-black/20" : "border-dashed border-border/40 bg-black/[0.01] opacity-60"
+                )}>
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
+                    <div className="flex items-center gap-4">
+                      <div className={cn(
+                        "w-10 h-10 rounded-[14px] flex items-center justify-center shrink-0",
+                        isSynced ? "bg-black text-white" : "bg-black/5 text-text-1 opacity-30"
+                      )}>
+                        {isSynced ? <CheckCircle2 size={18} /> : <Clock size={18} />}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <span className="text-[12px] font-black text-text-1 uppercase italic tracking-tight leading-none">
+                            {contract?.name || 'Contrato Desconhecido'}
+                          </span>
+                          {contract?.code && (
+                            <span className="text-[8px] font-black bg-black text-white px-2 py-0.5 rounded uppercase tracking-widest">{contract.code}</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-4 mt-1">
+                          <span className="flex items-center gap-1.5 text-[10px] font-black text-text-1 opacity-30 uppercase">
+                            <Hash size={11} /> {me.serial_number || 'S/N —'}
+                          </span>
+                          <span className="flex items-center gap-1.5 text-[10px] font-black text-text-1 opacity-30 uppercase">
+                            <MapPin size={11} /> {me.location || '—'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-[8px] font-black text-text-1 opacity-20 uppercase tracking-[0.3em] mb-1">ÚLTIMA SINCRONIA</p>
+                      <span className={cn(
+                        "text-[10px] font-black uppercase italic tracking-widest px-3 py-1 rounded-lg",
+                        isSynced ? "bg-success/10 text-success" : "bg-black/5 text-text-1 opacity-30"
+                      )}>
+                        {lastSync ? new Date(lastSync).toLocaleString('pt-BR') : 'SEM REGISTRO'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {latest ? (
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2 pt-4 border-t border-border/10">
+                      {/* Toners */}
+                      <MiniStock label="Toner K" value={latest.toner_black} type="K" />
+                      {latest.toner_cyan !== undefined && latest.toner_cyan > 0 && <MiniStock label="Toner C" value={latest.toner_cyan} type="C" />}
+                      {latest.toner_magenta !== undefined && latest.toner_magenta > 0 && <MiniStock label="Toner M" value={latest.toner_magenta} type="M" />}
+                      {latest.toner_yellow !== undefined && latest.toner_yellow > 0 && <MiniStock label="Toner Y" value={latest.toner_yellow} type="Y" />}
+                      {/* Drums */}
+                      {latest.drum_black !== undefined && latest.drum_black > 0 && <MiniStock label="Cil. K" value={latest.drum_black} type="K" isDrum />}
+                      {latest.drum_cyan !== undefined && latest.drum_cyan > 0 && <MiniStock label="Cil. C" value={latest.drum_cyan} type="C" isDrum />}
+                      {latest.drum_magenta !== undefined && latest.drum_magenta > 0 && <MiniStock label="Cil. M" value={latest.drum_magenta} type="M" isDrum />}
+                      {latest.drum_yellow !== undefined && latest.drum_yellow > 0 && <MiniStock label="Cil. Y" value={latest.drum_yellow} type="Y" isDrum />}
+                    </div>
+                  ) : (
+                    <div className="pt-4 border-t border-border/10 flex items-center gap-2">
+                      <Clock size={14} className="text-text-1 opacity-20" />
+                      <span className="text-[10px] font-black text-text-1 opacity-20 uppercase tracking-widest italic">Aguardando primeira sincronização</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -287,12 +450,25 @@ const StockMetric = ({ label, value, color }: { label: string, value: number, co
   );
 };
 
-const SuppliesRow = ({ label, value, icon: Icon }: { label: string, value: number, icon: any }) => (
-  <div className="flex items-center justify-between p-3 bg-bg/50 rounded-xl border border-border/5">
-     <div className="flex items-center gap-2">
-        <Icon size={14} className="text-text-1 opacity-20" />
-        <span className="text-[9px] font-black text-text-1 uppercase tracking-tight opacity-40">{label}</span>
-     </div>
-     <span className="text-[13px] font-black text-text-1 italic">{value} <span className="text-[8px] opacity-20 not-italic">UN</span></span>
-  </div>
-);
+const MiniStock = ({ label, value, type, isDrum }: { label: string, value?: number, type: 'K' | 'C' | 'M' | 'Y', isDrum?: boolean }) => {
+  const colorMap = {
+    K: { solid: 'bg-black text-white', stroke: 'border-black/60 text-black' },
+    C: { solid: 'bg-[#00ADEF] text-white', stroke: 'border-[#00ADEF] text-[#00ADEF]' },
+    M: { solid: 'bg-[#E10098] text-white', stroke: 'border-[#E10098] text-[#E10098]' },
+    Y: { solid: 'bg-[#FFD600] text-black', stroke: 'border-[#FFD600] text-[#FFD600]' },
+  };
+  const cls = isDrum ? colorMap[type].stroke : colorMap[type].solid;
+
+  return (
+    <div className="flex flex-col items-center gap-1.5 p-3 bg-bg border border-border rounded-[16px] hover:border-black/20 transition-all">
+      <div className={cn(
+        "w-5 h-5 rounded-md flex items-center justify-center text-[8px] font-black border",
+        isDrum ? cn("bg-transparent border-dashed", cls) : cn("border-transparent", cls)
+      )}>
+        {type}
+      </div>
+      <span className="text-lg font-black text-text-1 italic leading-none">{value ?? '--'}</span>
+      <span className="text-[7px] font-black text-text-1 opacity-20 uppercase tracking-tight text-center leading-none">{label}</span>
+    </div>
+  );
+};
