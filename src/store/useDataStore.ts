@@ -95,51 +95,56 @@ export const useDataStore = create<DataState>()(
         }
         
         try {
-          const fetchTable = async (query: PromiseLike<{ data: any[] | null; error: { message: string } | null }>): Promise<any[]> => {
+          const fetchResilient = async (query: any, tableName: string) => {
             const { data, error } = await query;
-            if (error) throw new Error(error.message);
+            if (error) {
+              console.error(`Error fetching ${tableName}:`, error.message);
+              return [];
+            }
             return data ?? [];
           };
 
-      const [
-        contractsRaw,
-        profiles,
-        equipModels,
-        ceRaw,
-        minStockRaw,
-        stockEntriesRaw,
-        paperEntriesRaw,
-        alertsRaw,
-        contractTechs,
-        configsRaw,
-        csRaw,
-      ] = await Promise.all([
-        fetchTable(supabase.from('contracts').select('*').order('created_at', { ascending: false })),
-        fetchTable(supabase.from('profiles').select('*').order('name')),
-        fetchTable(supabase.from('equipment_models').select('*').order('name')),
-        fetchTable(supabase.from('contract_equipment').select('*').order('created_at', { ascending: false })),
-        fetchTable(supabase.from('equipment_min_stock').select('*')),
-        fetchTable(supabase.from('equipment_stock_entries').select('*').order('created_at', { ascending: false }).limit(500)),
-        fetchTable(supabase.from('paper_stock_entries').select('*').order('created_at', { ascending: false }).limit(200)),
-        fetchTable(supabase.from('stock_alerts').select('*').eq('resolved', false).order('triggered_at', { ascending: false })),
-        fetchTable(supabase.from('contract_technicians').select('*')),
-        fetchTable(supabase.from('user_configs').select('*')),
-        fetchTable(supabase.from('contract_supplies').select('*')),
-      ]);
+          const [
+            contractsRaw,
+            profiles,
+            equipModels,
+            ceRaw,
+            minStockRaw,
+            stockEntriesRaw,
+            paperEntriesRaw,
+            alertsRaw,
+            contractTechs,
+            configsRaw,
+            csRaw,
+          ] = await Promise.all([
+            fetchResilient(supabase.from('contracts').select('*').order('created_at', { ascending: false }), 'contracts'),
+            fetchResilient(supabase.from('profiles').select('*').order('name'), 'profiles'),
+            fetchResilient(supabase.from('equipment_models').select('*').order('name'), 'equipment_models'),
+            fetchResilient(supabase.from('contract_equipment').select('*').order('created_at', { ascending: false }), 'contract_equipment'),
+            fetchResilient(supabase.from('equipment_min_stock').select('*'), 'equipment_min_stock'),
+            fetchResilient(supabase.from('equipment_stock_entries').select('*').order('created_at', { ascending: false }).limit(500), 'stock_entries'),
+            fetchResilient(supabase.from('paper_stock_entries').select('*').order('created_at', { ascending: false }).limit(200), 'paper_entries'),
+            fetchResilient(supabase.from('stock_alerts').select('*').eq('resolved', false).order('triggered_at', { ascending: false }), 'alerts'),
+            fetchResilient(supabase.from('contract_technicians').select('*'), 'contract_technicians'),
+            fetchResilient(supabase.from('user_configs').select('*'), 'user_configs'),
+            fetchResilient(supabase.from('contract_supplies').select('*'), 'contract_supplies'),
+          ]);
 
-      const techMap = new Map<string, string[]>();
-      for (const ct of contractTechs) {
-        const arr = techMap.get(ct.contract_id) ?? [];
-        arr.push(ct.technician_id);
-        techMap.set(ct.contract_id, arr);
-      }
+          const techMap = new Map<string, string[]>();
+          for (const ct of contractTechs) {
+            if (ct.contract_id && ct.technician_id) {
+              const arr = techMap.get(ct.contract_id) ?? [];
+              arr.push(ct.technician_id);
+              techMap.set(ct.contract_id, arr);
+            }
+          }
 
-      const contracts: Contract[] = contractsRaw.map((c: any) => ({
-        ...c,
-        active: c.active ?? true,
-        created_at: c.created_at ?? new Date().toISOString(),
-        technicianIds: techMap.get(c.id) ?? [],
-      }));
+          const contracts: Contract[] = contractsRaw.map((c: any) => ({
+            ...c,
+            active: c.active ?? true,
+            created_at: c.created_at ?? new Date().toISOString(),
+            technicianIds: techMap.get(c.id) ?? [],
+          }));
 
       const contractEquipment: ContractEquipment[] = ceRaw.map((ce: any) => ({
         id: ce.id,
@@ -804,13 +809,35 @@ export const useDataStore = create<DataState>()(
     }));
 
     for (const u of usersToInsert) {
-      const { error } = await supabase.auth.signUp({
-        email: u.email,
-        password: u.password,
-        options: { data: { name: u.name, role: u.role } }
-      });
-      if (error) console.error(`Erro ao criar usuário ${u.email}:`, error);
+      try {
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: u.email,
+          password: u.password,
+          options: { data: { name: u.name, role: u.role } }
+        });
+        
+        if (authError) {
+          console.error(`Erro ao criar auth para ${u.email}:`, authError.message);
+          continue;
+        }
+
+        if (authData.user) {
+          const { error: profileError } = await supabase.from('profiles').upsert({
+            id: authData.user.id,
+            name: u.name,
+            email: u.email,
+            role: u.role,
+            active: u.active,
+            password: u.password
+          });
+          if (profileError) console.error(`Erro ao criar perfil para ${u.email}:`, profileError.message);
+        }
+      } catch (err) {
+        console.error(`Falha critica no import do usuario ${u.email}:`, err);
+      }
     }
+    // Refresh to get new profiles
+    await get().fetchInitialData();
   },
   }),
   {
