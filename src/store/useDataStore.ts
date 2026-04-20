@@ -37,7 +37,7 @@ interface DataState {
   addEquipmentToContract: (data: Omit<ContractEquipment, 'id' | 'created_at'>, minStock?: Omit<EquipmentMinStock, 'id' | 'contract_equipment_id'>) => Promise<void>;
 
   addUser: (data: Omit<Profile, 'id' | 'created_at'>) => Promise<void>;
-  updateUser: (user: Profile) => Promise<void>;
+  updateUser: (user: Profile, passwordChanged?: boolean) => Promise<void>;
 
   addEquipmentModel: (data: Omit<EquipmentModel, 'id' | 'created_at'>) => Promise<void>;
   updateEquipmentModel: (model: EquipmentModel) => Promise<void>;
@@ -346,7 +346,7 @@ export const useDataStore = create<DataState>((set, get) => ({
     set(state => ({ users: [...state.users, newProfile] }));
   },
 
-  updateUser: async (user) => {
+  updateUser: async (user, passwordChanged = false) => {
     const { data: updated, error } = await supabase
       .from('profiles')
       .update({ name: user.name, email: user.email, role: user.role, active: user.active })
@@ -356,7 +356,8 @@ export const useDataStore = create<DataState>((set, get) => ({
     if (error) throw error;
     if (!updated || updated.length === 0) throw new Error('Sem permissão para atualizar este usuário');
 
-    if (user.password) {
+    // Only update auth password if user explicitly changed it
+    if (passwordChanged && user.password) {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       if (currentUser?.id === user.id) {
         const { error: authError } = await supabase.auth.updateUser({ password: user.password });
@@ -367,6 +368,10 @@ export const useDataStore = create<DataState>((set, get) => ({
         });
         if (fnError) throw new Error(`Troca de senha requer edge function: ${fnError.message}`);
       }
+      await supabase.from('profiles').update({ password: user.password }).eq('id', user.id);
+    } else if (passwordChanged === false && user.password) {
+      // Save updated password to profiles table if changed (keeps plain text in sync)
+      // but only update profiles, not auth
       await supabase.from('profiles').update({ password: user.password }).eq('id', user.id);
     }
 

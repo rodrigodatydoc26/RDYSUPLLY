@@ -25,6 +25,7 @@ export const Users = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [techContracts, setTechContracts] = useState<string[]>([]);
   const [showPassword, setShowPassword] = useState(true);
+  const [originalPassword, setOriginalPassword] = useState('');
 
   const [formData, setFormData] = useState<Omit<Profile, 'id' | 'created_at'>>({
     name: '', email: '', role: 'technician', active: true, password: '',
@@ -44,6 +45,7 @@ export const Users = () => {
 
   const openAddModal = () => {
     setEditingId(null);
+    setOriginalPassword('');
     setFormData({ name: '', email: '', role: 'technician', active: true, password: '' });
     setReminders({ times: [], days: [1, 2, 3, 4, 5] });
     setTechContracts([]);
@@ -52,7 +54,9 @@ export const Users = () => {
 
   const openEditModal = (user: Profile) => {
     setEditingId(user.id);
-    setFormData({ name: user.name, email: user.email, role: user.role, active: user.active, password: user.password || '' });
+    const storedPwd = user.password || '';
+    setOriginalPassword(storedPwd);
+    setFormData({ name: user.name, email: user.email, role: user.role, active: user.active, password: storedPwd });
     setTechContracts(contracts.filter(c => c.technicianIds?.includes(user.id)).map(c => c.id));
     
     // Load existing config
@@ -75,8 +79,13 @@ export const Users = () => {
     try {
       if (editingId) {
         const existing = users.find(u => u.id === editingId);
-        if (!existing) return;
-        await updateUser({ id: editingId, ...formData, created_at: existing.created_at });
+        if (!existing) {
+          toast.error('Usuário não encontrado. Recarregue a página.');
+          return;
+        }
+        // Only update auth password if it was actually changed by the user
+        const passwordChanged = formData.password !== originalPassword;
+        await updateUser({ id: editingId, ...formData, created_at: existing.created_at }, passwordChanged);
         await Promise.all(contracts.map(c => {
           const isLinked = techContracts.includes(c.id);
           const alreadyLinked = c.technicianIds?.includes(editingId) ?? false;
@@ -368,7 +377,7 @@ export const Users = () => {
                          <Trash2 size={20} />
                       </button>
                     )}
-                    <button onClick={() => setIsModalOpen(false)} title="Fechar Modal" className="w-12 h-12 rounded-full bg-black/5 hover:bg-black hover:text-white transition-all flex items-center justify-center border border-border">
+                    <button onClick={() => { if (!isSaving) setIsModalOpen(false); }} title="Fechar Modal" disabled={isSaving} className={cn("w-12 h-12 rounded-full bg-black/5 hover:bg-black hover:text-white transition-all flex items-center justify-center border border-border", isSaving && "opacity-30 cursor-not-allowed")}>
                         <Check size={20} />
                     </button>
                  </div>
@@ -449,3 +458,5 @@ export const Users = () => {
     </div>
   );
 };
+
+

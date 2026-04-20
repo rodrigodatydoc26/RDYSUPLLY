@@ -82,7 +82,7 @@ export const LoginPage = () => {
                <Input 
                  type="email"
                  autoComplete="off"
-                 placeholder="USUÁRIO"
+                 placeholder=""
                  value={email}
                  onChange={(e) => setEmail(e.target.value)}
                  disabled={isAuthenticating}
@@ -95,7 +95,7 @@ export const LoginPage = () => {
                <Input 
                  type={showPassword ? 'text' : 'password'}
                  autoComplete="off"
-                 placeholder="••••••••"
+                 placeholder=""
                  value={password}
                  onChange={(e) => setPassword(e.target.value)}
                  disabled={isAuthenticating}
