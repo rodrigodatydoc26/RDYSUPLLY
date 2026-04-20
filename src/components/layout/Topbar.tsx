@@ -61,7 +61,7 @@ export const Topbar = memo(() => {
             type="text" 
             placeholder="PESQUISAR ATIVOS..."
             title="Campo de Pesquisa"
-            className="w-full h-11 bg-surface border border-border rounded-full pl-12 pr-4 text-[10px] font-black uppercase tracking-widest outline-none focus:ring-4 focus:ring-primary/10 transition-all opacity-80"
+            className="w-full h-11 bg-bg border border-border rounded-full pl-12 pr-4 text-[10px] font-black uppercase tracking-widest outline-none focus:ring-4 focus:ring-primary/10 transition-all opacity-80"
           />
         </div>
       </div>
@@ -72,7 +72,7 @@ export const Topbar = memo(() => {
         
         {/* Theme Settings - Compact on mobile */}
         <div className="flex items-center gap-2 lg:gap-3 pr-2 lg:pr-4 border-r border-border/10">
-          <div className="hidden md:flex items-center gap-2.5 px-3 py-1.5 bg-surface border border-border rounded-full shadow-sm">
+          <div className="hidden md:flex items-center gap-2.5 px-3 py-1.5 bg-bg border border-border rounded-full shadow-sm">
             <button title="Cor Amarela" onClick={() => setAccentColor('yellow')} className={cn("w-3 h-3 rounded-full bg-[#FFD700] ring-offset-2 transition-all", accentColor === 'yellow' ? "ring-2 ring-black scale-110" : "opacity-30 hover:opacity-100")} />
             <button title="Cor Magenta" onClick={() => setAccentColor('magenta')} className={cn("w-3 h-3 rounded-full bg-[#FF007A] ring-offset-2 transition-all", accentColor === 'magenta' ? "ring-2 ring-black scale-110" : "opacity-30 hover:opacity-100")} />
             <button title="Cor Ciano" onClick={() => setAccentColor('cyan')} className={cn("w-3 h-3 rounded-full bg-[#00A3FF] ring-offset-2 transition-all", accentColor === 'cyan' ? "ring-2 ring-black scale-110" : "opacity-30 hover:opacity-100")} />
@@ -81,7 +81,7 @@ export const Topbar = memo(() => {
           <button 
             onClick={toggleDarkMode}
             title={darkMode ? "Ativar Modo Claro" : "Ativar Modo Escuro"}
-            className="w-9 h-9 flex items-center justify-center bg-surface border border-border rounded-xl text-text-1 hover:bg-black hover:text-white transition-all shadow-sm"
+            className="w-9 h-9 flex items-center justify-center bg-bg border border-border rounded-xl text-text-1 hover:bg-black hover:text-white transition-all shadow-sm"
           >
             {darkMode ? <Sun size={18} className="text-primary" /> : <Moon size={18} />}
           </button>
@@ -156,7 +156,7 @@ export const Topbar = memo(() => {
              
              <button 
                onClick={logout}
-               className="w-9 h-9 rounded-xl bg-surface border border-border flex items-center justify-center text-text-1 hover:bg-danger hover:text-white hover:border-danger transition-all shadow-sm group"
+               className="w-9 h-9 rounded-xl bg-bg border border-border flex items-center justify-center text-text-1 hover:bg-danger hover:text-white hover:border-danger transition-all shadow-sm group"
                title="Encerrar Sessão"
              >
                <LogOut size={18} className="group-hover:translate-x-0.5 transition-transform" />

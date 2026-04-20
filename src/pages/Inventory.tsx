@@ -152,7 +152,7 @@ export const Inventory = () => {
           </h2>
         </div>
         <div className="flex flex-col md:flex-row md:items-center gap-4">
-           <div className="hidden sm:flex items-center gap-3 px-6 py-4 bg-surface border border-border rounded-full shadow-sm">
+           <div className="hidden sm:flex items-center gap-3 px-6 py-4 bg-bg border border-border rounded-full shadow-sm">
                 <div className="w-2.5 h-2.5 rounded-full bg-success animate-pulse" />
                 <span className="text-[11px] font-black text-text-1 uppercase tracking-widest whitespace-nowrap">SINCRONIZADO</span>
            </div>
@@ -160,14 +160,14 @@ export const Inventory = () => {
            <div className="flex items-center gap-3">
               <Button 
                  onClick={() => exportToPDF(contractInventory)}
-                 className="h-14 px-6 bg-surface border border-border text-text-1 text-[10px] font-black uppercase tracking-widest hover:border-danger hover:text-danger transition-all rounded-[20px]"
+                 className="h-14 px-6 bg-bg border border-border text-text-1 text-[10px] font-black uppercase tracking-widest hover:border-danger hover:text-danger transition-all rounded-[20px]"
               >
                  <FileText size={18} className="mr-2" />
                  PDF
               </Button>
               <Button 
                  onClick={() => exportToExcel(contractInventory)}
-                 className="h-14 px-6 bg-surface border border-border text-text-1 text-[10px] font-black uppercase tracking-widest hover:border-success hover:text-success transition-all rounded-[20px]"
+                 className="h-14 px-6 bg-bg border border-border text-text-1 text-[10px] font-black uppercase tracking-widest hover:border-success hover:text-success transition-all rounded-[20px]"
               >
                  <Download size={18} className="mr-2" />
                  Excel
@@ -197,7 +197,7 @@ export const Inventory = () => {
 
         <div className="flex flex-col">
           <label className="text-[10px] font-black text-text-2 uppercase ml-6 mb-2 block tracking-[0.3em]">Matriz de Filtro</label>
-          <div className="flex bg-surface border border-border p-1.5 rounded-[28px] shadow-sm overflow-x-auto">
+          <div className="flex bg-bg border border-border p-1.5 rounded-[28px] shadow-sm overflow-x-auto">
               {['ALL', 'TONER', 'CILINDRO'].map(filter => (
                   <button
                       key={filter}

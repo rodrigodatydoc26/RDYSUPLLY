@@ -73,7 +73,7 @@ export const Sidebar = memo(() => {
       </div>
 
       {/* Navigation Items */}
-      <nav className="flex-1 px-4 space-y-2 py-6 overflow-y-auto scroll-elite">
+      <nav className="flex-1 px-4 space-y-0.5 py-4 overflow-y-auto scroll-elite">
         {filteredItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -84,7 +84,7 @@ export const Sidebar = memo(() => {
               className={({ isActive }) => cn(
                 "flex items-center gap-4 transition-all duration-500 group relative",
                 // Base dimensions
-                "h-12 rounded-xl",
+                "h-10 rounded-xl",
                 // Collapsed vs Expanded logic
                 isSidebarCollapsed 
                   ? "w-12 items-center justify-center mx-auto px-0" 

@@ -62,7 +62,7 @@ export const Dashboard = memo(() => {
           </h2>
           <p className="text-[10px] font-black text-text-1 uppercase tracking-[0.2em] mt-3 opacity-30 italic">Terminal de Performance RDY Supply</p>
         </div>
-        <div className="flex bg-surface px-5 py-2.5 rounded-full border border-border gap-3 shadow-sm">
+        <div className="flex bg-bg px-5 py-2.5 rounded-full border border-border gap-3 shadow-sm">
            <Activity size={16} className="text-text-1 opacity-20" />
            <p className="text-[10px] font-black text-text-1 uppercase tracking-widest">{format(new Date(), 'dd.MM HH:mm')}</p>
         </div>

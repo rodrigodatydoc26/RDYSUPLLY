@@ -151,12 +151,12 @@ export const Users = () => {
             <input
               type="text"
               placeholder="FILTRAR POR NOME OU E-MAIL..."
-              className="w-full h-16 bg-surface border border-border rounded-[24px] pl-16 pr-8 text-[11px] font-black uppercase tracking-[0.2em] text-text-1 outline-none focus:ring-4 focus:ring-black/5 transition-all placeholder:text-text-1 placeholder:opacity-20"
+              className="w-full h-16 bg-bg border border-border rounded-[24px] pl-16 pr-8 text-[11px] font-black uppercase tracking-[0.2em] text-text-1 outline-none focus:ring-4 focus:ring-black/5 transition-all placeholder:text-text-1 placeholder:opacity-20 shadow-sm"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-6 text-[10px] font-black text-text-1 uppercase tracking-widest px-8 h-16 bg-surface border border-border rounded-[24px] shadow-sm">
+          <div className="flex items-center gap-6 text-[10px] font-black text-text-1 uppercase tracking-widest px-8 h-16 bg-bg border border-border rounded-[24px] shadow-sm">
             <span className="flex items-center gap-2.5">
               <div className="w-2.5 h-2.5 rounded-full bg-success shadow-lg shadow-success/20" /> 
               {users.filter(u => u.active).length} ATIVOS
