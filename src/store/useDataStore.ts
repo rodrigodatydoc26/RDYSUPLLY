@@ -620,19 +620,42 @@ export const useDataStore = create<DataState>()(
 
   wipeDatabase: async () => {
     const NEVER = '00000000-0000-0000-0000-000000000000';
+    console.log('[wipeDatabase] Iniciando limpeza total...');
+    
     try {
-      await Promise.all([
-        supabase.from('equipment_stock_entries').delete().neq('id', NEVER),
-        supabase.from('paper_stock_entries').delete().neq('id', NEVER),
-        supabase.from('stock_alerts').delete().neq('id', NEVER),
-        supabase.from('equipment_min_stock').delete().neq('id', NEVER),
-        supabase.from('contract_equipment').delete().neq('id', NEVER),
-        supabase.from('contract_technicians').delete().neq('contract_id', NEVER),
-        supabase.from('contracts').delete().neq('id', NEVER),
-      ]);
+      // Ordem hierárquica reversa (filhos primeiro)
+      const tablesInOrder = [
+        'stock_adjustments',
+        'stock_alerts',
+        'equipment_min_stock',
+        'equipment_stock_entries',
+        'paper_stock_entries',
+        'contract_technicians',
+        'contract_supplies',
+        'contract_equipment',
+        'contracts',
+        'user_configs'
+      ];
+
+      for (const table of tablesInOrder) {
+        console.log(`[wipeDatabase] Limpando tabela: ${table}`);
+        const { error } = await supabase.from(table).delete().neq('id', NEVER);
+        if (error) console.error(`[wipeDatabase] Erro ao limpar ${table}:`, error.message);
+      }
+
+      // Limpar usuários não-admins da tabela profiles
+      console.log('[wipeDatabase] Limpando usuários operacionais...');
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .not('role', 'in', '("admin","cto")');
+      if (profileError) console.error('[wipeDatabase] Erro ao limpar perfis:', profileError.message);
+
     } catch (err) {
-      console.error('Remote wipe failed', err);
+      console.error('[wipeDatabase] Falha crítica na limpeza remota:', err);
     }
+    
+    // Resetar estado local
     get().resetToDefaults();
   },
 
@@ -648,21 +671,69 @@ export const useDataStore = create<DataState>()(
     }));
   },
 
-  resetToDefaults: () => {
-    set({
-      contracts: [],
-      users: [],
-      equipmentModels: [],
-      contractEquipment: [],
-      equipmentMinStock: [],
-      contractSupplies: [],
-      equipmentStockEntries: [],
-      paperStockEntries: [],
-      stockAlerts: [],
-      userConfigs: [],
-      isLoading: false,
-      _hasHydrated: true
-    });
+  resetToDefaults: async () => {
+    console.log('[resetToDefaults] Iniciando restauração para padrão de fábrica...');
+    
+    // Primeiro, limpamos tudo
+    await get().wipeDatabase();
+
+    try {
+      // 1. Injetar Modelo de Demonstração
+      console.log('[resetToDefaults] Injetando catálogos de demonstração...');
+      const { data: model, error: modelError } = await supabase
+        .from('equipment_models')
+        .insert({
+          brand: 'RDY GLOBAL',
+          name: 'RDY-PRINTER X1',
+          type: 'equipment',
+          is_color: true,
+          has_drum: true,
+          toner_black: 'TNR-X1-BLK',
+          toner_cyan: 'TNR-X1-CYN',
+          toner_magenta: 'TNR-X1-MAG',
+          toner_yellow: 'TNR-X1-YEL'
+        })
+        .select()
+        .single();
+
+      if (modelError) throw modelError;
+
+      // 2. Injetar Contrato de Demonstração
+      console.log('[resetToDefaults] Injetando contrato de demonstração...');
+      const { data: contract, error: contractError } = await supabase
+        .from('contracts')
+        .insert({
+          code: 'DEMO-001',
+          name: 'CONTRATO EXPERIMENTAL PRO',
+          client: 'DOC TECNOLOGIA TESTE',
+          active: true
+        })
+        .select()
+        .single();
+
+      if (contractError) throw contractError;
+
+      // 3. Vincular Equipamento ao Contrato
+      console.log('[resetToDefaults] Vinculando ativos...');
+      const { error: equipError } = await supabase
+        .from('contract_equipment')
+        .insert({
+          contract_id: contract.id,
+          equipment_model_id: model.id,
+          serial_number: 'DEMO-SN-2024',
+          location: 'SALA DE TESTES',
+          active: true
+        });
+
+      if (equipError) throw equipError;
+
+      console.log('[resetToDefaults] Dados de fábrica injetados com sucesso.');
+    } catch (err) {
+      console.error('[resetToDefaults] Erro ao injetar dados de demonstração:', err);
+    }
+
+    // Sincronizar estado local final
+    await get().fetchInitialData();
   },
 
   importEquipment: async (data: Record<string, unknown>[]) => {
